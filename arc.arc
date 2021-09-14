@@ -970,6 +970,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
              (++ i))))
       s)))
 
+(def rand-char ()
+  ((rand-string 1) 0))
+
 (mac forlen (var s . body)
   `(for ,var 0 (- (len ,s) 1) ,@body))
 
