@@ -1370,14 +1370,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def number (n) (in (type n) 'int 'num))
 
-(def since (t1 (o ms))
-  (if ms
-      (/ (- (now)     t1) 1000)
-         (- (seconds) t1)))
+(def since (t1) (- (seconds) t1))
 
-(def minutes-since (t1 (o ms)) (/ (since t1 ms) 60))
-(def hours-since (t1 (o ms))   (/ (since t1 ms) 3600))
-(def days-since (t1 (o ms))    (/ (since t1 ms) 86400))
+(def minutes-since (t1) (/ (since t1) 60))
+(def hours-since (t1)   (/ (since t1) 3600))
+(def days-since (t1)    (/ (since t1) 86400))
 
 ; could use a version for fns of 1 arg at least
 

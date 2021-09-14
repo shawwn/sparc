@@ -423,7 +423,7 @@ Strict-Transport-Security: max-age=31556900
 (def timed-fnidf (lasts f (o k))
   (atlet key (new-fnid k)
     (= (fns* key) f
-       (timed-fnids* key) (list (seconds) lasts (get-user)))
+       (timed-fnids* key) (list (now) lasts (get-user)))
     (wipe (fnids* key))
     key))
 
@@ -465,14 +465,14 @@ Strict-Transport-Security: max-age=31556900
   (sort (compare > car)
         (each (id (created subj)) fnids*
           (when (is subj user)
-            (out (minutes-since created t) id)))))
+            (out (minutes-since created) id)))))
 
 (def dead-fnids ((o max-hours fnid-hours-max*))
   (+ (each (id (created lasts)) timed-fnids*
        (when (> (since created) lasts)    
          (out id)))
-     (each (id (ms user)) fnids*
-       (when (>= (hours-since ms t) max-hours)
+     (each (id (created user)) fnids*
+       (when (>= (hours-since created) max-hours)
          (out id)))))
 
 (def harvest-fnids ((o force nil)

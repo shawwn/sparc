@@ -602,7 +602,7 @@
       (pr (len items*) "/" maxid* " loaded")
       (pr (num (round (/ (memusage) 1000))) " kb")
       (pr (len fns*) " fns")
-      (pr (num elapsed) " msec")
+      (pr (num (* elapsed 1000)) " msec")
       (link "settings" "/newsadmin")
       (link "pages" "/pages")
       (hook 'admin-bar user whence))
@@ -3749,7 +3749,7 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (def place-event! (type evt)
   (let e (copy evt)
-    (= e!time (str (/ (now) 1000))
+    (= e!time (str (now))
        e!type type)
     (atomic
       (= e!id (str (++ place-event-id*)))
@@ -3811,7 +3811,7 @@ X-Accel-Buffering: no")
 
 (defop place.events ()
   (with (seen (obj) ts (now))
-    (while (< (since ts t) place-event-lasts*)
+    (while (< (since ts) place-event-lasts*)
       (each x (qlist place-events*)
         (unless (seen x!id)
           (= (seen x!id) t)
