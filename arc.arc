@@ -872,6 +872,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (w/stdout ,gv (w/stderr ,gv ,@body))
       (inside ,gv))))
 
+(mac tostrings body
+  (w/uniq (ge go)
+   `(w/outstring ,ge
+      (w/outstring ,go
+        (w/stderr ,ge
+          (w/stdout ,go
+            ,@body))
+        (list (inside ,go) (inside ,ge))))))
+
 (mac fromstring (str . body)
   (w/uniq gv
    `(w/instring ,gv ,str
