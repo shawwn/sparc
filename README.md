@@ -1,8 +1,8 @@
-# To run laarc
+# To run tlarc
 
 ```
-git clone http://github.com/laarc/laarc
-cd laarc
+git clone http://github.com/tensorfork/tlarc
+cd tlarc
 make
 mkdir arc
 echo "myname" > arc/admins
@@ -54,5 +54,5 @@ sudo pkg install python # then install pip
 sudo pip install --upgrade google-api-python-client oauth2client
 
 # PULL=10 means `git pull` every 10 seconds
-PULL=10 FLUSH=nil bin/laarc
+PULL=10 FLUSH=nil bin/tlarc
 ```

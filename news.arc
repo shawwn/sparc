@@ -10,17 +10,17 @@
 (load "firebase.arc")
 (load "algolia.arc")
 
-(= site-name*    "laarc"
-   site-abbrev*  "LN"
-   site-email*   "hi@@laarc.io"
+(= site-name*    "Tensorfork Labs"
+   site-abbrev*  "TL"
+   site-email*   "tl@@tensorfork.com"
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
-   discord-url*  "https://discord.gg/qaqkc9z"
-   site-url*     "https://www.laarc.io"
-   parent-url*   "https://www.laarc.io"
+   discord-url*  "https://discord.gg/x52Xz3y"
+   site-url*     "https://www.tensorfork.com"
+   parent-url*   "https://www.tensorfork.com"
    welcome-url*  "/welcome.html"
    favicon-url*  ""
-   site-desc*    "Links for the curious"     ; for rss feed
+   site-desc*    "Tensorfork Labs"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t)
@@ -572,8 +572,8 @@
       (link "Welcome" welcome-url*)
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
-      (link "Feature Requests" "/item?id=230")
-      (link "Source" "https://github.com/laarc/laarc")
+      ;(link "Feature Requests" "/item?id=230")
+      (link "Source" "https://github.com/tensorfork/tlarc")
       (link "Contact" "mailto:@site-email*")
       (link "Twitter" "https://twitter.com/@site-twitter*")
       (link "Lists" "/lists"))
@@ -586,11 +586,12 @@
 
 (def search-bar (user elapsed whence)
   (br2)
-  (tag (form method "get" action "//search.laarc.io/")
-    (inputs (q Search 17 nil 'plain))))
+  ;(tag (form method "get" action "//search.laarc.io/")
+  ;  (inputs (q Search 17 nil 'plain)))
+  )
 
 (defcache memusage 5
-  (repeat 3 (seval!collect-garbage 'major))
+  ;(repeat 3 (seval!collect-garbage 'major))
   (memory))
 
 (def admin-bar (user elapsed whence)
@@ -892,7 +893,9 @@ function vote(node) {
 
 (defop apple-app-site-association req
   (write-json (obj webcredentials
-                   (obj apps (list "B9452FEMTF.com.emilykolar.LaarcIOS")))))
+                   (obj apps (list ;"B9452FEMTF.com.emilykolar.LaarcIOS"
+                                   ))))
+  )
 
 (def user>json (u)
   (obj id        u!id
@@ -2039,11 +2042,11 @@ function suggestTitle() {
         (pushnew (clean-sub x) s!keys)))
     (unless (mem (clean-sub "private") s!keys)
       (let title (downcase title)
-        (if (headmatch "show laarc" title)
+        (if (headmatch "show tl" title)
             (do (pull (clean-sub "news") s!keys)
                 (pushnew (clean-sub "show") s!keys))
             (or (blank url)
-                (headmatch "ask laarc" title))
+                (headmatch "ask tl" title))
             (do (pull (clean-sub "news") s!keys)
                 (pushnew (clean-sub "ask") s!keys)))))
     (save-item s)
@@ -3231,7 +3234,7 @@ first asterisk isn't whitespace.
 
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
-<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.laarc.io/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.tensorfork.com/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
   <u>post to @(do site-abbrev*)</u>
 </a>
 
@@ -3239,7 +3242,7 @@ first asterisk isn't whitespace.
 <br><br> On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
 <br><br>
 
-<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.laarc.io/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));</textarea>
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.tensorfork.com/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));</textarea>
 
 <br><br> It should look like this:
 <br><br>
@@ -3681,7 +3684,7 @@ RNBQKBNR
     (tag (form method 'post action (string url "?" op a "," b) onsubmit "return placeSubmit(this);")
       (gentag input type 'submit value2 text style "background-color: #@(hexrep bgcol);"))))
 
-(= place-submit-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F"
+(= place-submit-url* "/submitlink?l=ask%20place&t=Ask%20TL:%20what%20should%20we%20draw%20next%3F"
    place-css* "
 #place tr    { -webkit-appearance: none; border-radius: 0; display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; }
 #place td    { -webkit-appearance: none; border-radius: 0; display:    inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; }

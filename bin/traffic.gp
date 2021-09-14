@@ -21,7 +21,7 @@ set format x "%b %d"
 
 #set xlabel "Date (day/month)"
 
-#set title "laarc.io traffic"
+#set title "website traffic"
 set key below
 set grid
 
