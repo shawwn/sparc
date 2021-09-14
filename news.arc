@@ -1254,7 +1254,7 @@ function vote(node) {
                       (= predicted t))))))))
       ))))
 
-(adop traffic req
+(defop traffic req
   (aif (arg "on")
       (minipage "traffic on @it"
         (center
