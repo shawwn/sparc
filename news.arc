@@ -1254,7 +1254,7 @@ function vote(node) {
                       (= predicted t))))))))
       ))))
 
-(defop traffic req
+(adop traffic req
   (aif (arg "on")
       (minipage "traffic on @it"
         (center
@@ -1279,7 +1279,7 @@ function vote(node) {
       (row (link "/bestcomments") "Highest voted recent comments.")
       (row (link "/noobstories")  "Submissions from new accounts.")
       (row (link "/noobcomments") "Comments from new accounts.")
-      (row (link "/traffic")      "Hourly, daily, and weekly traffic statistics.")
+      ;(row (link "/traffic")      "Hourly, daily, and weekly traffic statistics.")
       (row (link "/uptime")       "How long has racket been running?")
       (when (admin user)
         (map row:link
