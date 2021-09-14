@@ -548,7 +548,7 @@
 (define (ac-boxed-get name)
   (let ((getter (ac-boxed? 'get name)))
     (if (procedure? getter)
-      `(,getter 'nil)
+      `(,getter ',name)
       getter)))
 
 ; generate special fast code for ordinary two-operand
