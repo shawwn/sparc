@@ -1295,12 +1295,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def split (seq pos)
   (list (cut seq 0 pos) (cut seq pos)))
 
-(mac time (expr)
+(mac time (expr (o label ""))
   (w/uniq (t1 t2)
     `(let ,t1 (now)
        (do1 ,expr
             (let ,t2 (now)
-              (prn "time: " (num (- ,t2 ,t1) 4 t) " msec."))))))
+              (ero ,label "time: " (num (- ,t2 ,t1) 4 t) " msec."))))))
 
 (mac jtime (expr)
   `(do1 'ok (time ,expr)))
