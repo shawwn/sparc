@@ -6,3 +6,4 @@ arc/
 *.png
 static/place.txt
 static/traffic*
+.env
