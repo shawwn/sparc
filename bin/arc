@@ -1,4 +1,10 @@
 #!/bin/sh
 
+# for now, just source the .env file
+if [ -f .env ]
+then
+  source .env
+fi
+
 export DEV="${DEV:-1}"
 exec racket -t as.scm "$@"

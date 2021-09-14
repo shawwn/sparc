@@ -1,2 +1,9 @@
 #!/bin/sh
+
+# for now, just source the .env file
+if [ -f .env ]
+then
+  source .env
+fi
+
 exec racket -t site.scm "$@"
