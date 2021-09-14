@@ -1138,15 +1138,12 @@
 ; http://list.cs.brown.edu/pipermail/plt-scheme/2005-August/009414.html
 
 (xdef socket-accept (lambda (s)
-                      (let ((oc (current-custodian))
-                            (nc (make-custodian)))
-                        (current-custodian nc)
+                      (parameterize ((current-custodian (make-custodian)))
                         (call-with-values
                          (lambda () (tcp-accept s))
                          (lambda (in out)
                            (let ((in1 (make-limited-input-port in 100000 #t)))
-                             (current-custodian oc)
-                             (associate-custodian nc in1 out)
+                             (associate-custodian (current-custodian) in1 out)
                              (list in1
                                    out
                                    (let-values (((us them) (tcp-addresses out)))
