@@ -860,13 +860,16 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/stdout (str . body)
   `(call-w/stdout ,str (fn () ,@body)))
 
+(mac w/stderr (str . body)
+  `(call-w/stderr ,str (fn () ,@body)))
+
 (mac w/stdin (str . body)
   `(call-w/stdin ,str (fn () ,@body)))
 
 (mac tostring body
   (w/uniq gv
    `(w/outstring ,gv
-      (w/stdout ,gv ,@body)
+      (w/stdout ,gv (w/stderr ,gv ,@body))
       (inside ,gv))))
 
 (mac fromstring (str . body)
