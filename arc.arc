@@ -1812,6 +1812,20 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def zip ls (unzip ls))
 
+(def tmpfile ((o val "") (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path "arc/tmp/"))
+  (ensure-dir path)
+  (let file (+ path (map [if (is _ #\X) (rand-char) _] name))
+    (w/outfile o file (writer val o))
+    file))
+
+(def call-w/tmpfile (val f (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path "arc/tmp/"))
+  (let file (tmpfile val writer name path)
+    (after (f file)
+      (errsafe:rmfile file))))
+
+(mac w/tmpfile (var val . body)
+  `(call-w/tmpfile ,val (fn (,var) ,@body)))
+
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
 ; idea: implicit tables of tables; setf empty field, becomes table
