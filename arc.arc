@@ -1078,7 +1078,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (awhen (readc str)
     (tostring 
       (writec it)
-      (whiler c (readc str) [in _ nil #\newline]
+      (whiler c (readc str) [in _ nil #\return #\newline]
         (writec c)))))
 
 ; Don't currently use this but suspect some code could.
