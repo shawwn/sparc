@@ -423,7 +423,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         ; make it also work for uncompressed calls to compose
         (and (acons expr) (metafn (car expr)))
          (setforms (expand-metafn-call (ssexpand (car expr)) (cdr expr)))
-        (and (acons expr) (acons (car expr)) (is (caar expr) 'get))
+        (and (acons expr) (acons (car expr)) (is (caar expr) '%get))
          (setforms (list (cadr expr) (cadr (car expr))))
          (let f (setter (car expr))
            (if f
@@ -1739,7 +1739,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; if renamed this would be more natural for (map [_ user] pagefns*)
 
-(def get (index) [_ index])
+(def %get (index) [_ index])
 
 (or= savers* (table))
 
