@@ -765,10 +765,20 @@
                            (string ',name (reassemble-args ,parm)))))))
 
 (def shellquote (str)
-  (+ "'" (multisubst (list (list "'" "'\"'\"'")) str) "'"))
+  (cat "'" (multisubst (list (list "'" "'\"'\"'")) (cat str)) "'"))
+
+(def shellargs (cmd (o args))
+  (cat cmd " " (intersperse #\space (map shellquote:string (rem nil args)))))
+
+(def shellrun (cmd (o args))
+  (let s (shellargs cmd args)
+    (let code (seval!system/exit-code s)
+      (unless (is code 0)
+        (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
 
 (def shell (cmd . args)
-  (tostring:system (+ (string cmd) " " (string:intersperse #\space (map shellquote:string (rem nil args))))))
+  (tostring1
+    (shellrun cmd args)))
 
 (def GET (url)
   (shell "curl" "-fsSL" (clean-url url)))
