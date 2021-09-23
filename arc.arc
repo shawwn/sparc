@@ -763,7 +763,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,@(map [do `(aif ,_ (,ga it))]
               body))))
 
-(def eof () nil)
+(def eof args (if args (apply is eof args) eof))
 
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
@@ -1572,12 +1572,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (and (> (len file) 4)
        (is ".arc" (cut file (- (len file) 4)))))
 
+(def read-code ((o x (stdin)) (o eof eof))
+  (read x eof nil))
+
 (def load-code (file (o evalfn (if (arcfile? file) eval seval)))
   (let x nil
     (w/infile f file
-      (w/uniq eof
-        (whiler e (read f eof nil) eof
-          (= x (evalfn e)))))
+      (whiler e (read-code f eof) eof
+        (= x (evalfn e))))
     x))
 
 (def load (file)
