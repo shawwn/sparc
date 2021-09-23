@@ -3,10 +3,14 @@
                     (env* (map car #,(lexenv))))
        #,,@body))
 
+(def try-require (lib)
+  (errsafe:seval `(begin (require ,lib) ',lib)))
+
 ;; Optional debugger
 ;;   raco pkg install debug
 
-(when (errsafe:and #'(require debug/repl) t)
+(when (try-require 'debug/repl)
+
   #'(xdef resume resume)
 
   (mac debug ()
