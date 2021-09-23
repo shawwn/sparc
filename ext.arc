@@ -6,10 +6,8 @@
 ;; Optional debugger
 ;;   raco pkg install debug
 
-(when (errsafe
-        #'(require debug/repl)
-        #'(xdef resume resume)
-        t)
+(when (errsafe:and #'(require debug/repl) t)
+  #'(xdef resume resume)
 
   (mac debug ()
     `(w/env
