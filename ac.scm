@@ -57,7 +57,10 @@
 (define (stx-map proc stxl)
   (map proc (stx->list stxl)))
 
-(define (ac* e s env)
+(define (scm% e s env)
+  s)
+
+(define (ac% e s env)
   (cond ((string? s) (ac-string s env))
         ((keyword? s) s)
         ((literal? s) (list 'quote (ac-quoted s)))
@@ -83,11 +86,13 @@
         ((syntax? s) s)
         (#t (err "Bad object in expression" s))))
 
+(define ac* (make-parameter ac%))
+
 (define (ac stx (env (env*)) (ns (arc-namespace)))
   (parameterize ((env* env))
     (let* ((e (syn stx))
            (s (syntax->datum e))
-           (expr (ac* e s env)))
+           (expr ((ac*) e s env)))
       (parameterize ((current-namespace ns))
         (namespace-syntax-introduce (syn expr stx))))))
 
