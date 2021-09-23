@@ -73,6 +73,7 @@
         ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
         ((eq? (xcar s) 'quote) (list 'quote (ac-quoted (cadr s))))
         ((eq? (xcar s) 'quasiquote) (ac-qq (cadr s) env))
+        ((eq? (xcar s) 'quasisyntax) (ac-qs (cadr s) env))
         ((eq? (xcar s) 'if) (ac-if (cdr s) env))
         ((eq? (xcar s) 'fn) (ac-fn (cadr s) (cddr s) env))
         ((eq? (xcar s) 'assign) (ac-set (cdr s) env))
@@ -330,6 +331,29 @@
          ar-nil)
         ((eqv? x 't)
          ar-t)
+        (#t x)))
+
+; quasisyntax
+
+(define (ac-qs args env)
+  ; (list 'quasisyntax (ac-qs1 1 args env)))
+  (ac-qs1 1 args env))
+
+; process the argument of a quasisyntax. keep track of
+; depth of nesting. handle unsyntax only at top level (level = 1).
+; complete form, e.g. x or (fn x) or (unsyntax (fn x))
+
+(define (ac-qs1 level x env)
+  (cond ((= level 0)
+         (ac x env))
+        ((and (pair? x) (eqv? (car x) 'unsyntax))
+         (begin #;list #;'unsyntax          (ac-qs1 (- level 1) (cadr x) env)))
+        ((and (pair? x) (eqv? (car x) 'unsyntax-splicing) (= level 1))
+         (begin #;list #;'unsyntax-splicing (ac-qs1 (- level 1) (cadr x) env)))
+        ((and (pair? x) (eqv? (car x) 'quasisyntax))
+         (begin #;list #;'quasisyntax       (ac-qs1 (+ level 1) (cadr x) env)))
+        ((pair? x)
+         (imap (lambda (x) (ac-qs1 level x env)) x))
         (#t x)))
 
 ; like map, but don't demand '()-terminated list
