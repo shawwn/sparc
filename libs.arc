@@ -1,4 +1,5 @@
-(map load '("glob.arc"
+(map load '("ext.arc"
+            "glob.arc"
             "strings.arc"
             "colors.arc"
             "dbg.arc"
