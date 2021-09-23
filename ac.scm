@@ -66,6 +66,7 @@
         ((literal? s) (list 'quote (ac-quoted s)))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
+        ((eq? (xcar s) '%do) (ac-do (cdr s) env))
         ((eq? (xcar s) 'lexenv) (ac-lenv (cdr s) env))
         ((eq? (xcar s) 'syntax) (cadr (syntax-e e)))
         ((eq? (xcar (xcar s)) 'syntax) (stx-map ac e))
@@ -458,6 +459,17 @@
   (if (null? body)
       (list (list 'quote ar-nil))
       (ac-body body env)))
+
+(define (ac-do body (env (void)))
+  (if (void? env)
+      (let ((expr (ac-body* body (env*))))
+        (cond ((= (length expr) 0)
+               '(begin))
+              ((= (length expr) 1)
+               (car expr))
+              (#t `(begin ,@expr))))
+      (parameterize ((env* env))
+        (ac-do body))))
 
 ; (set v1 expr1 v2 expr2 ...)
 
