@@ -161,6 +161,10 @@
 (attribute rss        version        opstring)
 (attribute script     type           opstring)
 (attribute script     src            opstring)
+(attribute canvas     id             opsym)
+(attribute canvas     class          opstring)
+(attribute canvas     width          opnum)
+(attribute canvas     height         opnum)
 
 (mac gentag args (start-tag args))
 
