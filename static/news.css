@@ -49,7 +49,7 @@ a:visited { color:#828282; text-decoration:none; }
 
 .pagebreak {page-break-before:always}
 
-pre { overflow: auto; padding: 2px; }
+pre { overflow: auto; padding: 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
 pre:hover { overflow:auto }
 
 .votearrow {
