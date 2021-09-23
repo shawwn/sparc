@@ -619,7 +619,7 @@
      (trtd ,@body)))
 
 (mac minipage (label . body)
-  `(npage (+ site-name* bar* ,label) ,label
+  `(npage (+ ,label bar* site-name*) ,label
      (pagetop nil nil ,label)
      (trtd ,@body)))
 
