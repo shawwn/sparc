@@ -567,13 +567,13 @@
                             (lambda (,val) (set! ,var ,val)))))
                  (filter (lambda (x) (not (or (ar-false? x) (pair? x)))) env))))
 
-(define boxed* '())
+(define boxed* (make-parameter '()))
 
 (define (ac-boxed? op name)
   (let ((result
     (when (not (ar-false? name))
-      (when (not (ar-false? boxed*))
-        (let ((slot (assoc name boxed*)))
+      (when (not (ar-false? (boxed*)))
+        (let ((slot (assoc name (boxed*))))
           (case op
             ((get) (when (and slot (>= (length slot) 2)) (cadr slot)))
             ((set) (when (and slot (>= (length slot) 3)) (caddr slot)))
@@ -1292,10 +1292,10 @@
       (apply arc-eval-boxed expr args)))
 
 (define (arc-eval-boxed expr lexenv)
-  (w/restore boxed* (if (or (ar-false? boxed*)
-                            (ar-false? lexenv))
-                      lexenv
-                      (append lexenv boxed*))
+  (parameterize ((boxed* (if (or (ar-false? (boxed*))
+                                 (ar-false? lexenv))
+                             lexenv
+                             (append lexenv (boxed*)))))
     (arc-eval expr)))
 
 
