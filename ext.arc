@@ -11,7 +11,7 @@
 
 (when (try-require 'debug/repl)
 
-  #'(xdef resume resume)
+  ;#'(xdef resume resume)
 
   (mac debug ()
     `(w/env
