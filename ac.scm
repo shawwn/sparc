@@ -48,7 +48,7 @@
   (let ((s (syn x)))
     (syntax->datum s)))
 
-(define env* (make-parameter (list)))
+(define env* (make-parameter (list) #f 'env*))
 
 ; compile an Arc expression into a Scheme expression,
 ; both represented as s-expressions.
@@ -89,7 +89,7 @@
         ((syntax? s) s)
         (#t (err "Bad object in expression" s))))
 
-(define ac* (make-parameter ac%))
+(define ac* (make-parameter ac% #f 'ac%))
 
 (define (ac stx (env (env*)) (ns (arc-namespace)))
   (parameterize ((env* env))
@@ -568,7 +568,7 @@
                             (lambda (,val) (set! ,var ,val)))))
                  (filter (lambda (x) (not (or (ar-false? x) (pair? x)))) env))))
 
-(define boxed* (make-parameter '()))
+(define boxed* (make-parameter '() #f 'boxed*))
 
 (define (ac-boxed? op name)
   (let ((result
@@ -1312,7 +1312,7 @@
   (display "Use (quit) to quit, (tl) to return here after an interrupt.\n")
   (tl2))
 
-(define ac-that-expr* (make-parameter (void)))
+(define ac-that-expr* (make-parameter (void) #f 'ac-that-expr*))
 
 (define (ac-read-interaction src in)
   (parameterize ((read-accept-reader #t)
