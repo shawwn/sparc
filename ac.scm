@@ -119,13 +119,20 @@
           (list 'string-copy (unescape-ats s)))
       (list 'string-copy s)))     ; avoid immutable strings
 
+(define (keywordp x)
+  (and (symbol? x)
+       (let ((s (symbol->string x)))
+         (and (> (string-length s) 0)
+              (eq? (string-ref s 0) #\:)))))
+
 (define (literal? x)
   (or (boolean? x)
       (char? x)
       (string? x)
       (number? x)
       (bytes? x)
-      (ar-nil? x)))
+      (ar-nil? x)
+      (keywordp x)))
 
 (define (ssyntax? x)
   (and (symbol? x)
