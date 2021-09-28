@@ -6,8 +6,10 @@
 (load "ac.scm")
 (require 'ac)
 
-(require "brackets.scm")
-(use-bracket-readtable)
+(load "brackets.scm")
+(require 'brackets)
+
+(use-arc-readtable)
 
 (aload "arc.arc")
 (aload "libs.arc") 
