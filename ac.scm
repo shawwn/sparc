@@ -335,11 +335,7 @@
          (list 'quasiquote (ac-qq1 (+ level 1) (cadr x) env)))
         ((pair? x)
          (imap (lambda (x) (ac-qq1 level x env)) x))
-        ((eqv? x 'nil)
-         ar-nil)
-        ((eqv? x 't)
-         ar-t)
-        (#t x)))
+        (#t (ac-quoted x))))
 
 ; quasisyntax
 
