@@ -51,7 +51,7 @@
     ;(test? "-0X" (read "-0X"))
     ;(test? "-0Xg" (read "-0Xg"))
     (test? t (read "t"))
-    ;(test? (no t) (read "nil"))
+    (test? (no t) (read "nil"))
     (test? 'hi (read "hi"))
     (test? '"hi" (read "\"hi\""))
     (test? 'hi (read "|hi|"))
@@ -99,21 +99,21 @@
 ;  (test? true (is? false))
 ;  (test? true (is? (obj))))
 
-;(define-test no
-;  (test? true (no nil))
-;  (test? true (no null))
-;  (test? false (no true))
-;  (test? true (no false))
-;  (test? false (no (obj)))
-;  (test? false (no 0)))
+(define-test no
+  (test? true (no nil))
+  ;(test? true (no null))
+  (test? false (no true))
+  (test? true (no false))
+  (test? false (no (obj)))
+  (test? false (no 0)))
 
-;(define-test yes
-;  (test? false (yes nil))
-;  (test? false (yes null))
-;  (test? true (yes true))
-;  (test? false (yes false))
-;  (test? true (yes (obj)))
-;  (test? true (yes 0)))
+(define-test yes
+  (test? false (yes nil))
+  ;(test? false (yes null))
+  (test? true (yes true))
+  (test? false (yes false))
+  (test? true (yes (obj)))
+  (test? true (yes 0)))
 
 ;(define-test boolean
 ;  (test? true (or true false))
