@@ -149,7 +149,7 @@
   (test? 0 (apply * '(0 0)))
   (test? 4 (apply + '(2 2)))
   (test? 0 (apply + ()))
-  ;(test? 18 18.00)
+  (test? 18 18.00)
   (test? 4 (- 7 3))
   (test? 4 (apply - '(7 3)))
   ;(test? 0 (apply - ()))

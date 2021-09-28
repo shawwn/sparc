@@ -874,6 +874,7 @@
 
 (define (ar-is2 a b)
   (tnil (or (eqv? a b)
+            (and (number? a) (number? b) (= a b))
             (and (string? a) (string? b) (string=? a b))
             (and (ar-false? a) (ar-false? b)))))
 
