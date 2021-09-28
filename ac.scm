@@ -34,7 +34,8 @@
 
 (define (sdata p (eof eof))
   (parameterize ((read-accept-lang #f)
-                 (read-accept-reader #f))
+                 (read-accept-reader #f)
+                 (current-readtable #f))
     (let ((expr (ac-quoted (read p))))
       (if (eof-object? expr) eof expr))))
 
