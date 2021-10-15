@@ -1748,9 +1748,8 @@
                   (unesc (string->list s)))))
 
 
-(module bcrypt mzscheme
-  (require (lib "foreign.ss"))
-  (unsafe!)
+(module bcrypt racket/base
+  (require ffi/unsafe)
   (provide bcrypt)
   (define bcrypt* (get-ffi-obj "bcrypt" (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt"))
                    (_fun _string _string _pointer -> _void)))
@@ -1780,9 +1779,8 @@
 (xdef write-json write-json)
 (xdef read-json read-json)
 
-(module uuid mzscheme
-  (require (lib "foreign.ss"))
-  (unsafe!)
+(module uuid racket/base
+  (require ffi/unsafe)
   (provide uuid-generate)
 
   (define uuid-generate
