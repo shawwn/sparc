@@ -7,3 +7,4 @@ arc/
 static/place.txt
 static/traffic*
 .env
+*.swp
