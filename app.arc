@@ -777,7 +777,7 @@
         (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
 
 (def shell (cmd . args)
-  (tostring1
+  (tostring
     (shellrun cmd args)))
 
 (def GET (url)
