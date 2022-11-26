@@ -1,10 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
-# for now, just source the .env file
-if [ -f .env ]
-then
-  source .env
-fi
+dir="$(pwd)"
+bin="$0"
+while [ -L "${bin}" ]
+do
+    x="$(readlink "${bin}")"
+    cd "$(dirname "${bin}")"
+    bin="${x}"
+done
+cd "$(dirname "${bin}")"
+home="$(dirname "$(pwd)")"
+cd "${dir}"
 
-export DEV="${DEV:-1}"
-exec racket -t as.scm "$@"
+source "${home}/bin/setup.sh"
+set +e
+
+script="$1"
+shift
+
+exec "${ARC_HOST}" -t "${script:-${ARC_HOME}/as.scm}" "$@"

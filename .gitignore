@@ -8,3 +8,5 @@ static/place.txt
 static/traffic*
 .env
 *.swp
+/bin/racket
+/bin/racket-*.*

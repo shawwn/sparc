@@ -1,9 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-# for now, just source the .env file
-if [ -f .env ]
-then
-  source .env
-fi
+dir="$(pwd)"
+bin="$0"
+while [ -L "${bin}" ]
+do
+    x="$(readlink "${bin}")"
+    cd "$(dirname "${bin}")"
+    bin="${x}"
+done
+cd "$(dirname "${bin}")"
+home="$(dirname "$(pwd)")"
+cd "${dir}"
 
-exec racket -t site.scm "$@"
+exec "${home}/bin/arc" "${home}/site.scm" "$@"
