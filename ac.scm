@@ -14,6 +14,7 @@
 (require racket/async-channel)
 (require racket/struct)
 (require syntax/srcloc)
+(require racket/undefined)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -61,7 +62,7 @@
 (define (scm% e s env)
   s)
 
-(define (ac% e s env)
+(define (ac% e (s (syntax->datum e)) (env (env*)))
   (cond ((string? s) (ac-string s env))
         ((keyword? s) s)
         ((literal? s) (list 'quote (ac-quoted s)))
@@ -86,21 +87,21 @@
          (ac (list 'no (cons (cadar s) (cdr s))) env))
         ((eq? (xcar (xcar s)) 'andf) (ac-andf s env))
         ((pair? s) (ac-call (car s) (cdr s) env))
-        ((syntax? s) s)
-        (#t (err "Bad object in expression" s))))
+        (#t s)))
 
 (define ac* (make-parameter ac% #f 'ac%))
 
 (define (ac stx (env (env*)) (ns (arc-namespace)))
-  (parameterize ((env* env))
     (let* ((e (syn stx))
            (s (syntax->datum e))
            (expr ((ac*) e s env)))
       (parameterize ((current-namespace ns))
-        (namespace-syntax-introduce (syn expr stx))))))
+        (namespace-syntax-introduce (syn expr stx)))))
 
 (define ar-nil '())
 (define ar-t #t)
+(define unset undefined)
+(define (unset? x) (eq? x unset))
 
 (define (ar-nil? x)
   (eqv? x ar-nil))
@@ -120,10 +121,12 @@
       (list 'string-copy s)))     ; avoid immutable strings
 
 (define (keywordp x)
-  (and (symbol? x)
-       (let ((s (symbol->string x)))
-         (and (> (string-length s) 0)
-              (eq? (string-ref s 0) #\:)))))
+  (or (and (keyword? x) x)
+      (and (symbol? x)
+           (let ((s (symbol->string x)))
+             (and (> (string-length s) 0)
+                  (eq? (string-ref s 0) #\:)
+                  (symbol->keyword (string->symbol (substring s 1))))))))
 
 (define (literal? x)
   (or (boolean? x)
@@ -131,7 +134,7 @@
       (string? x)
       (number? x)
       (bytes? x)
-      (ar-nil? x)
+      (ar-false? x)
       (keywordp x)))
 
 (define (ssyntax? x)
@@ -287,7 +290,7 @@
                  keepsep?))))
 
 (define (ac-global-name s)
-  (string->symbol (string-append "_" (symbol->string s))))
+  (string->symbol (string-append (if (member s scm-reserved) "_" "") (symbol->string s))))
 
 (define (ac-var-ref s env)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
@@ -479,7 +482,8 @@
         (#t (cons (car a) (ac-arglist (cdr a))))))
 
 (define (ac-body body env)
-  (map (lambda (x) (ac x env)) body))
+  (parameterize ((env* env))
+    (map ac body)))
 
 ; like ac-body, but spits out a nil expression if empty
 
@@ -488,16 +492,13 @@
       (list (list 'quote ar-nil))
       (ac-body body env)))
 
-(define (ac-do body (env (void)))
-  (if (void? env)
-      (let ((expr (ac-body* body (env*))))
-        (cond ((= (length expr) 0)
-               '(begin))
-              ((= (length expr) 1)
-               (car expr))
-              (#t `(begin ,@expr))))
-      (parameterize ((env* env))
-        (ac-do body))))
+(define (ac-do body env)
+  (let ((expr (ac-body* body env)))
+    (cond ((= (length expr) 0)
+           '(begin))
+          ((= (length expr) 1)
+           (car expr))
+          (#t `(begin ,@expr)))))
 
 ; (set v1 expr1 v2 expr2 ...)
 
@@ -535,7 +536,8 @@
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
                      ((lex? a env) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
-                                                         ,n)))
+                                                         ,n
+                                                         #t)))
                n))
       (err "First arg to set must be a symbol" a)))
 
@@ -634,8 +636,8 @@
           ((and direct-calls (symbol? fn) (not (lex? fn env)) (bound? fn)
                 (procedure? (bound? fn)))
            (ac-global-call fn args env))
-          ((memf keyword? args)
-           `(,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+          ((memf keywordp args)
+           `(,(ac fn env) ,@(map (lambda (x) (or (keywordp x) (ac x env))) args)))
           ((= (length args) 0)
            `(ar-funcall0 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
           ((= (length args) 1)
@@ -650,10 +652,21 @@
            `(ar-apply ,(ac fn env)
                       (list ,@(map (lambda (x) (ac x env)) args)))))))
 
+(define (unzip-list l (vals '()) (keys '()))
+  (cond ((null? l) (list (reverse vals) (reverse keys)))
+        ((keywordp (car l))
+         (if (or (null? (cdr l))
+                 (keywordp (cadr l)))
+             (unzip-list (cdr l) vals (cons (list (keywordp (car l)) #t) keys))
+             (unzip-list (cddr l) vals (cons (list (keywordp (car l)) (cadr l)) keys))))
+        (#t (unzip-list (cdr l) (cons (car l) vals) keys))))
+
 (define (ac-mac-call m args env)
-  (let ((x1 (apply m args)))
-    (let ((x2 (ac x1 env)))
-      x2)))
+  (let* ((it (unzip-list args))
+         (args (car it))
+         (kwargs (cadr it))
+         (expr (keyword-apply m (map car kwargs) (map cadr kwargs) args)))
+    (ac expr env)))
 
 ; returns #f or the macro function
 
@@ -680,6 +693,24 @@
 
 ; is v lexically bound?
 
+(define scm-reserved '(
+  do lambda let let* and or if cond else when unless set!
+  while for loop case
+  define define-syntax define-values
+  begin begin-for-syntax
+  + - / *
+  < <= = == >= > 
+  #t #f true false t nil
+  car cdr caar cadr cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
+  lib require provide module load eof read write eval
+  length empty last keep set max min fill-table abs round count
+  eq eqv equal eq? eqv? equal?
+  cons list member assoc compose all map string thread
+  tag link only any nor private public
+  sort close error with-handlers
+  date tokens
+  place place* place/context place-kill
+))
 (define (lex? v env)
   (memq v env))
 
@@ -706,7 +737,7 @@
 (define-namespace-anchor arc-anchor)
 ; (define (arc-namespace) (namespace-anchor->namespace arc-anchor))
 
-(define arc-namespace current-namespace)
+(define arc-namespace (make-parameter (current-namespace) #f 'arc-namespace))
 
 ; run-time primitive procedures
 
@@ -718,7 +749,15 @@
   (syntax-rules ()
     ((xxdef a b)
      (let ((nm (ac-global-name 'a))
-           (a b))
+           (a b)
+           (val (namespace-variable-value 'a #t (lambda () (void)))))
+       (when (and (not (eqv? 'a 'b))
+                  (not (void? val)))
+         (display "*** redefining " (current-error-port))
+         (display 'a (current-error-port))
+         (display " (was " (current-error-port))
+         (write a (current-error-port))
+         (display ")\n" (current-error-port)))
        (namespace-set-variable-value! nm a)))))
 
 (define fn-signatures (make-hash))
@@ -757,7 +796,13 @@
 ; Scheme lists (e.g. . body of a macro).
 
 (define (ar-false? x)
-  (or (ar-nil? x) (eq? x #f)))
+  (or (ar-nil? x)
+      (eq? x #f)
+      (void? x)
+      (eq? x undefined)))
+
+(define (ar-true? x)
+  (not (ar-false? x)))
 
 ; call a function or perform an array ref, hash ref, &c
 
@@ -981,7 +1026,12 @@
         ((keyword? x)       'keyword)
         ((boolean? x)       'bool)
         ((syntax? x)        'syntax)
-        (#t                 (err "Type: unknown type" x))))
+        (#t                 (typeof x))))
+
+(define (typeof x)
+  (let ((tag (vector-ref (struct->vector x) 0)))
+    (string->symbol (substring (symbol->string tag) (string-length "struct:")))))
+
 (xdef type ar-type)
 
 (define (ar-rep x)
