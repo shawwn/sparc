@@ -15,6 +15,11 @@
 (require racket/struct)
 (require syntax/srcloc)
 (require racket/undefined)
+(require ffi/unsafe)
+(require ffi/unsafe/define)
+(require ffi/vector)
+(require ffi/cvector)
+(require ffi/unsafe/cvector)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -42,7 +47,7 @@
 
 (define (syn x (src #f))
   (if (syntax? x)
-      (syn (syntax->datum x) (or src x))
+      x
       (datum->syntax #f x (if (syntax? src) src #f))))
 
 (define (datum x)
@@ -63,15 +68,13 @@
   s)
 
 (define (ac% e (s (syntax->datum e)) (env (env*)))
-  (cond ((string? s) (ac-string s env))
-        ((keyword? s) s)
-        ((literal? s) (list 'quote (ac-quoted s)))
+  (cond ((literal? s) (ac-literal s))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
         ((eq? (xcar s) '%do) (ac-do (cdr s) env))
         ((eq? (xcar s) 'lexenv) (ac-lenv (cdr s) env))
         ((eq? (xcar s) 'syntax) (cadr (syntax-e e)))
-        ((eq? (xcar (xcar s)) 'syntax) (stx-map ac e))
+        ((eq? (xcar (xcar s)) 'syntax) (stx-map (lambda (x) (ac x env)) e))
         ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
         ((eq? (xcar s) 'quote) (list 'quote (ac-quoted (cadr s))))
         ((eq? (xcar s) 'quasiquote) (ac-qq (cadr s) env))
@@ -100,6 +103,8 @@
 
 (define ar-nil '())
 (define ar-t #t)
+(define nil '())
+(define t #t)
 (define unset undefined)
 (define (unset? x) (eq? x unset))
 
@@ -108,15 +113,14 @@
 
 (define atstrings #f)
 
-(define (ac-string s env)
+(define (ac-string s)
   (if atstrings
       (if (atpos s 0)
           (ac (cons 'string (map (lambda (x)
                                    (if (string? x)
                                        (unescape-ats x)
                                        x))
-                                 (codestring s)))
-              env)
+                                 (codestring s))))
           (list 'string-copy (unescape-ats s)))
       (list 'string-copy s)))     ; avoid immutable strings
 
@@ -124,9 +128,10 @@
   (or (and (keyword? x) x)
       (and (symbol? x)
            (let ((s (symbol->string x)))
-             (and (> (string-length s) 0)
-                  (eq? (string-ref s 0) #\:)
-                  (symbol->keyword (string->symbol (substring s 1))))))))
+             (and (> (string-length s) 1)
+                  (eq? (string-ref s (- (string-length s) 1)) #\:)
+                  (not (eq? (string-ref s (- (string-length s) 2)) #\:))
+                  (symbol->keyword (string->symbol (substring s 0 (- (string-length s) 1)))))))))
 
 (define (literal? x)
   (or (boolean? x)
@@ -135,7 +140,13 @@
       (number? x)
       (bytes? x)
       (ar-false? x)
+      (syntax? x)
       (keywordp x)))
+
+(define (ac-literal x)
+  (cond ((null? x) (list 'quote x))
+        ((string? x) (ac-string x))
+        (#t (ac-quoted x))))
 
 (define (ssyntax? x)
   (and (symbol? x)
@@ -290,7 +301,7 @@
                  keepsep?))))
 
 (define (ac-global-name s)
-  (string->symbol (string-append (if (member s scm-reserved) "_" "") (symbol->string s))))
+  (string->symbol (string-append (if (member s scm-reserved) "arc--" "") (symbol->string s))))
 
 (define (ac-var-ref s env)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
@@ -306,6 +317,8 @@
          ar-nil)
         ((eqv? x 't)
          ar-t)
+        ((keywordp x)
+         (keywordp x))
         (#t x)))
 
 (define (ac-unquoted x)
@@ -637,7 +650,7 @@
                 (procedure? (bound? fn)))
            (ac-global-call fn args env))
           ((memf keywordp args)
-           `(,(ac fn env) ,@(map (lambda (x) (or (keywordp x) (ac x env))) args)))
+           `(,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
           ((= (length args) 0)
            `(ar-funcall0 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
           ((= (length args) 1)
@@ -748,9 +761,9 @@
 (define-syntax xdef
   (syntax-rules ()
     ((xxdef a b)
-     (let ((nm (ac-global-name 'a))
-           (a b)
-           (val (namespace-variable-value 'a #t (lambda () (void)))))
+     (let* ((nm (ac-global-name 'a))
+            (a b)
+            (val (namespace-variable-value nm #t (lambda () (void)))))
        (when (and (not (eqv? 'a 'b))
                   (not (void? val)))
          (display "*** redefining " (current-error-port))
@@ -758,7 +771,7 @@
          (display " (was " (current-error-port))
          (write a (current-error-port))
          (display ")\n" (current-error-port)))
-       (namespace-set-variable-value! nm a)))))
+       (namespace-set-variable-value! nm a #t)))))
 
 (define fn-signatures (make-hash))
 
@@ -1052,8 +1065,6 @@
 
 (xdef ccc call-with-current-continuation)
 
-(xdef call/ec call-with-escape-continuation)
-
 (xdef modtime file-or-directory-modify-seconds)
 
 (xdef infile  open-input-file)
@@ -1264,8 +1275,6 @@
              ar-t))
 
 (define (wrapnil f) (lambda args (apply f args) ar-nil))
-
-(xdef sleep (wrapnil sleep))
 
 ; Will system "execute" a half-finished string if thread killed
 ; in the middle of generating it?
@@ -1766,6 +1775,7 @@
               (let* ((rest (substring s (+ i 1)))
                      (in (open-input-string rest))
                      (expr (read in))
+                     (expr (if (eq? (xcar expr) '%braces) (cadr expr) expr))
                      (i2 (let-values (((x y z) (port-next-location in))) z)))
                 (close-input-port in)
                 (cons expr (codestring (substring rest (- i2 1))))))
@@ -1798,29 +1808,18 @@
                   (unesc (string->list s)))))
 
 
-(module bcrypt racket/base
-  (require ffi/unsafe)
-  (provide bcrypt)
-  (define bcrypt* (get-ffi-obj "bcrypt" (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt"))
-                   (_fun _string _string _pointer -> _void)))
+(define bcrypt-lib (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt")))
 
-  (define bcrypt ; (passwd salt) see BSD manual crypt(3)
-    (let* ((p (malloc 'atomic 256)))
-      (lambda (pwd salt . failed)
-        (memset p 0 256)
-        (bcrypt* pwd salt p)
-        (let ((x (cast p _pointer _string)))
-          (if (or (<= (string-length x) 0)
-                  (not (eqv? (string-ref x 0) #\$)))
-              (if (pair? failed)
-                  (car failed)
-                  (error "bcrypt failed; use a salt like (+ \"$2a$10$\" (rand-string 22))"))
-              x))))))
-(require 'bcrypt)
+(define bcrypt-fn (get-ffi-obj "bcrypt" bcrypt-lib (_fun _string _string (out : _bytes = (make-bytes 256)) -> _void -> (cast out _bytes _string/utf-8))))
 
-(xdef bcrypt (lambda args
-               (atomic-invoke (lambda ()
-                 (apply bcrypt args)))))
+(define (bcrypt pwd salt . failed) ; see BSD manual crypt(3)
+  (let ((x (bcrypt-fn pwd salt)))
+    (if (or (<= (string-length x) 0)
+            (not (eqv? (string-ref x 0) #\$)))
+      (if (pair? failed)
+        (car failed)
+        (error "bcrypt failed; use a salt like (+ \"$2a$10$\" (rand-string 22))"))
+      x)))
 
 (xdef system-type system-type)
 
@@ -1829,21 +1828,15 @@
 (xdef write-json write-json)
 (xdef read-json read-json)
 
-(module uuid racket/base
-  (require ffi/unsafe)
-  (provide uuid-generate)
+(define uuid-generate
+  (unless (eqv? (system-type) 'windows)
+    (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+      (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out)))))
 
-  (define uuid-generate
-    (unless (eqv? (system-type) 'windows)
-      (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-        (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out)))))
-
-  (define uuid-unparse
-    (unless (eqv? (system-type) 'windows)
-      (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-        (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8)))))
-  )
-(require 'uuid)
+(define uuid-unparse
+  (unless (eqv? (system-type) 'windows)
+    (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+      (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8)))))
 
 (xdef uuid uuid-generate)
 
