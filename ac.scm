@@ -844,6 +844,8 @@
          (hash-ref fn
                    (car args)
                    (if (pair? (cdr args)) (cadr args) ar-nil)))
+        ((sequence? fn)
+         (sequence-ref fn (car args)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
 ; another possibility: constant in functional pos means it gets
@@ -1005,6 +1007,7 @@
 (xdef len (lambda (x)
              (cond ((string? x) (string-length x))
                    ((hash? x) (hash-count x))
+                   ((sequence? x) (sequence-length x))
                    (#t (length x)))))
 
 (define (ar-tag type rep)
