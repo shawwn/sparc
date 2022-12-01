@@ -572,7 +572,7 @@ Strict-Transport-Security: max-age=31556900
     (fnid-field (fnid f k))
     (bodyfn)))
 
-(mac fnform (f bodyfn redir (o k '(lexkey)))
+(mac fnform (f bodyfn (o redir) (o k '(lexkey)))
   `(fnformf ,f ,bodyfn ,redir ,k))
 
 ; Could also make a version that uses just an expr, and var capture.
