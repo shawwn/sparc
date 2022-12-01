@@ -723,6 +723,7 @@
   sort close error with-handlers
   date tokens
   place place* place/context place-kill
+  compile
 ))
 (define (lex? v env)
   (memq v env))
