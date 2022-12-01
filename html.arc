@@ -181,7 +181,7 @@
 (def start-tag (spec)
   (if (atom spec)
       `(pr ,(string "<" spec ">"))
-      (let opts (tag-options (car spec) (pair (cdr spec)))
+      (let opts (tag-options (car spec) (hug (cdr spec)))
         (if (all [isa _ 'string] opts)
             `(pr ,(string "<" (car spec) (apply string opts) ">"))
             `(do (pr ,(string "<" (car spec)))

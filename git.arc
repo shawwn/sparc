@@ -12,7 +12,7 @@
   (map git--read-branch (lines:shell 'git 'branch '-rv '--all)))
 
 (def git-branch-refs ((o ref))
-  (aand (pair:tokens:shell 'git 'show-ref)
+  (aand (hug:tokens:shell 'git 'show-ref)
         (map (fn ((hash name))
                (list name (git-hash-id hash)))
              it)))

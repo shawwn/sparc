@@ -75,13 +75,13 @@
       nil
       (cons (f (car xs)) (map1 f (cdr xs)))))
 
-(def pair (xs (o f list))
+(def hug (xs (o f list))
   (if (no xs)
        nil
       (no (cdr xs))
        (list (list (car xs)))
       (cons (f (car xs) (cadr xs))
-            (pair (cddr xs) f))))
+            (hug (cddr xs) f))))
 
 (assign mac (annotate 'mac
               (fn (name parms . body)
@@ -118,9 +118,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def alref (al key) (cadr (assoc key al)))
 
 (mac with (parms . body)
-  `((fn ,(map1 car (pair parms))
+  `((fn ,(map1 car (hug parms))
      ,@body)
-    ,@(map1 cadr (pair parms))))
+    ,@(map1 cadr (hug parms))))
 
 (mac let (var val . body)
   `(with (,var ,val) ,@body))
@@ -309,7 +309,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (> n 0) (nthcdr (- n 1) (cdr xs))
               xs))
 
-; Generalization of pair: (tuples x) = (pair x)
+; Generalization of hug: (tuples x) = (hug x)
 
 (def tuples (xs (o n 2))
   (if (no xs)
@@ -456,13 +456,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def expand=list (terms)
   `(do ,@(map (fn ((p v)) (expand= p v))  ; [apply expand= _]
-                  (pair terms))))
+                  (hug terms))))
 
 (mac = args
   (expand=list args))
 
 (mac or= args
-  `(do ,@(map [cons 'or-assign _] (pair args))))
+  `(do ,@(map [cons 'or-assign _] (hug args))))
 
 (mac or-assign (slot value)
   `(atomic
@@ -1128,7 +1128,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                        (dotted (cdr x))))))
 
 (def fill-table (table data)
-  (each (k v) (pair data) (= (table k) v))
+  (each (k v) (hug data) (= (table k) v))
   table)
 
 (def keys (h) 
@@ -1151,7 +1151,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac obj args
   `(listtab (list ,@(map (fn ((k v))
                            `(list ',k ,v))
-                         (pair args)))))
+                         (hug args)))))
 
 (def load-table (file (o eof))
   (w/infile i file (read-table i eof)))
@@ -1185,7 +1185,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                      new)
                    (err "Can't copy " x))
     (map (fn ((k v)) (= (x2 k) v))
-         (pair args))
+         (hug args))
     x2))
 
 (def abs (n)
@@ -1321,20 +1321,20 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     `(= (templates* ',name) 
         (+ (mappend templates* ',(rev includes))
            (list ,@(map (fn ((k v)) `(list ',k (fn () ,v)))
-                        (pair fields)))))))
+                        (hug fields)))))))
 
 (mac addtem (name . fields)
   `(= (templates* ',name) 
       (union (fn (x y) (is (car x) (car y)))
              (list ,@(map (fn ((k v)) `(list ',k (fn () ,v)))
-                          (pair fields)))
+                          (hug fields)))
              (templates* ',name))))
 
 (def inst (tem . args)
   (let x (table)
     (each (k v) (if (acons tem) tem (templates* tem))
       (unless (no v) (= (x k) (v))))
-    (each (k v) (pair args)
+    (each (k v) (hug args)
       (= (x k) v))
     x))
 
@@ -1846,7 +1846,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; idea: get rid of strings and just use symbols
 ; could a string be (#\a #\b . "") ?
 ; better err msg when , outside of a bq
-; idea: parameter (p foo) means in body foo is (pair arg)
+; idea: parameter (p foo) means in body foo is (hug arg)
 ; idea: make ('string x) equiv to (coerce x 'string) ?  or isa?
 ;   quoted atoms in car valuable unused semantic space
 ; idea: if (defun foo (x y) ...), make (foo 1) return (fn (y) (foo 1 y))

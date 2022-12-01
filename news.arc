@@ -1185,7 +1185,7 @@ function vote(node) {
           ymd1 (date (- (date-seconds ymd0) (* 24 60 60)))
           ymd2 (date (- (date-seconds ymd1) (* 24 60 60)))
           ts (strftime "+%Y-%m-%d %H:%M:%S GMT" secs)
-          (daily weekly) (pair (plot-traffic)))
+          (daily weekly) (hug (plot-traffic)))
     (tostring:minipage "traffic @ts"
       (center
         (pr "recent 48 hours")

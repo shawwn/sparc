@@ -4,7 +4,7 @@
            
 (or= bodops* (table))
 
-(each (k v) (pair
+(each (k v) (hug
    '(let 2 with 1 while 1 def 2 fn 1 rfn 2 afn 1
      when 1 unless 1 after 1 whilet 2 for 3 each 2 whenlet 2 awhen 1
      whitepage 0 tag 1 form 1 aform 1 aformh 1 w/link 1 textarea 3
