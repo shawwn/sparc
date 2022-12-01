@@ -81,13 +81,15 @@
       (each p (map post (rev (range 1 postid*)))
         (tag li (link p!title (post-url p)))))))
 
-(defop blog req
-  (let user (get-user req)
-    (blogpage
-      (for i 0 4
-        (awhen (posts* (- postid* i)) 
-          (display-post user it)
-          (br 3))))))
+(def blogmain ((o user (get-user)))
+  (blogpage
+    (for i 0 4
+      (awhen (posts* (- postid* i)) 
+        (display-post user it)
+        (br 3)))))
+
+(defop blog req (blogmain (get-user req)))
+(defop ||   req (blogmain (get-user req)))
 
 (def bsv ((o port 8080))
   (ensure-dir postdir*)
