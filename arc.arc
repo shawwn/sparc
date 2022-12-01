@@ -131,16 +131,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(let ,(car parms) ,(cadr parms) 
          (withs ,(cddr parms) ,@body))))
 
-; Rtm prefers to overload + to do this
-
-(def join args
-  (if (no args)
-      nil
-      (let a (car args) 
-        (if (no a) 
-            (apply join (cdr args))
-            (cons (car a) (apply join (cdr a) (cdr args)))))))
-
 ; Need rfn for use in macro expansions.
 
 (mac rfn (name parms . body)
@@ -447,7 +437,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (if (is (car f) 'compose)
        ((afn (fs)
           (if (caris (car fs) 'compose)            ; nested compose
-               (self (join (cdr (car fs)) (cdr fs)))
+               (self (+ (cdr (car fs)) (cdr fs)))
               (cdr fs)
                (list (car fs) (self (cdr fs)))
               (cons (car fs) args)))
