@@ -2016,7 +2016,7 @@ function suggestTitle() {
   (and (valid-url url)
        (let toks (parse-site (rem #\space url))
          (if (isa (saferead (car toks)) 'int)
-             (tostring (prall toks "" "."))
+             (tostring (prall toks "."))
              (let (t1 t2 t3 . rest) toks
                (if (and (~in t3 nil "www")
                         (or (mem t1 multi-tld-countries*)

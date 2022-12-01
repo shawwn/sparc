@@ -1098,14 +1098,16 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; Could prob be generalized beyond printing.
 
-(def prall (elts (o init "") (o sep ", "))
+(def prall (elts (o sep ", ") (o init "") (o end ""))
+  (pr init)
   (when elts
-    (pr init (car elts))
-    (map [pr sep _] (cdr elts))
-    elts))
+    (pr (car elts))
+    (map [pr sep _] (cdr elts)))
+  (pr end)
+  elts)
              
 (def prs args     
-  (prall args "" #\space))
+  (prall args #\space))
 
 (def tree-subst (old new tree)
   (if (is tree old)
