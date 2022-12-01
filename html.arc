@@ -195,7 +195,7 @@
 (def end-tag (spec)
   `(pr ,(string "</" (carif spec) ">")))
 
-(def literal (x)
+(def html-literal (x)
   (case (type x)
     sym   (in x nil t)
     cons  (caris x 'quote)
@@ -228,7 +228,7 @@
                 (tag-options spec rest)))))))
 
 (def precomputable-tagopt (val)
-  (and (literal val)
+  (and (html-literal val)
        (no (and (is (type val) 'string) (find #\@ val)))))
 
 (def br ((o n 1))
