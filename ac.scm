@@ -1268,6 +1268,9 @@
 ; (xdef setuid setuid)
 (xdef setuid (lambda args ar-nil))
 
+(define getuid (get-ffi-obj 'getuid #f (_fun -> _int)))
+(xdef getuid getuid)
+
 (xdef new-thread thread)
 (xdef kill-thread kill-thread)
 (xdef break-thread break-thread)
