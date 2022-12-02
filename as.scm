@@ -4,5 +4,5 @@
 ; http://localhost:8080
 
 (require "arc.scm")
-(tl)
+(interact)
 

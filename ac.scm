@@ -1375,8 +1375,8 @@
       (newline)
       (tle))))
 
-(define (tl)
-  (display "Use (quit) to quit, (tl) to return here after an interrupt.\n")
+(define (interact)
+  (display "Use (quit) to quit, (interact) to return here after an interrupt.\n")
   (tl2))
 
 (define ac-that-expr* (make-parameter (void) #f 'ac-that-expr*))
