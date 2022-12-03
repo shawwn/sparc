@@ -1601,8 +1601,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def ero args
   (w/stdout (stderr) 
     (each a args 
-      (write a)
-      (writec #\space))
+      (when a
+        (disp a)
+        (writec #\space)))
     (writec #\newline))
   (car args))
 
