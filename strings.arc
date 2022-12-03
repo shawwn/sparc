@@ -230,7 +230,7 @@
       (string str "s")))
 
 (def plural (n x)
-  (string n #\  (pluralize n x)))
+  (string n #\space (pluralize n x)))
 
 
 ; http://www.eki.ee/letter/chardata.cgi?HTML4=1
