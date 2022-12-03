@@ -42,8 +42,8 @@
   (parameterize ((read-accept-lang #f)
                  (read-accept-reader #f)
                  (current-readtable #f))
-    (let ((expr (ac-quoted (read p))))
-      (if (eof-object? expr) eof expr))))
+    (let ((expr (read p)))
+      (if (eof-object? expr) eof (ac-quoted expr)))))
 
 (define (syn x (src #f))
   (if (syntax? x)
