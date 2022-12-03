@@ -1065,7 +1065,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def alphadig (c) (or (letter c) (digit c)))
 
 (def punc (c)
-  (in c #\. #\, #\; #\: #\! #\?))
+  (in c #\. #\, #\; #\: #\! #\?
+      ))
 
 (def readline ((o str (stdin)))
   (awhen (readc str)
