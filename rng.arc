@@ -121,11 +121,11 @@
 (def randu32 () (randu 32))
 (def randu64 () (randu 64))
 
-(def random-seed ()
+(def randseed ()
   (randu64))
 
 (def threefry-seed ((o seed))
-  (withs (v (ensure-u64 (or seed (random-seed)))
+  (withs (v (ensure-u64 (or seed (randseed)))
           k1 (rshift v 32)
           k2 (bitwise-and v (- (lshift 1 32) 1)))
     (list k1 k2)))
