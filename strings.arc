@@ -216,6 +216,11 @@
             (pr s))))
     (leftpad (string s) digits c)))
 
+(def partition (pat seq (o start 0))
+  (whenlet i (findsubseq pat seq start)
+    (list (cut seq start i)
+          (cut seq i (+ i (len pat)))
+          (cut seq (+ i (len pat))))))
 
 ; English
 
