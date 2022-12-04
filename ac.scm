@@ -929,10 +929,16 @@
 
 ; for (is x y)
 
+(define (ar-id a b)
+  (or (eqv? a b)
+      (and (number? a) (number? b) (= a b))
+      (and (string? a) (string? b) (string=? a b))))
+
+(xdef id ar-id)
+
 (define (ar-is2 a b)
-  (tnil (or (eqv? a b)
-            (and (number? a) (number? b) (= a b))
-            (and (string? a) (string? b) (string=? a b))
+  (tnil (or (ar-id a b)
+            (and (bytes? a) (bytes? b) (bytes=? a b))
             (and (ar-false? a) (ar-false? b)))))
 
 ; for all other uses of is
