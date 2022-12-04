@@ -731,6 +731,10 @@
 (define (xcar x)
   (and (pair? x) (car x)))
 
+(define (xcdr x)
+  (or (and (pair? x) (cdr x))
+      (and (null? x) x)))
+
 ; The next two are optimizations, except work for macros.
 
 (define (decompose fns args)
