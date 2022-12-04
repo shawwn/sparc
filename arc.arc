@@ -590,6 +590,19 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,@(cdr args)
        ,g)))
 
+(mac guard body
+  `(on-err [list nil _]
+           (fn () (list t (do ,@body)))))
+
+(mac eif (var expr (o fail var) . body)
+  (w/uniq ok
+    `(let (,ok ,var) (guard ,expr)
+       (if ,ok (do ,@body) ,fail))))
+
+(mac errsafe (expr)
+  `(on-err (fn (c) nil)
+           (fn () ,expr)))
+
 (def listify (x)
   (if (alist x) x (list x)))
 
@@ -1387,10 +1400,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac defcache (name lasts . body)
   `(safeset ,name (cache (fn () ,lasts)
                          (fn () ,@body))))
-
-(mac errsafe (expr)
-  `(on-err (fn (c) nil)
-           (fn () ,expr)))
 
 (def saferead (arg) (errsafe:read arg))
 
