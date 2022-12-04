@@ -17,10 +17,12 @@
 ;      ,(read/recursive port #\[ #f)))
 
 (define (arc-read-square-brackets ch port src line col pos)
-  #`(%brackets #,@(read-syntax/recursive ch port #\[ #f)))
+  (let ((stx (read-syntax/recursive ch port #\[ #f)))
+    (datum->syntax #f `(%brackets ,@(syntax-e stx)) stx)))
 
 (define (arc-read-curly-braces ch port src line col pos)
-  #`(%braces #,@(read-syntax/recursive ch port #\{ #f)))
+  (let ((stx (read-syntax/recursive ch port #\{ #f)))
+    (datum->syntax #f `(%braces ,@(syntax-e stx)) stx)))
   
 ; a readtable that is just like the builtin except for []s
 
