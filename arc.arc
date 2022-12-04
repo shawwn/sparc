@@ -920,9 +920,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
    (if (isa src 'string) (instring src) src)
    n))
 
-(def allchars (str)
+(def allbytes ((o str (stdin)))
+  (drain (readb str)))
+
+(def allchars ((o str (stdin)))
   (tostring (whiler c (readc str nil) no
               (writec c))))
+
+(def filebytes (name)
+  (w/infile s name (allbytes s)))
 
 (def filechars (name)
   (w/infile s name (allchars s)))
