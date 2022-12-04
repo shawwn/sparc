@@ -1406,12 +1406,25 @@
   (let ((in ((current-get-interaction-input-port))))
     (parameterize ((current-read-interaction ac-read-interaction))
       ((current-read-interaction) (object-name in) in))))
+
+(define (pp-to-string val)
+  (let* ((s (disp-to-string val pretty-print))
+         (n (string-length s)))
+    (if (and (> n 0)
+             (char=? (string-ref s 0) #\'))
+      (substring s 1 (- n 1))
+      (substring s 0 (- n 1)))))
+
+(define (pp val (port (current-output-port)))
+  (display (pp-to-string val) port)
+  (display #\newline port))
  
 (define (ac-prompt-print val)
   (namespace-set-variable-value! (ac-global-name 'that) val)
   (namespace-set-variable-value! (ac-global-name 'thatexpr) (ac-that-expr*))
-  (unless (void? val)
-    (pretty-print val))
+  (unless (or (void? val)
+              (ar-nil? val))
+    (pp val))
   val)
 
 (define (tl2)
@@ -1519,9 +1532,9 @@
                         (f)))))))
 (xdef on-err on-err)
 
-(define (disp-to-string x)
+(define (disp-to-string x (writer display))
   (let ((o (open-output-string)))
-    (display x o)
+    (writer x o)
     (close-output-port o)
     (get-output-string o)))
 
