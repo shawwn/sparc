@@ -905,9 +905,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; inconsistency between names of readfile[1] and writefile
 
-(def readfile (name) (w/infile s name (drain (read s))))
+(def codefile (name) (w/infile s name (drain (read-code s eof) eof)))
 
-(def readfile1 (name) (w/infile s name (read s)))
+(def readfile (name) (w/infile s name (drain (read s eof) eof)))
+
+(def readfile1 (name (o eof)) (w/infile s name (read s eof)))
 
 (def readall (src (o n) (o data t))
   ((afn (i n)
