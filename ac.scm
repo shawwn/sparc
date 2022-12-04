@@ -788,6 +788,8 @@
   (hash-set! fn-signatures a (list parms))
   b)
 
+(xdef eof eof)
+
 (xdef sig fn-signatures)
 
 (xdef quoted ac-quoted)
@@ -1051,6 +1053,7 @@
         ((keyword? x)       'keyword)
         ((boolean? x)       'bool)
         ((syntax? x)        'syntax)
+        ((eof-object? x)    'eof)
         (#t                 (typeof x))))
 
 (define (typeof x)

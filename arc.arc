@@ -766,8 +766,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,@(map [do `(aif ,_ (,ga it))]
               body))))
 
-(def eof args (if args (apply is eof args) eof))
-
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
 (mac drain (expr (o eof nil))
@@ -911,9 +909,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def readfile1 (name) (w/infile s name (read s)))
 
-(def readall (src (o n))
+(def readall (src (o n) (o data t))
   ((afn (i n)
-    (let x (read i eof)
+    (let x (read i eof data)
       (if (or (is x eof) (and n (<= n 0)))
           nil
           (cons x (self i (and n (- n 1)))))))
