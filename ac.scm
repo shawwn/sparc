@@ -1356,6 +1356,12 @@
                 (rename-file-or-directory old new #t)
                 ar-nil))
 
+(define (ar-expand-path name (directory (current-directory)))
+  (let ((directory (path->complete-path (expand-user-path directory))))
+    (path->string (simplify-path (path->complete-path (expand-user-path name) directory)))))
+
+(xdef expandpath ar-expand-path)
+
 (define-syntax w/restore
   (syntax-rules ()
     ((_ var val body ...)
