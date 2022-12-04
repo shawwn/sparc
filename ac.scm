@@ -841,15 +841,13 @@
          (apply fn args))
         ((pair? fn)
          (list-ref fn (car args)))
-        ((ar-nil? fn)
-         fn)
         ((string? fn)
          (string-ref fn (car args)))
         ((hash? fn)
          (hash-ref fn
                    (car args)
                    (if (pair? (cdr args)) (cadr args) ar-nil)))
-        ((sequence? fn)
+        ((and (sequence? fn) (not (null? fn)))
          (sequence-ref fn (car args)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
