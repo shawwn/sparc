@@ -29,7 +29,26 @@
 
 ; sread = scheme read. eventually replace by writing read
 
-(struct ar-tagged (type rep) #:prefab)
+(define (car? l . k)
+  (and (pair? l)
+       (if (null? k)
+           (car l)
+         (let ((k (car k)))
+           (if (procedure? k)
+               (k (car l))
+               (eq? (car l) k))))))
+
+(define (ar-tagged type . rep)
+  `(lit ,type ,@rep))
+
+(define (ar-tagged? x)
+  (car? x 'lit))
+
+(define (ar-tagged-type x)
+  (cadr x))
+
+(define (ar-tagged-rep x)
+  (caddr x))
 
 (define (sread p (eof eof))
   (parameterize ((read-accept-lang #t)
@@ -141,10 +160,12 @@
       (bytes? x)
       (ar-false? x)
       (syntax? x)
-      (keywordp x)))
+      (keywordp x)
+      (ar-tagged? x)))
 
 (define (ac-literal x)
   (cond ((null? x) (list 'quote x))
+        ((ar-tagged? x) (list 'quote x))
         ((string? x) (ac-string x))
         (#t (ac-quoted x))))
 
