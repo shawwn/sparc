@@ -591,7 +591,7 @@
   )
 
 (defcache memusage 5
-  ;(repeat 3 (seval!collect-garbage 'major))
+  ;(repeat 3 (#'collect-garbage 'major))
   (memory))
 
 (def admin-bar (user elapsed whence)
@@ -1264,10 +1264,10 @@ function vote(node) {
               (row d (pr:num r) (pr:num u))))))
       (pr:traffic-page)))
 
-(seval '(require racket/os))
+#'(require racket/os)
 
 (defop uptime req
-  (let ((o s "00") (o m "00") (o h "00") (o d "00")) (rev:tokens (trim:shell "ps -o etime= -p" (seval!getpid)) [in _ #\- #\:])
+  (let ((o s "00") (o m "00") (o h "00") (o d "00")) (rev:tokens (trim:shell "ps -o etime= -p" (#'getpid)) [in _ #\- #\:])
     (pr:string d "d " h "h " m "m " s "s")))
 
 (newsop lists ()

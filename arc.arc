@@ -541,7 +541,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                            start)
                        0 n))
       (if (isa seq 'string)
-          (seval!substring seq start end)
+          (#'substring seq start end)
           (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
@@ -968,12 +968,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (repeat ,n (push ,expr ,ga))
        (rev ,ga))))
 
-(seval '(require racket/random))
+#'(require racket/random)
 
-(withs (n 1024 s (seval!crypto-random-bytes n) bytes-ref seval!bytes-ref)
+(withs (n 1024 s (#'crypto-random-bytes n) bytes-ref #'bytes-ref)
   (def randb ()
     (atomic
-      (if (<= n 0) (= n 1024 s (seval!crypto-random-bytes 1024)))
+      (if (<= n 0) (= n 1024 s (#'crypto-random-bytes 1024)))
       (bytes-ref s (-- n)))))
 
 ; rejects bytes >= 248 lest digits be overrepresented

@@ -772,7 +772,7 @@
 
 (def shellrun (cmd (o args))
   (let s (shellargs cmd args)
-    (let code (seval!system/exit-code s)
+    (let code (#'system/exit-code s)
       (unless (is code 0)
         (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
 
@@ -790,7 +790,7 @@
         (whenlet p3 (posmatch ">" s p1)
           (trim (cut s (+ p3 1) p2)))))))
 
-(seval '(require racket/date))
+#'(require racket/date)
 
 (def mindate ((o secs (seconds)))
   (cut (rev:timedate secs) 0 5))
@@ -799,13 +799,13 @@
   (cut (rev:timedate secs) 0 4))
 
 (defmemo date-seconds ((Y m d (o H 0) (o M 0) (o S 0)))
-  (seval!find-seconds S M H d m Y #f))
+  (#'find-seconds S M H d m Y #f))
 
 (defmemo date-yearday (ymd)
-  (seval!date-year-day:seval!seconds->date:date-seconds ymd))
+  (#'date-year-day (#'seconds->date (date-seconds ymd))))
 
 (defmemo date-weekday (ymd)
-  (seval!date-week-day:seval!seconds->date:date-seconds ymd))
+  (#'date-week-day (#'seconds->date (date-seconds ymd))))
 
 (defmemo date-weekday-name (ymd (o short t))
   (let s (days* (date-weekday ymd))

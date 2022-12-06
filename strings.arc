@@ -42,7 +42,7 @@
         (if (f (seq i)) (a i))))))
 
 (def lines (s)
-  (seval!sequence->list (seval!in-lines (instring s))))
+  (#'sequence->list (#'in-lines (instring s))))
 
 (def slices (s test)
   (accum a

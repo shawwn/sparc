@@ -92,7 +92,7 @@
              (assign *debug nil))))))
 
 (def pprint (x)
-  (seval!pretty-print x)
+  (#'pretty-print x)
   x)
 
 (mac w/dbg body

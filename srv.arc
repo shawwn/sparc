@@ -291,16 +291,14 @@ Strict-Transport-Security: max-age=31556900
 (def static-src (filename)
   (string "/" filename "?" (shashfile (+ staticdir* filename))))
 
-(seval '(require file/sha1))
-
-(= sha1 seval!sha1)
+#'(require file/sha1)
 
 (def shash (str)
-  (sha1 (instring str)))
+  (#'sha1 (instring str)))
 
 (defmemo shashfile-1 (filename modtime)
   (w/infile i filename
-    (sha1 i)))
+    (#'sha1 i)))
 
 (def shashfile (filename)
   (shashfile-1 filename (modtime filename)))
