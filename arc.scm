@@ -3,14 +3,16 @@
 (compile-allow-set!-undefined #t)
 (compile-enforce-module-constants #f)
 
-(load "ac.scm")
+(define-runtime-path ac-scm "ac.scm")
+(define-runtime-path brackets-scm "brackets.scm")
+(define-runtime-path arc-arc "arc.arc")
+
+(load ac-scm)
 (require 'ac)
 
-(load "brackets.scm")
+(load brackets-scm)
 (require 'brackets)
-
 (use-arc-readtable)
 
-(aload "arc.arc")
-(aload "libs.arc") 
-
+(aload arc-arc)
+(arc-eval '(load (libpath "libs.arc")))

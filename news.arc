@@ -7,8 +7,8 @@
 
 (declare 'atstrings t)
 
-(load "firebase.arc")
-(load "algolia.arc")
+(load (libpath "firebase.arc"))
+(load (libpath "algolia.arc"))
 
 (= site-name*    "Tensorfork Labs"
    site-abbrev*  "TL"
@@ -82,10 +82,10 @@
 
 ; Load and Save
 
-(= newsdir*  "arc/news/"
-   storydir* "arc/news/story/"
-   profdir*  "arc/news/profile/"
-   votedir*  "arc/news/vote/")
+(= newsdir*  (libpath "arc/news/")
+   storydir* (libpath "arc/news/story/")
+   profdir*  (libpath "arc/news/profile/")
+   votedir*  (libpath "arc/news/vote/"))
 
 (or= votes* (table) profs* (table))
 
@@ -93,7 +93,7 @@
 
 (def load-news ((o reload))
   (when reload
-    (load "news.arc")
+    (load (libpath "news.arc"))
     ;(= caching* 0)
     )
   (map ensure-dir (list arcdir* newsdir* storydir* votedir* profdir*))
@@ -1147,7 +1147,7 @@ function vote(node) {
 
 (def stats-day ((o ymd (date)))
   (let (y m d) ymd
-    (let file (string "arc/logs/srv-" y "-" (leftpad m 2) "-" (leftpad d 2))
+    (let file (libpath (string "arc/logs/srv-" y "-" (leftpad m 2) "-" (leftpad d 2)))
       (stats-from-log file))))
 
 (def stats-hour (H (o ymd (date)) (o day (stats-day ymd)))

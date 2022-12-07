@@ -1,6 +1,6 @@
 (= algolia-app-id* "DMX77CEFW8"
    algolia-key-ro* "0e7e64491733b975977b6d1229a3620b"
-   algolia-key* "../algolia.json"
+   algolia-key* (libpath "../algolia.json")
    algolia-write* (no (readenv "DEV")))
 
 (defcache algolia-key 600

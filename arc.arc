@@ -1565,19 +1565,16 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (pr ,@(parse-format str))))
 )
 
-(or= loaded-files*      (list "libs.arc" "arc.arc" "ac.scm")
-     loaded-file-times* (obj "ac.scm" (modtime "ac.scm")
-                             "arc.arc" (modtime "arc.arc")
-                             "libs.arc" (modtime "libs.arc")))
+(or= loaded-files*      nil
+     loaded-file-times* (obj))
 
 (def loaded-files () (rev loaded-files*))
 
 (def loadtime (file) (loaded-file-times* file))
 
-(def notetime (file value (o secs (modtime file)))
+(def notetime (file (o secs (modtime file)))
   (pushnew file loaded-files*)
-  (= (loaded-file-times* file) secs)
-  value)
+  (= (loaded-file-times* file) secs))
 
 (def arcfile? (file)
   (and (> (len file) 4)
@@ -1593,10 +1590,16 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (= x (evalfn e))))
     x))
 
-(def load (file)
-  (let value (or (hook 'load file) (load-code file))
-    (notetime file value)
+(def load (file (o loaded))
+  (let value (unless loaded
+               (or (hook 'load file)
+                   (load-code file)))
+    (notetime file)
     value))
+
+; Both the compiler and this file are already loaded; note those.
+(each file (list "ac.scm" "arc.arc")
+  (load (libpath file) 'loaded))
 
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
@@ -1604,7 +1607,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (or= reload-count* 0)
 
 (def reload ((o file (loaded-files)))
-  (if (file-changed? "ac.scm")
+  (if (file-changed? (libpath "ac.scm"))
        (map [list _ (load _)] file)
       (acons file)
        (map reload file)
@@ -1832,13 +1835,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def zip ls (unzip ls))
 
-(def tmpfile ((o val "") (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path "arc/tmp/"))
+(def tmpfile ((o val "") (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path (libpath "arc/tmp/")))
   (ensure-dir path)
   (let file (+ path (map [if (is _ #\X) (rand-char) _] name))
     (w/outfile o file (writer val o))
     file))
 
-(def call-w/tmpfile (val f (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path "arc/tmp/"))
+(def call-w/tmpfile (val f (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path (libpath "arc/tmp/")))
   (let file (tmpfile val writer name path)
     (after (f file)
       (errsafe:rmfile file))))

@@ -6,10 +6,10 @@
 
 ; A user is simply a string: "pg". Use /whoami to test user cookie.
 
-(= hpwfile*   "arc/hpw"
-   oidfile*   "arc/openids"
-   adminfile* "arc/admins"
-   cookfile*  "arc/cooks")
+(= hpwfile*   (libpath "arc/hpw")
+   oidfile*   (libpath "arc/openids")
+   adminfile* (libpath "arc/admins")
+   cookfile*  (libpath "arc/cooks"))
 
 (def asv ((o port 8080))
   (load-userinfo)
@@ -959,7 +959,7 @@
   (strftime "+%a, %d %b %Y %H:%M:%S GMT" secs))
 
 (def send-email (from to subject message)
-  (tostring:shell "python2" "../sendmail.py" from to subject message))
+  (tostring:shell "python2" (libpath "../sendmail.py") from to subject message))
 
 ; (let ts (seconds)
 ;   (each c "%aAbBcCdDeFgGhHIjklmMnNpPqrRsStTuUVwWxXyYzZ"

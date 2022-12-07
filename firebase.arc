@@ -3,8 +3,8 @@
    firebase-write* (no (readenv "DEV")))
 
 (defcache firebase-token 600
-  (when (file-exists "../firetoken.py")
-    (let x (trim:fromstring "" (shell 'python "../firetoken.py"))
+  (when (file-exists (libpath "../firetoken.py"))
+    (let x (trim:fromstring "" (shell 'python (libpath "../firetoken.py")))
       (unless (blank x) x))))
 
 (def firebase-set (path value (o auth firebase-write*) (o url firebase-url*))

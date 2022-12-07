@@ -5,7 +5,7 @@
 ; arc> (bsv)
 ; go to http://localhost:8080/blog
 
-(= postdir*   "arc/posts/"
+(= postdir*   (libpath "arc/posts/")
    blogtitle* "A Blog")
 
 (or= postid* 0 posts* (table))

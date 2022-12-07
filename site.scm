@@ -1,4 +1,10 @@
 #lang racket/load
 
-(require "arc.scm")
-(arc-eval '((load "news.arc")))
+(require racket/runtime-path)
+
+(define-runtime-path arc-scm "./arc.scm")
+
+(load arc-scm)
+(require 'arc)
+
+(arc-eval '((load:libpath "news.arc")))
