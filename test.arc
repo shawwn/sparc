@@ -318,7 +318,7 @@
   )
 
 (define-test quasiexpand
-  (with (x 'x z 'z)
+  (withs (x 'x z 'z)
     (test? 'a (macex 'a))
     (test? '(17) (macex '(17)))
     (test? '(1 z) (macex '(1 z)))
@@ -365,11 +365,11 @@
 ;    (test? 30 (%literal f |()|))))
 
 (define-test names
-  (with (a! 0
-         b? 1
-         -% 2
-         ** 3
-         break 4)
+  (withs (a! 0
+          b? 1
+          -% 2
+          ** 3
+          break 4)
     (test? 0 a!)
     (test? 1 b?)
     (test? 2 -%)
@@ -487,7 +487,7 @@
 ;    (for i 5
 ;      (add l i))
 ;    (test? '(0 1 2 3 4) l))
-;  (test? '(0 1) (with l () (for i 2 (add l i))))
+;  (test? '(0 1) (withs l () (for i 2 (add l i))))
 ;  (let (n 0 l '(a b c d e))
 ;    (for i (# l)
 ;      (++ n i)
@@ -629,43 +629,43 @@
 (define-test let
   (let a 10
     (test? 10 a))
-  (with (a 10)
+  (withs (a 10)
     (test? 10 a))
-  (with (a 11
-         b 12)
+  (withs (a 11
+          b 12)
     (test? 11 a)
     (test? 12 b))
-  (with (a 1)
+  (withs (a 1)
     (test? 1 a)
-    (with (a 2)
+    (withs (a 2)
       (test? 2 a))
     (test? 1 a))
-  (with (a 1)
-    (with (a 2)
-      (with (a 3)
+  (withs (a 1)
+    (withs (a 2)
+      (withs (a 3)
         (test? a 3))
       (test? a 2))
     (test? a 1))
-  (with (a 20)
+  (withs (a 20)
     (test? 20 a)
-    (with (a (+ a 7))
+    (withs (a (+ a 7))
       (test? 27 a))
-    (with (a (+ a 10))
+    (withs (a (+ a 10))
       (test? 30 a))
     (test? 20 a))
-  (test? 10 (with (a 10) a))
-  (with (a (with (b 12) b))
+  (test? 10 (withs (a 10) a))
+  (withs (a (withs (b 12) b))
     (test? 12 a))
-  (with (a (with (a 10) a))
+  (withs (a (withs (a 10) a))
     (test? 10 a))
-  (with (a (+ (with (a 0)
-                (= a 10)
-                (+ a 2))
+  (withs (a (+ (withs (a 0)
+                 (= a 10)
+                 (+ a 2))
               3))
     (test? a 15))
   ((fn (zz)
      (test? 20 zz)
-     (with (zz 21)
+     (withs (zz 21)
        (test? 21 zz))
      (test? 20 zz))
    20)
@@ -679,7 +679,7 @@
                 (abs -1)))))
 
 ;(define-test with
-;  (test? 10 (with x 9 (++ x))))
+;  (test? 10 (withs (x 9) (++ x))))
 
 (define-test whenlet
   (test? nil (whenlet frips (is 'a 'b) 19))
@@ -705,9 +705,9 @@
   (test? 100 zzap))
 
 (define-test reserved
-  (with (end 'zz
-         try 'yy
-         return 99)
+  (withs (end 'zz
+          try 'yy
+          return 99)
     (test? 'zz end)
     (test? 'yy try)
     (test? '99 return))
@@ -844,7 +844,7 @@
   ;(test? true (nan? (* nan 20)))
   ;(test? -inf (- inf))
   ;(test? inf (- -inf))
-  (with (Inf 1 NaN 2 -Inf 'a -NaN 'b)
+  (withs (Inf 1 NaN 2 -Inf 'a -NaN 'b)
     (test? Inf 1)
     (test? NaN 2)
     (test? -Inf 'a)

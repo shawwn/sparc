@@ -210,8 +210,8 @@
 (def load-items ()
   (map rmrf (glob (+ storydir* "*.tmp")))
   (pr "load items: ")
-  (with (items (table)
-         ids   (sort > (map int (dir storydir*))))
+  (withs (items (table)
+          ids   (sort > (map int (dir storydir*))))
     (if ids (= maxid* (car ids)))
     (noisy-each 100 id (firstn initload* ids)
       (let i (load-item id)
@@ -534,7 +534,7 @@
 
 (mac fulltop (user lid label title whence . body)
   (w/uniq (gu gi gl gt gw)
-    `(with (,gu ,user ,gi ,lid ,gl ,label ,gt ,title ,gw ,whence)
+    `(withs (,gu ,user ,gi ,lid ,gl ,label ,gt ,title ,gw ,whence)
        (npage (+ (if ,gt (+ ,gt bar*) "") site-name*) ,gl
          (if (check-procrast ,gu)
              (do (pagetop 'full ,gi ,gl ,gt ,gu ,gw)
@@ -544,7 +544,7 @@
 
 (mac longpage (user t1 lid label title whence . body)
   (w/uniq (gu gt gi)
-    `(with (,gu ,user ,gt ,t1 ,gi ,lid)
+    `(withs (,gu ,user ,gt ,t1 ,gi ,lid)
        (fulltop ,gu ,gi ,label ,title ,whence
          (trtd ,@body)
          (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
@@ -785,9 +785,9 @@ function vote(node) {
 (mac opexpand (definer name parms . body)
   (w/uniq gr
     `(,definer ,name ,gr
-       (with (user (get-user ,gr) ip (,gr 'ip))
-         (with ,(and parms (mappend [list _ (list 'arg gr (string _))]
-                                    parms))
+       (withs (user (get-user ,gr) ip (,gr 'ip))
+         (withs ,(and parms (mappend [list _ (list 'arg gr (string _))]
+                                     parms))
            (newslog ip user ',name ,@parms)
            ,@body)))))
 
@@ -848,7 +848,7 @@ function vote(node) {
                (fn () (newsadmin-page user)))
     (br2)
     (aform (fn (req)
-             (with (user (get-user req) subject (arg req "id"))
+             (withs (user (get-user req) subject (arg req "id"))
                (if (profile subject)
                    (do (killallby subject)
                        (submitted-page user subject))
@@ -994,8 +994,8 @@ function vote(node) {
 ; Verify email
 
 (defopg verify req
-  (with (user (get-user req)
-         subject (arg req "u"))
+  (withs (user (get-user req)
+          subject (arg req "u"))
     (verify-page user subject)))
 
 (def verify-page (user subject (o msg))
@@ -1218,8 +1218,8 @@ function vote(node) {
           (row "daily" "requests" "uniques")
           (let predicted nil
             (each (d r u) (map tokens (rev:lines:trim:filechars "static/traffic.csv"))
-              (with (r (or (saferead r) 0)
-                     u (or (saferead u) 0))
+              (withs (r (or (saferead r) 0)
+                      u (or (saferead u) 0))
                 (if predicted (row d (pr:num r) (pr:num u))
                   (let m (aand (+ (* 60 (or (saferead (strftime "%H" secs)) 0))
                                         (or (saferead (strftime "%M" secs)) 0))
@@ -1240,10 +1240,10 @@ function vote(node) {
           (br2))
         (sptab
           (row "weekly" "requests" "uniques")
-          (with (predicted nil stats (map tokens (rev:lines:trim:filechars "static/traffic-weekly.csv")))
+          (withs (predicted nil stats (map tokens (rev:lines:trim:filechars "static/traffic-weekly.csv")))
             (each (d r u) stats
-              (with (r (or (saferead r) 0)
-                     u (or (saferead u) 0))
+              (withs (r (or (saferead r) 0)
+                      u (or (saferead u) 0))
                 (if predicted (row d (pr:num r) (pr:num u))
                   (let ts (date-seconds (map int (tokens d #\-)))
                     (let m (/ (* 7 24 60 60) (+ 1 (- secs ts)))
@@ -1336,8 +1336,8 @@ function vote(node) {
           (url-for
             (afnid (fn (req)
                      (prn)
-                     (with (url  (url-for it)     ; it bound by afnid
-                            user (get-user req))
+                     (withs (url  (url-for it)     ; it bound by afnid
+                             user (get-user req))
                        (newslog req!ip user 'more label)
                        (longpage user (now) nil label title url
                          (apply f user items label title url args))))))
@@ -1492,9 +1492,9 @@ function vote(node) {
 ; know how to generate an auth arg that matches each user's cookie.
 
 (newsop vote (by for dir auth whence)
-  (with (i      (safe-item for)
-         dir    (saferead dir)
-         whence (if whence (urldecode whence) "news"))
+  (withs (i      (safe-item for)
+          dir    (saferead dir)
+          whence (if whence (urldecode whence) "news"))
     (if (no i)
          (pr "No such item.")
         (no (in dir 'up 'down))
@@ -2362,7 +2362,7 @@ function suggestTitle() {
 (def note-baditem (user ip)
   (unless (admin user)
     (++ (baditemreqs* ip 0))
-    (with (r (requests/ip* ip) b (baditemreqs* ip))
+    (withs (r (requests/ip* ip) b (baditemreqs* ip))
        (when (and (> r 500) (> (/ b r) baditem-threshold*))
          (set (throttle-ips* ip))))))
 
@@ -2371,9 +2371,9 @@ function suggestTitle() {
 (def news-type (i) (and i (in i!type 'story 'comment 'poll 'pollopt)))
 
 (def item-page (user i)
-  (with (title (and (cansee user i)
-                    (or i!title (aand i!text (ellipsize (striptags it)))))
-         here (item-url i!id))
+  (withs (title (and (cansee user i)
+                     (or i!title (aand i!text (ellipsize (striptags it)))))
+          here (item-url i!id))
     (longpage user (now) nil nil title here
       (tab (display-item nil i user here t)
            (display-item-text i user)
@@ -2454,7 +2454,7 @@ function suggestTitle() {
 
 (= (fieldfn* 'story)
    (fn (user s)
-     (with (a (admin user)  e (editor user)  x (canedit user s))
+     (withs (a (admin user)  e (editor user)  x (canedit user s))
        `((string1 title     ,s!title        t ,x)
          (url     url       ,s!url          t ,e)
          (mdtext  text      ,s!text         t ,x)
@@ -2462,20 +2462,20 @@ function suggestTitle() {
 
 (= (fieldfn* 'comment)
    (fn (user c)
-     (with (a (admin user)  e (editor user)  x (canedit user c))
+     (withs (a (admin user)  e (editor user)  x (canedit user c))
        `((mdtext  text      ,c!text         t ,x)
          ,@(standard-item-fields c a e x)))))
 
 (= (fieldfn* 'poll)
    (fn (user p)
-     (with (a (admin user)  e (editor user)  x (canedit user p))
+     (withs (a (admin user)  e (editor user)  x (canedit user p))
        `((string1 title     ,p!title        t ,x)
          (mdtext2 text      ,p!text         t ,x)
          ,@(standard-item-fields p a e x)))))
 
 (= (fieldfn* 'pollopt)
    (fn (user p)
-     (with (a (admin user)  e (editor user)  x (canedit user p))
+     (withs (a (admin user)  e (editor user)  x (canedit user p))
        `((string  title     ,p!title        t ,x)
          (url     url       ,p!url          t ,x)
          (mdtext2 text      ,p!text         t ,x)
@@ -2732,8 +2732,8 @@ function suggestTitle() {
   (link title (+ "/reply?id=" i!id "&whence=" (urlencode whence))))
 
 (newsop reply (id whence)
-  (with (i      (safe-item id)
-         whence (or (only.urldecode whence) "news"))
+  (withs (i      (safe-item id)
+          whence (or (only.urldecode whence) "news"))
     (if (only.comments-active i)
         (if user
             (addcomment-page i user whence)
@@ -2838,8 +2838,8 @@ function suggestTitle() {
 
 (def submitted-page (user subject)
   (if (profile subject)
-      (with (label (+ subject "'s submissions")
-             here  (submitted-url subject))
+      (withs (label (+ subject "'s submissions")
+              here  (submitted-url subject))
         (longpage user (now) nil label label here
           (if (or (no (ignored subject))
                   (is user subject)
@@ -3073,8 +3073,8 @@ first asterisk isn't whitespace.
 ; Reset PW
 
 (defopg resetpw req
-  (with (user (get-user req)
-         subject (arg req "u"))
+  (withs (user (get-user req)
+          subject (arg req "u"))
     (resetpw-page user subject)))
 
 (def resetpw-page (user subject (o msg))
@@ -3162,8 +3162,8 @@ first asterisk isn't whitespace.
   (minipage "Scrubrules"
     (when msg (pr msg) (br2))
     (uform user req
-           (with (froms (lines (arg req "from"))
-                  tos   (lines (arg req "to")))
+           (withs (froms (lines (arg req "from"))
+                   tos   (lines (arg req "to")))
              (if (is (len froms) (len tos))
                  (do (todisk scrubrules* (map list froms tos))
                      (scrub-page user scrubrules* "Changes saved."))
@@ -3314,7 +3314,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (msgpage user welcome-page* "Welcome" (pages-url "welcome")))
 
 (defcache lambdas 300
-  (with (acc nil cs (table))
+  (withs (acc nil cs (table))
     (each-loaded-item i
       (each k i!keys
         (when (headmatch "/l/" (string k))
@@ -3339,8 +3339,8 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (adop badsites ()
   (sptab
     (row "Dead" "Days" "Site" "O" "K" "I" "Users")
-    (each (site deads) (with (banned (banned-site-items)
-                              pairs  (killedsites))
+    (each (site deads) (withs (banned (banned-site-items)
+                               pairs  (killedsites))
                          (+ pairs (map [list _ (banned _)]
                                        (rem (fn (d)
                                               (some [caris _ d] pairs))
@@ -3366,7 +3366,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (let bads (table [each-loaded-item i
                      (awhen (and i!dead (sitename i!url))
                        (push i (_ it)))])
-    (with (acc nil deadcount (table))
+    (withs (acc nil deadcount (table))
       (each (site items) bads
         (let n (len items)
           (when (> n 2)
@@ -3411,7 +3411,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                   (pr " "))))))))
 
 (defcache badips 300
-  (with (bads (table) goods (table))
+  (withs (bads (table) goods (table))
     (each-loaded-item s
       (if (and s!dead (commentable s))
           (push s (bads  s!ip))
@@ -3508,7 +3508,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                    "> @(ellipsize item.id!text)")))]
                      (sort (compare > car:cadr) (apply + (map tablist (vals votes*)))))
           (whenlet (age id dir score who by title) x
-            (with (age (multisubst '(("hour" "hr") ("minute" "m") (" ago" "") (" " "")) age))
+            (withs (age (multisubst '(("hour" "hr") ("minute" "m") (" ago" "") (" " "")) age))
               (row "@(++ i). " age (pr:itemlink item.id id) dir score
                    (tdr (if (or (is user (str who)) (admin user)) (userlink user who) (pr "[hidden]")))
                    (tdr (userlink user by) (pr ":"))
@@ -3583,7 +3583,7 @@ RNBQKBNR
 
 (def chess-board ((o user) (o from) (o to) (o board chess-board*))
   (idtab "chess"
-    (with (i 0 j 0 from (or from "") to (or to ""))
+    (withs (i 0 j 0 from (or from "") to (or to ""))
       (each y (chess board)
         (= i 0)
         (++ j)
@@ -3810,7 +3810,7 @@ Cache-Control: no-cache;
 X-Accel-Buffering: no")
 
 (defop place.events ()
-  (with (seen (obj) ts (now))
+  (withs (seen (obj) ts (now))
     (while (< (since ts) place-event-lasts*)
       (each x (qlist place-events*)
         (unless (seen x!id)

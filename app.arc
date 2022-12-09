@@ -112,7 +112,7 @@
     (br2)
     (aform (fn (req)
              (when-umatch user req
-               (with (u (arg req "acct") p (arg req "pw"))
+               (withs (u (arg req "acct") p (arg req "pw"))
                  (if (or (no u) (no p) (is u "") (is p ""))
                       (pr "Bad data.")
                      (user-exists u)
@@ -243,7 +243,7 @@
 
 (def create-handler (req switch afterward)
   (logout-user (get-user req))
-  (with (user (arg req "acct") pw (arg req "pw") email (arg req "email"))
+  (withs (user (arg req "acct") pw (arg req "pw") email (arg req "email"))
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
          (do (create-acct user pw email)
@@ -512,7 +512,7 @@
   (markdown (trim (rem #\return (if esc str (esc-tags str))) 'end) 100 nolinks))
 
 (def markdown (s (o maxurl) (o nolinks))
-  (with (ital nil bold nil)
+  (withs (ital nil bold nil)
     (tostring
       (forlen i s
         (iflet (newi spaces) (indented-code s i (if (is i 0) 2 0))
@@ -675,7 +675,7 @@
 
 (def parse-time (s)
   (let (nums (o label "")) (halve s letter)
-    (with ((h (o m 0)) (map int (tokens nums ~digit))
+    (withs ((h (o m 0)) (map int (tokens nums ~digit))
            cleanlabel  (downcase (rem ~alphadig label)))
       (+ (* (if (is h 12)
                  (if (in cleanlabel "am" "midnight")
@@ -719,8 +719,8 @@
         (err (string "Invalid date: " s)))))
 
 (def date-nums (s)
-  (with ((ynow mnow dnow) (date)
-         toks             (tokens s ~alphadig))
+  (withs ((ynow mnow dnow) (date)
+          toks             (tokens s ~alphadig))
     (if (all [all digit _] toks)
          (let nums (map int toks)
            (case (len nums)
@@ -948,8 +948,8 @@
   (moment-ms ms))
 
 (defmemo moment-ms ((o ms (msec)))
-  (with (secs (trunc (/ ms 1000))
-         msecs (mod (trunc ms) 1000))
+  (withs (secs (trunc (/ ms 1000))
+          msecs (mod (trunc ms) 1000))
     (strftime (+ "+%Y-%m-%dT%H:%M:%S." (leftpad msecs 3 "0") "Z") secs)))
 
 (def moment-secs ((o secs (seconds)))

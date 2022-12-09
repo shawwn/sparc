@@ -81,7 +81,7 @@
 
 (mac litmatch (pat string (o start 0))
   (w/uniq (gstring gstart)
-    `(with (,gstring ,string ,gstart ,start)
+    `(withs (,gstring ,string ,gstart ,start)
        (unless (> (+ ,gstart ,(len pat)) (len ,gstring))
          (and ,@(let acc nil
                   (forlen i pat
@@ -117,7 +117,7 @@
     nil))
 
 (def headmatch (pat seq (o start 0))
-  (with (p (len pat) s (len seq))
+  (withs (p (len pat) s (len seq))
     ((afn (i)
        (or (is i p)
            (and (< (+ i start) s)

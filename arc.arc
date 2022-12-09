@@ -117,13 +117,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def alref (al key) (cadr (assoc key al)))
 
-(mac with (parms . body)
-  `((fn ,(map1 car (hug parms))
-     ,@body)
-    ,@(map1 cadr (hug parms))))
-
 (mac let (var val . body)
-  `(with (,var ,val) ,@body))
+  `((fn (,var) ,@body)
+    ,val))
 
 (mac withs (parms . body)
   (if (no parms) 
@@ -172,8 +168,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac w/uniq (names . body)
   (if (acons names)
-      `(with ,(apply + nil (map1 (fn (n) (list n `(uniq ',n)))
-                             names))
+      `(withs ,(apply + nil (map1 (fn (n) (list n `(uniq ',n)))
+                              names))
          ,@body)
       `(let ,names (uniq ',names) ,@body)))
 
@@ -336,9 +332,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac atlet args
   `(atomic (let ,@args)))
   
-(mac atwith args
-  `(atomic (with ,@args)))
-
 (mac atwiths args
   `(atomic (withs ,@args)))
 
@@ -451,7 +444,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(assign ,place ,val)
       (let (vars prev setter) (setforms place)
         (w/uniq g
-          `(atwith ,(+ vars (list g val))
+          `(atwiths ,(+ vars (list g val))
              (,setter ,g))))))
 
 (def expand=list (terms)
@@ -482,13 +475,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac for (v init max . body)
   (w/uniq (gi gm)
-    `(with (,v nil ,gi ,init ,gm (+ ,max 1))
+    `(withs (,v nil ,gi ,init ,gm (+ ,max 1))
        (loop (assign ,v ,gi) (< ,v ,gm) (assign ,v (+ ,v 1))
          ,@body))))
 
 (mac down (v init min . body)
   (w/uniq (gi gm)
-    `(with (,v nil ,gi ,init ,gm (- ,min 1))
+    `(withs (,v nil ,gi ,init ,gm (- ,min 1))
        (loop (assign ,v ,gi) (> ,v ,gm) (assign ,v (- ,v 1))
          ,@body))))
 
@@ -630,15 +623,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac swap (place1 place2)
   (w/uniq (g1 g2)
-    (with ((binds1 val1 setter1) (setforms place1)
-           (binds2 val2 setter2) (setforms place2))
+    (withs ((binds1 val1 setter1) (setforms place1)
+            (binds2 val2 setter2) (setforms place2))
       `(atwiths ,(+ binds1 (list g1 val1) binds2 (list g2 val2))
          (,setter1 ,g2)
          (,setter2 ,g1)))))
 
 (mac rotate places
-  (with (vars (map [uniq] places)
-         forms (map setforms places))
+  (withs (vars (map [uniq] places)
+          forms (map setforms places))
     `(atwiths ,(mappend (fn (g (binds val setter))
                           (+ binds (list g val)))
                         vars
@@ -699,13 +692,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; E.g. (++ x) equiv to (zap + x 1)
 
 (mac zap (op place . args)
-  (with (gop    (uniq)
-         gargs  (map [uniq] args)
-         mix    (afn seqs 
-                  (if (some no seqs)
-                      nil
-                      (+ (map car seqs)
-                         (apply self (map cdr seqs))))))
+  (withs (gop    (uniq)
+          gargs  (map [uniq] args)
+          mix    (afn seqs 
+                   (if (some no seqs)
+                       nil
+                       (+ (map car seqs)
+                          (apply self (map cdr seqs))))))
     (let (binds val setter) (setforms place)
       `(atwiths ,(+ binds (list gop op) (mix gargs args))
          (,setter (,gop ,val ,@gargs))))))
@@ -770,7 +763,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac drain (expr (o eof nil))
   (w/uniq (gacc gdone gres)
-    `(with (,gacc nil ,gdone nil)
+    `(withs (,gacc nil ,gdone nil)
        (while (no ,gdone)
          (let ,gres ,expr
            (if (is ,gres ,eof)
@@ -980,7 +973,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def rand-string (n)
   (let c "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    (with (nc 62 s (newstring n) i 0)
+    (withs (nc 62 s (newstring n) i 0)
       (while (< i n)
         (let x (randb)
            (unless (> x 247)
@@ -1016,7 +1009,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; (mac max2 (x y)
 ;   (w/uniq (a b)
-;     `(with (,a ,x ,b ,y) (if (> ,a ,b) ,a ,b))))
+;     `(withs (,a ,x ,b ,y) (if (> ,a ,b) ,a ,b))))
 
 (def most (f seq) 
   (unless (no seq)
@@ -1056,7 +1049,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; right no of args and didn't have to call apply (or list if 1 arg).
 
 (def memo (f)
-  (with (cache (table) nilcache (table))
+  (withs (cache (table) nilcache (table))
     (fn args
       (or (cache args)
           (and (no (nilcache args))
@@ -1259,7 +1252,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; by Eli Barzilay for MzLib; re-written in Arc.
 
 (def mergesort (less? lst)
-  (with (n (len lst))
+  (let n (len lst)
     (if (<= n 1) lst
         ; ; check if the list is already sorted
         ; ; (which can be a common case, eg, directory lists).
@@ -1279,13 +1272,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                ; it can be removed (and use the above case for n>1)
                ; and the code still works, except a little slower
                (is n 2)
-                (with (x (car lst) y (cadr lst) p lst)
+                (withs (x (car lst) y (cadr lst) p lst)
                   (= lst (cddr lst))
                   (when (less? y x) (scar p y) (scar (cdr p) x))
                   (scdr (cdr p) nil)
                   p)
                (is n 1)
-                (with (p lst)
+                (withs (p lst)
                   (= lst (cdr lst))
                   (scdr p nil)
                   p)
@@ -1378,7 +1371,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Note: discards fields not defined by the template.
 
 (def templatize (tem raw)
-  (with (x (inst tem) fields (if (acons tem) tem (templates* tem)))
+  (witwihs (x (inst tem) fields (if (acons tem) tem (templates* tem)))
     (each (k v) raw
       (when (assoc k fields)
         (= (x k) v)))
@@ -1403,7 +1396,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; could use a version for fns of 1 arg at least
 
 (def cache (timef valf)
-  (with (cached nil gentime nil)
+  (withs (cached nil gentime nil)
     (fn ((o reset))
       (when (or reset
                 (no gentime)
@@ -1430,7 +1423,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (string y "-" (if (< m 10) "0") m "-" (if (< d 10) "0") d)))
 
 (def count (test x)
-  (with (n 0 testf (testify test))
+  (withs (n 0 testf (testify test))
     (each elt x
       (if (testf elt) (++ n)))
     n))
@@ -1447,7 +1440,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(while (no ,test) ,@body))
 
 (def before (x y seq (o i 0))
-  (with (xp (pos x seq i) yp (pos y seq i))
+  (withs (xp (pos x seq i) yp (pos y seq i))
     (and xp (or (no yp) (< xp yp)))))
 
 (def orf fns
@@ -1494,7 +1487,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac conswhen (f x y)
   (w/uniq (gf gx)
-   `(with (,gf ,f ,gx ,x)
+   `(withs (,gf ,f ,gx ,x)
       (if (,gf ,gx) (cons ,gx ,y) ,y))))
 
 ; Could combine with firstn if put f arg last, default to (fn (x) t).
@@ -1506,7 +1499,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                              (retrieve n f (cdr xs))))
 
 (def dedup (xs)
-  (with (h (table) acc nil)
+  (withs (h (table) acc nil)
     (each x xs
       (unless (h x)
         (push x acc)
@@ -1526,7 +1519,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
           (counts (cdr seq) c))))
 
 (def commonest (seq)
-  (with (winner nil n 0)
+  (withs (winner nil n 0)
     (each (k v) (counts seq)
       (when (> v n) (= winner k n v)))
     (list winner n)))
@@ -1545,7 +1538,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
   (def parse-format (str)
     (accum a
-      (with (chars nil  i -1)
+      (withs (chars nil  i -1)
         (w/instring s str
           (whilet c (readc s)
             (case c 
@@ -1671,7 +1664,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac noisy-each (n var val . body)
   (w/uniq (gn gc)
-    `(with (,gn ,n ,gc 0)
+    `(withs (,gn ,n ,gc 0)
        (each ,var ,val
          (when (multiple (++ ,gc) ,gn)
            (pr ".") 

@@ -52,7 +52,7 @@
     (if (and (or (ignore-ips* ip) (abusive-ip ip))
              (++ (spurned* ip 0)))
         (force-close i o)
-        (do (with (th1 nil th2 nil)
+        (do (withs (th1 nil th2 nil)
               (= th1 (thread
                        (after (handle-request-thread i o ip)
                               (close i o)
@@ -101,7 +101,7 @@
   lines)
 
 (def handle-request-thread (i o ip)
-  (with (nls 0 lines nil line nil responded nil t0 (msec))
+  (withs (nls 0 lines nil line nil responded nil t0 (msec))
     (after
       (whilet c (unless responded (readc i))
         (if (is c #\newline)
@@ -124,7 +124,7 @@
   (harvest-fnids))
 
 (def log-request (type op args cooks ip t0 t1)
-  (with (parsetime (- t1 t0) respondtime (- (msec) t1))
+  (withs (parsetime (- t1 t0) respondtime (- (msec) t1))
     (srvlog 'srv ip 
                  parsetime 
                  respondtime 
@@ -647,7 +647,7 @@ Strict-Transport-Security: max-age=31556900
 (def logfile-name (type)
   (string logdir* type "-" (memodate)))
 
-(with (lastasked nil lastval nil)
+(withs (lastasked nil lastval nil)
 
 (def memodate ()
   (let now (seconds)

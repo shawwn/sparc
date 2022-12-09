@@ -364,8 +364,8 @@
 ;    return ans
 
 (def polevl (x coefs N)
-  (with (ans 0
-         power (- (len coefs) 1))
+  (withs (ans 0
+          power (- (len coefs) 1))
     (each coef coefs
       (++ ans (* coef (expt x power)))
       (-- power))
@@ -444,8 +444,8 @@
   (def ndtri (y)
     ;s2pi = 2.50662827463100050242
     ;code = 1
-    (with (s2pi 2.50662827463100050242
-           code 1)
+    (withs (s2pi 2.50662827463100050242
+            code 1)
 
       ;if y > (1.0 - 0.13533528323661269189):      # 0.135... = exp(-2)
       ;    y = 1.0 - y
