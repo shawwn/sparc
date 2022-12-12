@@ -1665,14 +1665,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac noisy-each (n var val . body)
   (w/uniq (gn gc)
     `(withs (,gn ,n ,gc 0)
-       (each ,var ,val
-         (when (multiple (++ ,gc) ,gn)
-           (pr ".") 
-           (flushout)
-           )
-         ,@body)
-       (prn)
-       (flushout))))
+       (after
+         (each ,var ,val
+           (when (multiple (++ ,gc) ,gn)
+             (disp "." (stderr))
+             (flushout (stderr)))
+           ,@body)
+         (writec #\newline (stderr))
+         (flushout (stderr))))))
 
 (def downcase (x)
   (let downc (fn (c)
