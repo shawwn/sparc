@@ -27,16 +27,11 @@
 (print-hash-table #t)
 (print-syntax-width 10000)
 
-; sread = scheme read. eventually replace by writing read
-
-(define (car? l . k)
+(define (car? l (k undefined) (test equal?))
   (and (pair? l)
-       (if (null? k)
-           (car l)
-         (let ((k (car k)))
-           (if (procedure? k)
-               (k (car l))
-               (eq? (car l) k))))))
+       (or (and (eq? k undefined) (car l))
+           (and (procedure? k) (k (car l)))
+           (test (car l) k))))
 
 (define (ar-tagged type . rep)
   `(lit ,type ,@rep))
@@ -49,6 +44,8 @@
 
 (define (ar-tagged-rep x)
   (caddr x))
+
+; sread = scheme read. eventually replace by writing read
 
 (define (sread p (eof eof))
   (parameterize ((read-accept-lang #t)
