@@ -1744,7 +1744,9 @@
 ; Added because Mzscheme buffers output.  Not a permanent part of Arc.
 ; Only need to use when declare explicit-flush optimization.
 
-(xdef flushout (lambda () (flush-output) ar-t))
+(xdef flushout (lambda ((port (current-output-port)))
+                 (flush-output port)
+                 ar-t))
 
 (xdef ssyntax (lambda (x) (tnil (ssyntax? x))))
 
