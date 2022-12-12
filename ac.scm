@@ -47,12 +47,17 @@
 
 ; sread = scheme read. eventually replace by writing read
 
+(define (shebang? port)
+  (equal? "#!" (peek-string 2 0 port)))
+
 (define (sread p (eof eof))
   (parameterize ((read-accept-lang #t)
                  (read-accept-reader #t))
     (port-count-lines! p)
-    (let ((expr (read-syntax (object-name p) p)))
-      (if (eof-object? expr) eof expr))))
+    (if (shebang? p)
+        (begin (read-line p) (sread p eof))
+        (let ((expr (read-syntax (object-name p) p)))
+          (if (eof-object? expr) eof expr)))))
 
 (define (sdata p (eof eof))
   (parameterize ((read-accept-lang #f)

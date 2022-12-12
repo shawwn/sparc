@@ -1,3 +1,5 @@
+#!bin/arc
+
 ; adapted from test.l in https://github.com/sctb/lumen
 (declare 'atstrings t)
 
