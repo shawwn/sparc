@@ -1590,9 +1590,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (notetime file)
     value))
 
-; Both the compiler and this file are already loaded; note those.
-(each file (list "ac.scm" "arc.arc")
-  (load (libpath file) 'loaded))
+; This file is already loaded; note it.
+(load (libpath "arc.arc") 'loaded)
 
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
@@ -1600,9 +1599,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (or= reload-count* 0)
 
 (def reload ((o file (loaded-files)))
-  (if (file-changed? (libpath "ac.scm"))
-       (map [list _ (load _)] file)
-      (acons file)
+  (if (acons file)
        (map reload file)
       (file-changed? file)
        (do1 (list file (load file))
