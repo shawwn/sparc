@@ -961,19 +961,15 @@
                    ((null? x)     x)
                    (#t            (err "Can't take cdr of" x)))))
 
-(define (tnil x) (if x ar-t ar-nil))
-
 ; (pairwise pred '(a b c d)) =>
 ;   (and (pred a b) (pred b c) (pred c d))
-; pred returns t/nil, as does pairwise
 ; reduce?
 
 (define (pairwise pred lst)
-  (cond ((null? lst) ar-t)
-        ((null? (cdr lst)) ar-t)
-        ((not (ar-nil? (pred (car lst) (cadr lst))))
-         (pairwise pred (cdr lst)))
-        (#t ar-nil)))
+  (or (null? lst)
+      (null? (cdr lst))
+      (and (ar-true? (pred (car lst) (cadr lst)))
+           (pairwise pred (cdr lst)))))
 
 ; not quite right, because behavior of underlying eqv unspecified
 ; in many cases according to r5rs
@@ -986,12 +982,12 @@
       (and (number? a) (number? b) (= a b))
       (and (string? a) (string? b) (string=? a b))))
 
-(xdef id ar-id)
+(xdef id (lambda args (pairwise ar-id args)))
 
 (define (ar-is2 a b)
-  (tnil (or (ar-id a b)
-            (and (bytes? a) (bytes? b) (bytes=? a b))
-            (and (ar-false? a) (ar-false? b)))))
+  (or (ar-id a b)
+      (and (bytes? a) (bytes? b) (bytes=? a b))
+      (and (ar-false? a) (ar-false? b))))
 
 ; for all other uses of is
 
@@ -1046,22 +1042,22 @@
 ; generic comparison
 
 (define (ar->2 x y)
-  (tnil (cond ((and (number? x) (number? y)) (> x y))
-              ((and (string? x) (string? y)) (string>? x y))
-              ((and (symbol? x) (symbol? y)) (string>? (symbol->string x)
-                                                       (symbol->string y)))
-              ((and (char? x) (char? y)) (char>? x y))
-              (#t (> x y)))))
+  (cond ((and (number? x) (number? y)) (> x y))
+        ((and (string? x) (string? y)) (string>? x y))
+        ((and (symbol? x) (symbol? y)) (string>? (symbol->string x)
+                                                 (symbol->string y)))
+        ((and (char? x) (char? y)) (char>? x y))
+        (#t (> x y))))
 
 (xdef > (lambda args (pairwise ar->2 args)))
 
 (define (ar-<2 x y)
-  (tnil (cond ((and (number? x) (number? y)) (< x y))
-              ((and (string? x) (string? y)) (string<? x y))
-              ((and (symbol? x) (symbol? y)) (string<? (symbol->string x)
-                                                       (symbol->string y)))
-              ((and (char? x) (char? y)) (char<? x y))
-              (#t (< x y)))))
+  (cond ((and (number? x) (number? y)) (< x y))
+        ((and (string? x) (string? y)) (string<? x y))
+        ((and (symbol? x) (symbol? y)) (string<? (symbol->string x)
+                                                 (symbol->string y)))
+        ((and (char? x) (char? y)) (char<? x y))
+        (#t (< x y))))
 
 (xdef < (lambda args (pairwise ar-<2 args)))
 
@@ -1670,12 +1666,14 @@
 
 ; rewrite to pass a (true) gensym instead of #f in case var bound to #f
 
-(define (bound? arcname)
-  (namespace-variable-value (ac-global-name arcname)
-                            #t
-                            (lambda () #f)))
+(define (bound? arcname (fail #f))
+  (let ((it (namespace-variable-value (ac-global-name arcname)
+                                      #t
+                                      (lambda () undefined))))
+    (if (eq? it undefined) fail it)))
 
-(xdef bound (lambda (x) (tnil (bound? x))))
+(xdef bound (lambda (x (fail ar-nil))
+              (bound? x fail)))
 
 (xdef newstring make-string)
 
@@ -1683,7 +1681,7 @@
 
 ; bad name
 
-(xdef exact (lambda (x) (tnil (exint? x))))
+(xdef exact exint?)
 
 (xdef msec                         current-milliseconds)
 (xdef mnow                         current-inexact-milliseconds)
@@ -1720,7 +1718,7 @@
 				(thread-cell-set! ar-sema-cell #f)))))))
 (xdef atomic-invoke atomic-invoke)
 
-(xdef dead (lambda (x) (tnil (thread-dead? x))))
+(xdef dead thread-dead?)
 
 (xdef chan (lambda args
              (cond
@@ -1774,7 +1772,7 @@
                  (flush-output port)
                  ar-t))
 
-(xdef ssyntax (lambda (x) (tnil (ssyntax? x))))
+(xdef ssyntax ssyntax?)
 
 (xdef ssexpand (lambda (x)
                   (if (ssyntax? x) (expand-ssyntax x) x)))
