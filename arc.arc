@@ -1371,7 +1371,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Note: discards fields not defined by the template.
 
 (def templatize (tem raw)
-  (witwihs (x (inst tem) fields (if (acons tem) tem (templates* tem)))
+  (withs (x (inst tem) fields (if (acons tem) tem (templates* tem)))
     (each (k v) raw
       (when (assoc k fields)
         (= (x k) v)))
