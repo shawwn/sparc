@@ -1275,7 +1275,7 @@
                       ((keyword) (symbol->keyword x))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
-    (#t             x)))
+    (#t             (err "Can't coerce" x type))))
 
 (xdef coerce ar-coerce)
 
