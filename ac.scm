@@ -431,6 +431,23 @@
         ((pair? (car env)) (caar env))
         (#t (ac-dbname (cdr env)))))
 
+(define (ac-fn-args a (env (env*)))
+  (cond ((null? a) '())
+        ((symbol? a) a)
+        ((car? (xcar a) 'o)
+         (let* ((it (cdar a))
+                (var (car it))
+                (val (if (pair? (cdr it)) (cadr it) 'nil)))
+           (cons (list var (ac val env))
+                 (ac-fn-args (cdr a) (cons var env)))))
+        ((car? a keywordp)
+         (cons (keywordp (car a))
+               (ac-fn-args (cdr a) env)))
+        ((car? a symbol?)
+         (cons (car a) (ac-fn-args (cdr a) (cons (car a) env))))
+        (#t
+         (cons (car a) (ac-fn-args (cdr a) env)))))
+
 ; translate fn directly into a lambda if it has ordinary
 ; parameters, otherwise use a rest parameter and parse it.
 
@@ -439,7 +456,7 @@
       (ac-complex-fn args body env)
       (ac-nameit
        (ac-dbname env)
-       `(lambda ,args
+       `(lambda ,(ac-fn-args args env)
           ,@(ac-body* body (append (ac-arglist args) env))))))
 
 ; does an fn arg list use optional parameters or destructuring?
@@ -448,7 +465,10 @@
 (define (ac-complex-args? args)
   (cond ((null? args) #f)
         ((symbol? args) #f)
-        ((and (pair? args) (symbol? (car args)))
+        ((or (car? args symbol?)
+             (car? args keywordp)
+             (and (car? (xcar args) 'o)
+                  (car? (cdar args) symbol?)))
          (ac-complex-args? (cdr args)))
         (#t #t)))
 
@@ -510,11 +530,16 @@
 
 ; (a b . c) -> (a b c)
 ; a -> (a)
+; ((o a)) -> (a)
+; (a: b) -> (b)
+; (a: (o b)) -> (b)
 
 (define (ac-arglist a)
   (cond ((null? a) '())
         ((symbol? a) (list a))
-        ((symbol? (cdr a)) (list (car a) (cdr a)))
+        ((car? (xcar a) 'o)
+         (cons (cadar a) (ac-arglist (cdr a))))
+        ((car? a keywordp) (ac-arglist (cdr a)))
         (#t (cons (car a) (ac-arglist (cdr a))))))
 
 (define (ac-body body env)
