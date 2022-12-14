@@ -1492,7 +1492,8 @@
 
 (define (pp val (port (current-output-port)))
   (display (pp-to-string val) port)
-  (display #\newline port))
+  (display #\newline port)
+  val)
  
 (define (ac-prompt-print val)
   (namespace-set-variable-value! (ac-global-name 'that) val)
