@@ -1573,13 +1573,8 @@
 
 (xdef eval arc-eval)
 
-(define (seval s (ns (current-namespace)))
-  (parameterize ((current-namespace ns)
-                 (compile-allow-set!-undefined #t)
-                 (compile-enforce-module-constants #f))
-    (eval (if (syntax? s)
-              (compile-syntax (namespace-syntax-introduce s))
-              (compile s)))))
+(define (seval s)
+  (eval s))
 
 (xdef seval seval)
 
