@@ -82,20 +82,15 @@
 ; env is a list of lexically bound variables, which we
 ; need in order to decide whether set should create a global.
 
-(define (stx-map proc stxl)
-  (map proc (stx->list stxl)))
-
-(define (scm% e s env)
-  s)
-
-(define (ac% e (s (syntax->datum e)) (env (env*)))
-  (cond ((literal? s) (ac-literal s))
+(define (ac s (env (env*)))
+  (cond ((syntax? s) (syn (ac (syntax->datum s) env) s))
+        ((literal? s) (ac-literal s))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
         ((eq? (xcar s) '%do) (ac-do (cdr s) env))
         ((eq? (xcar s) 'lexenv) (ac-lenv (cdr s) env))
-        ((eq? (xcar s) 'syntax) (cadr (syntax-e e)))
-        ((eq? (xcar (xcar s)) 'syntax) (stx-map (lambda (x) (ac x env)) e))
+        ((eq? (xcar s) 'syntax) (cadr s))
+        ((eq? (xcar (xcar s)) 'syntax) (map (lambda (x) (ac x env)) s))
         ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
         ((eq? (xcar s) 'quote) (list 'quote (ac-quoted (cadr s))))
         ((eq? (xcar s) 'quasiquote) (ac-qq (cadr s) env))
@@ -112,15 +107,6 @@
         ((eq? (xcar (xcar s)) 'andf) (ac-andf s env))
         ((pair? s) (ac-call (car s) (cdr s) env))
         (#t s)))
-
-(define ac* (make-parameter ac% #f 'ac%))
-
-(define (ac stx (env (env*)) (ns (arc-namespace)))
-    (let* ((e (syn stx))
-           (s (syntax->datum e))
-           (expr ((ac*) e s env)))
-      (parameterize ((current-namespace ns))
-        (namespace-syntax-introduce (syn expr stx)))))
 
 (define ar-nil '())
 (define ar-t #t)
