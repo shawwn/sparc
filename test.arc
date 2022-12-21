@@ -227,6 +227,10 @@
 ;  (test? 3 (# "a\\b"))
 ;  (test? "x3" (cat "x" (+ 1 2))))
 
+(define-test atstrings
+  (let a 'foo
+    (test? "foobar" "@{a}bar")))
+
 (define-test quote
   (test? 7 (quote 7))
   (test? true (quote t))
