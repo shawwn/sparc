@@ -33,6 +33,9 @@
            (and (procedure? k) (k (car l)))
            (test (car l) k))))
 
+(define (caar? l (k undefined) (test equal?))
+  (car? (car? l) k test))
+
 (define (ar-tagged type . rep)
   `(lit ,type ,@rep))
 
@@ -72,8 +75,7 @@
       (datum->syntax #f x (if (syntax? src) src #f))))
 
 (define (datum x)
-  (let ((s (syn x)))
-    (syntax->datum s)))
+  (if (syntax? x) (syntax->datum x) x))
 
 (define env* (make-parameter (list) #f 'env*))
 
@@ -87,24 +89,24 @@
         ((literal? s) (ac-literal s))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
-        ((eq? (xcar s) '%do) (ac-do (cdr s) env))
-        ((eq? (xcar s) 'lexenv) (ac-lenv (cdr s) env))
-        ((eq? (xcar s) 'syntax) (cadr s))
-        ((eq? (xcar (xcar s)) 'syntax) (map (lambda (x) (ac x env)) s))
-        ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
-        ((eq? (xcar s) 'quote) (list 'quote (ac-quoted (cadr s))))
-        ((eq? (xcar s) 'quasiquote) (ac-qq (cadr s) env))
-        ((eq? (xcar s) 'quasisyntax) (ac-qs (cadr s) env))
-        ((eq? (xcar s) 'if) (ac-if (cdr s) env))
-        ((eq? (xcar s) 'fn) (ac-fn (cadr s) (cddr s) env))
-        ((eq? (xcar s) 'assign) (ac-set (cdr s) env))
+        ((car? s '%do) (ac-do (cdr s) env))
+        ((car? s 'lexenv) (ac-lenv (cdr s) env))
+        ((car? s 'syntax) (cadr s))
+        ((caar? s 'syntax) (map (lambda (x) (ac x env)) s))
+        ((car? s ssyntax?) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
+        ((car? s 'quote) (list 'quote (ac-quoted (cadr s))))
+        ((car? s 'quasiquote) (ac-qq (cadr s) env))
+        ((car? s 'quasisyntax) (ac-qs (cadr s) env))
+        ((car? s 'if) (ac-if (cdr s) env))
+        ((car? s 'fn) (ac-fn (cadr s) (cddr s) env))
+        ((car? s 'assign) (ac-set (cdr s) env))
         ; the next three clauses could be removed without changing semantics
         ; ... except that they work for macros (so prob should do this for
         ; every elt of s, not just the car)
-        ((eq? (xcar (xcar s)) 'compose) (ac (decompose (cdar s) (cdr s)) env))
-        ((eq? (xcar (xcar s)) 'complement)
+        ((caar? s 'compose) (ac (decompose (cdar s) (cdr s)) env))
+        ((caar? s 'complement)
          (ac (list 'no (cons (cadar s) (cdr s))) env))
-        ((eq? (xcar (xcar s)) 'andf) (ac-andf s env))
+        ((caar? s 'andf) (ac-andf s env))
         ((pair? s) (ac-call (car s) (cdr s) env))
         (#t s)))
 
@@ -420,7 +422,7 @@
 (define (ac-fn-args a (env (env*)))
   (cond ((null? a) '())
         ((symbol? a) a)
-        ((car? (xcar a) 'o)
+        ((caar? a 'o)
          (let* ((it (cdar a))
                 (var (car it))
                 (val (if (pair? (cdr it)) (cadr it) 'nil)))
@@ -453,7 +455,7 @@
         ((symbol? args) #f)
         ((or (car? args symbol?)
              (car? args keywordp)
-             (and (car? (xcar args) 'o)
+             (and (caar? args 'o)
                   (car? (cdar args) symbol?)))
          (ac-complex-args? (cdr args)))
         (#t #t)))
@@ -523,7 +525,7 @@
 (define (ac-arglist a)
   (cond ((null? a) '())
         ((symbol? a) (list a))
-        ((car? (xcar a) 'o)
+        ((caar? a 'o)
          (cons (cadar a) (ac-arglist (cdr a))))
         ((car? a keywordp) (ac-arglist (cdr a)))
         (#t (cons (car a) (ac-arglist (cdr a))))))
@@ -759,6 +761,7 @@
   place place* place/context place-kill
   compile
 ))
+
 (define (lex? v env)
   (memq v env))
 
@@ -1257,7 +1260,7 @@
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((pair? x)      (case type
-                      ((string)  (if (byte? (xcar x))
+                      ((string)  (if (car? x byte?)
                                      (if (null? args)
                                          (bytes->string/latin-1 (list->bytes x))
                                          (bytes->string/utf-8 (list->bytes x)))
@@ -1452,9 +1455,8 @@
                  (read-accept-lang #f))
     (let ((stx (read-syntax src in)))
       (if (eof-object? stx) stx
-        (if (eq? (xcar (syntax->datum stx)) 'unquote) stx
           (begin (ac-that-expr* stx)
-                 (ac stx)))))))
+                 (ac stx))))))
 
  (define (ac-prompt-read)
    (if (syntax? (ac-that-expr*))
@@ -1536,7 +1538,7 @@
         #t
         (let ((scm (ac x)))
           (eval scm)
-          (pretty-print scm op)
+          (pp (datum scm) op)
           (newline op)
           (newline op)
           (acompile1 ip op)))))
@@ -1551,6 +1553,8 @@
       (lambda (ip)
         (call-with-output-file outname
           (lambda (op)
+            (display "#lang racket/load" op)
+            (display #\newline op)
             (acompile1 ip op)))))))
 
 (xdef macex (lambda (e) (ac-macex e)))
@@ -1849,7 +1853,7 @@
               (let* ((rest (substring s (+ i 1)))
                      (in (open-input-string rest))
                      (expr (read in))
-                     (expr (if (eq? (xcar expr) '%braces) (cadr expr) expr))
+                     (expr (if (car? expr '%braces) (cadr expr) expr))
                      (i2 (let-values (((x y z) (port-next-location in))) z)))
                 (close-input-port in)
                 (cons expr (codestring (substring rest (- i2 1))))))
