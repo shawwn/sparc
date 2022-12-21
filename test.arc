@@ -424,7 +424,7 @@
             (test? 20 a)))
     (test? 20 (do (= a 10)
                   (do (= a 20) a))))
-  (test? '((fn ())) (macex '(do))))
+  (test? '(%do) (macex '(do))))
 
 (define-test if
   (test? '(if a) (macex '(if a)))

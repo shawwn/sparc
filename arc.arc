@@ -23,14 +23,17 @@
 
 
 (assign do (annotate 'mac
-             (fn args `((fn () ,@args)))))
+             (fn args `(%do ,@args))))
+
+(assign warnset (fn (var)
+                  (if (bound var)
+                      (do (disp "*** redefining " (stderr))
+                          (disp var (stderr))
+                          (disp #\newline (stderr))))))
 
 (assign safeset (annotate 'mac
                   (fn (var val)
-                    `(do (if (bound ',var)
-                             (do (disp "*** redefining " (stderr))
-                                 (disp ',var (stderr))
-                                 (disp #\newline (stderr))))
+                    `(do (warnset ',var)
                          (assign ,var ,val)))))
 
 (assign def (annotate 'mac
