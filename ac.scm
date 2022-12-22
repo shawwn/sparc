@@ -328,9 +328,7 @@
          ar-nil)
         ((eqv? x 't)
          ar-t)
-        ((keywordp x)
-         (keywordp x))
-        (#t x)))
+        (#t (or (keywordp x) x))))
 
 (define (ac-unquoted x)
   (cond ((pair? x)
