@@ -84,30 +84,30 @@
 ; env is a list of lexically bound variables, which we
 ; need in order to decide whether set should create a global.
 
-(define (ac s (env (env*)))
-  (cond ((syntax? s) (syn (ac (syntax->datum s) env) s))
+(define (ac s)
+  (cond ((syntax? s) (syn (ac (syntax->datum s)) s))
         ((literal? s) (ac-literal s))
-        ((ssyntax? s) (ac (expand-ssyntax s) env))
-        ((symbol? s) (ac-var-ref s env))
-        ((car? s '%do) (ac-do (cdr s) env))
-        ((car? s 'lexenv) (ac-lenv (cdr s) env))
+        ((ssyntax? s) (ac (expand-ssyntax s)))
+        ((symbol? s) (ac-var-ref s))
+        ((car? s '%do) (ac-do (cdr s)))
+        ((car? s 'lexenv) (ac-lexenv))
         ((car? s 'syntax) (cadr s))
-        ((caar? s 'syntax) (map (lambda (x) (ac x env)) s))
-        ((car? s ssyntax?) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
+        ((caar? s 'syntax) (map ac s))
+        ((car? s ssyntax?) (ac (cons (expand-ssyntax (car s)) (cdr s))))
         ((car? s 'quote) (list 'quote (ac-quoted (cadr s))))
-        ((car? s 'quasiquote) (ac-qq (cadr s) env))
-        ((car? s 'quasisyntax) (ac-qs (cadr s) env))
-        ((car? s 'if) (ac-if (cdr s) env))
-        ((car? s 'fn) (ac-fn (cadr s) (cddr s) env))
-        ((car? s 'assign) (ac-set (cdr s) env))
+        ((car? s 'quasiquote) (ac-qq (cadr s)))
+        ((car? s 'quasisyntax) (ac-qs (cadr s)))
+        ((car? s 'if) (ac-if (cdr s)))
+        ((car? s 'fn) (ac-fn (cadr s) (cddr s)))
+        ((car? s 'assign) (ac-set (cdr s)))
         ; the next three clauses could be removed without changing semantics
         ; ... except that they work for macros (so prob should do this for
         ; every elt of s, not just the car)
-        ((caar? s 'compose) (ac (decompose (cdar s) (cdr s)) env))
+        ((caar? s 'compose) (ac (decompose (cdar s) (cdr s))))
         ((caar? s 'complement)
-         (ac (list 'no (cons (cadar s) (cdr s))) env))
-        ((caar? s 'andf) (ac-andf s env))
-        ((pair? s) (ac-call (car s) (cdr s) env))
+         (ac (list 'no (cons (cadar s) (cdr s)))))
+        ((caar? s 'andf) (ac-andf s))
+        ((pair? s) (ac-call (car s) (cdr s)))
         (#t s)))
 
 (define ar-nil '())
@@ -314,16 +314,16 @@
 (define (ac-global-name s)
   (string->symbol (string-append (if (member s scm-reserved) "arc--" "") (symbol->string s))))
 
-(define (ac-var-ref s env)
+(define (ac-var-ref s)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
-        ((lex? s env)       s)
+        ((lex? s)           s)
         (#t                 (ac-global-name s))))
 
 ; quote
 
 (define (ac-quoted x)
   (cond ((pair? x)
-         (imap (lambda (x) (ac-quoted x)) x))
+         (imap ac-quoted x))
         ((eqv? x 'nil)
          ar-nil)
         ((eqv? x 't)
@@ -334,7 +334,7 @@
 
 (define (ac-unquoted x)
   (cond ((pair? x)
-         (imap (lambda (x) (ac-unquoted x)) x))
+         (imap ac-unquoted x))
         ((ar-nil? x)
          'nil)
         ((eqv? x ar-t)
@@ -343,48 +343,47 @@
 
 ; quasiquote
 
-(define (ac-qq args env)
-  (list 'quasiquote (ac-qq1 1 args env)))
+(define (ac-qq args)
+  (list 'quasiquote (ac-qq1 1 args)))
 
 ; process the argument of a quasiquote. keep track of
 ; depth of nesting. handle unquote only at top level (level = 1).
 ; complete form, e.g. x or (fn x) or (unquote (fn x))
 
-(define (ac-qq1 level x env)
+(define (ac-qq1 level x)
   (cond ((= level 0)
-         (ac x env))
+         (ac x))
         ((car? x 'unquote)
-         (list 'unquote (ac-qq1 (- level 1) (cadr x) env)))
+         (list 'unquote (ac-qq1 (- level 1) (cadr x))))
         ((and (car? x 'unquote-splicing) (= level 1))
          (list 'unquote-splicing
-               (ac-qq1 (- level 1) (cadr x) env)))
+               (ac-qq1 (- level 1) (cadr x))))
         ((car? x 'quasiquote)
-         (list 'quasiquote (ac-qq1 (+ level 1) (cadr x) env)))
+         (list 'quasiquote (ac-qq1 (+ level 1) (cadr x))))
         ((pair? x)
-         (imap (lambda (x) (ac-qq1 level x env)) x))
+         (imap (lambda (x) (ac-qq1 level x)) x))
         (#t (ac-quoted x))))
 
 ; quasisyntax
 
-(define (ac-qs args env)
-  ; (list 'quasisyntax (ac-qs1 1 args env)))
-  (ac-qs1 1 args env))
+(define (ac-qs args)
+  (ac-qs1 1 args))
 
 ; process the argument of a quasisyntax. keep track of
 ; depth of nesting. handle unsyntax only at top level (level = 1).
 ; complete form, e.g. x or (fn x) or (unsyntax (fn x))
 
-(define (ac-qs1 level x env)
+(define (ac-qs1 level x)
   (cond ((= level 0)
-         (ac x env))
+         (ac x))
         ((car? x 'unsyntax)
-         (ac-qs1 (- level 1) (cadr x) env))
+         (ac-qs1 (- level 1) (cadr x)))
         ((and (car? x 'unsyntax-splicing) (= level 1))
-         (ac-qs1 (- level 1) (cadr x) env))
+         (ac-qs1 (- level 1) (cadr x)))
         ((car? x 'quasisyntax)
-         (ac-qs1 (+ level 1) (cadr x) env))
+         (ac-qs1 (+ level 1) (cadr x)))
         ((pair? x)
-         (imap (lambda (x) (ac-qs1 level x env)) x))
+         (imap (lambda (x) (ac-qs1 level x)) x))
         (#t x)))
 
 ; like map, but don't demand '()-terminated list
@@ -402,50 +401,63 @@
 ; (if nil a b) -> b
 ; (if nil a b c) -> (if b c)
 
-(define (ac-if args env)
+(define (ac-if args)
   (cond ((null? args) (list 'quote ar-nil))
-        ((null? (cdr args)) (ac (car args) env))
-        (#t `(if (ar-true? ,(ac (car args) env))
-                 ,(ac (cadr args) env)
-                 ,(ac-if (cddr args) env)))))
+        ((null? (cdr args)) (ac (car args)))
+        (#t `(if (ar-true? ,(ac (car args)))
+                 ,(ac (cadr args))
+                 ,(ac-if (cddr args))))))
 
-(define (ac-dbname! name env)
-  (if (symbol? name)
-      (cons (list name) env)
-      env))
+(define (ac-dbname! name (env (env*)))
+  (env* (if (symbol? name)
+            (cons (list name) env)
+            env))
+  (env*))
 
-(define (ac-dbname env)
+(define (ac-dbname (env (env*)))
   (cond ((null? env) #f)
         ((pair? (car env)) (caar env))
         (#t (ac-dbname (cdr env)))))
 
-(define (ac-fn-args a (env (env*)))
+(define (ac-env! x)
+  (cond ((symbol? x)
+         (env* (cons x (env*))))
+        ((caar? x 'o)
+         (ac-env! (cadr x)))
+        ((pair? x)
+         (imap ac-env! x)))
+  (env*))
+
+(define (ac-fn-args a)
   (cond ((null? a) '())
-        ((symbol? a) a)
+        ((symbol? a)
+         (ac-env! a)
+         a)
         ((caar? a 'o)
          (let* ((it (cdar a))
                 (var (car it))
-                (val (if (pair? (cdr it)) (cadr it) 'nil)))
-           (cons (list var (ac val env))
-                 (ac-fn-args (cdr a) (cons var env)))))
+                (val (if (pair? (cdr it)) (cadr it) 'nil))
+                (expr (ac val)))
+           (ac-env! var)
+           (cons (list var expr)
+                 (ac-fn-args (cdr a)))))
         ((car? a keywordp)
          (cons (keywordp (car a))
-               (ac-fn-args (cdr a) env)))
-        ((car? a symbol?)
-         (cons (car a) (ac-fn-args (cdr a) (cons (car a) env))))
+               (ac-fn-args (cdr a))))
         (#t
-         (cons (car a) (ac-fn-args (cdr a) env)))))
+         (ac-env! (car a))
+         (cons (car a) (ac-fn-args (cdr a))))))
 
 ; translate fn directly into a lambda if it has ordinary
 ; parameters, otherwise use a rest parameter and parse it.
 
-(define (ac-fn args body env)
-  (if (ac-complex-args? args)
-      (ac-complex-fn args body env)
-      (ac-nameit
-       (ac-dbname env)
-       `(lambda ,(ac-fn-args args env)
-          ,@(ac-body* body (append (ac-arglist args) env))))))
+(define (ac-fn args body)
+  (parameterize ((env* (env*)))
+    (ac-nameit
+      (if (ac-complex-args? args)
+          (ac-complex-fn args body)
+          `(lambda ,(ac-fn-args args)
+             ,@(ac-body* body))))))
 
 ; does an fn arg list use optional parameters or destructuring?
 ; a rest parameter is not complex
@@ -466,12 +478,12 @@
 ; but it's OK for parts of a list you're destructuring to
 ; be missing.
 
-(define (ac-complex-fn args body env)
+(define (ac-complex-fn args body)
   (let* ((ra (ar-gensym))
-         (z (ac-complex-args args env ra #t)))
+         (z (ac-complex-args args ra #t)))
     `(lambda ,ra
        (let* ,z
-         ,@(ac-body* body (append (ac-complex-getargs z) env))))))
+         ,@(ac-body* body)))))
 
 ; returns a list of two-element lists, first is variable name,
 ; second is (compiled) expression. to be used in a let.
@@ -480,27 +492,25 @@
 ; is-params indicates that args are function arguments
 ;   (not destructuring), so they must be passed or be optional.
 
-(define (ac-complex-args args env ra is-params)
+(define (ac-complex-args args ra is-params)
   (cond ((null? args) '())
-        ((symbol? args) (list (list args ra)))
+        ((symbol? args)
+         (ac-env! args)
+         (list (list args ra)))
         ((pair? args)
-         (let* ((x (if (and (pair? (car args)) (eqv? (caar args) 'o))
+         (let* ((x (if (caar? args 'o)
                        (ac-complex-opt (cadar args)
                                        (if (pair? (cddar args))
                                            (caddar args)
                                            ar-nil)
-                                       env
                                        ra)
                        (ac-complex-args
                         (car args)
-                        env
                         (if is-params
                             `(car ,ra)
                             `(ar-xcar ,ra))
-                        #f)))
-                (xa (ac-complex-getargs x)))
+                        #f))))
            (append x (ac-complex-args (cdr args)
-                                      (append xa env)
                                       `(ar-xcdr ,ra)
                                       is-params))))
         (#t (err "Can't understand fn arg list" args))))
@@ -508,8 +518,10 @@
 ; (car ra) is the argument
 ; so it's not present if ra is nil or '()
 
-(define (ac-complex-opt var expr env ra)
-  (list (list var `(if (pair? ,ra) (car ,ra) ,(ac expr env)))))
+(define (ac-complex-opt var expr ra)
+  (let ((val (ac expr)))
+    (ac-env! var)
+    (list (list var `(if (pair? ,ra) (car ,ra) ,val)))))
 
 ; extract list of variables from list of two-element lists.
 
@@ -530,19 +542,18 @@
         ((car? a keywordp) (ac-arglist (cdr a)))
         (#t (cons (car a) (ac-arglist (cdr a))))))
 
-(define (ac-body body env)
-  (parameterize ((env* env))
-    (map ac body)))
+(define (ac-body body)
+  (map ac body))
 
 ; like ac-body, but spits out a nil expression if empty
 
-(define (ac-body* body env)
+(define (ac-body* body)
   (if (null? body)
       (list (list 'quote ar-nil))
-      (ac-body body env)))
+      (ac-body body)))
 
-(define (ac-do body env)
-  (let ((expr (ac-body* body env)))
+(define (ac-do body)
+  (let ((expr (ac-body* body)))
     (cond ((= (length expr) 0)
            '(begin))
           ((= (length expr) 1)
@@ -551,19 +562,19 @@
 
 ; (set v1 expr1 v2 expr2 ...)
 
-(define (ac-set x env)
-  `(begin ,@(ac-setn x env)))
+(define (ac-set x)
+  `(begin ,@(ac-setn x)))
 
-(define (ac-setn x env)
+(define (ac-setn x)
   (if (null? x)
       '()
-      (cons (ac-set1 (ac-macex (car x)) (cadr x) env)
-            (ac-setn (cddr x) env))))
+      (cons (ac-set1 (ac-macex (car x)) (cadr x))
+            (ac-setn (cddr x)))))
 
 ; trick to tell Scheme the name of something, so Scheme
 ; debugging and profiling make more sense.
 
-(define (ac-nameit name v)
+(define (ac-nameit v (name (ac-lexname)))
   (if (symbol? name)
       (let ((n (string->symbol (string-append " " (symbol->string name)))))
         (list 'let `((,n ,v)) n))
@@ -573,17 +584,19 @@
 ; = now defined in arc (is it?)
 ; name is to cause fns to have their arc names for debugging
 
-(define (ac-set1 a b1 env)
+(define (ac-set1 a b1)
   (if (symbol? a)
       (let ((n (string->symbol (string-append " " (symbol->string a))))
-            (b (ac b1 (ac-dbname! a env))))
+            (b (parameterize ((env* (env*)))
+                 (ac-dbname! a)
+                 (ac b1))))
         (list 'let `((,n ,b))
                (cond ((eqv? a 'nil) (err "Can't rebind nil"))
                      ((eqv? a 't) (err "Can't rebind t"))
                      ((eqv? a 'true) (err "Can't rebind true"))
                      ((eqv? a 'false) (err "Can't rebind false"))
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
-                     ((lex? a env) `(set! ,a ,n))
+                     ((lex? a) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
                                                          ,n
                                                          #t)))
@@ -593,30 +606,28 @@
 ; given a list of Arc expressions, return a list of Scheme expressions.
 ; for compiling passed arguments.
 
-(define (ac-args names exprs env)
+(define (ac-args names exprs)
   (if (null? exprs)
       '()
-      (cons (ac (car exprs)
-                (ac-dbname! (if (pair? names) (car names) #f) env))
+      (cons (parameterize ((env* (env*)))
+              (ac-dbname! (xcar names))
+              (ac (car exprs)))
             (ac-args (if (pair? names) (cdr names) '())
-                     (cdr exprs)
-                     env))))
+                     (cdr exprs)))))
 
-(define (ac-lexname env)
-  (let ((name (ac-dbname env)))
-    (if (eqv? name #f)
-        'fn
-        (apply string-append
-               (map (lambda (x) (string-append (symbol->string x) "-"))
-                    (apply append (keep pair? env)))))))
+(define (ac-lexname (env (env*)))
+  (and (ac-dbname env)
+       (string->symbol
+         (string-trim
+           (apply string-append
+                  (map (lambda (x) (string-append (symbol->string x) "--"))
+                       (apply append (reverse (keep pair? env)))))
+           "--"))))
 
-(define (ac-lenv args env)
-  (ac-lexenv (ac-lexname env) env))
-
-(define (ac-lexenv name env)
-  `(list (list '*name ',name)
+(define (ac-lexenv (env (env*)))
+  `(list (list '*name ',(ac-lexname env))
          ,@(imap (lambda (var)
-                   (let ((val (ar-gensym)))
+                   (let ((val (ar-gensym 'x)))
                      `(list ',var
                             (lambda ,val ,var)
                             (lambda (,val) (set! ,var ,val)))))
@@ -659,11 +670,11 @@
 
 ; (foo bar) where foo is a global variable bound to a procedure.
 
-(define (ac-global-call fn args env)
+(define (ac-global-call fn args)
   (cond ((and (assoc fn ac-binaries) (= (length args) 2))
-         `(,(cadr (assoc fn ac-binaries)) ,@(ac-args '() args env)))
+         `(,(cadr (assoc fn ac-binaries)) ,@(ac-args '() args)))
         (#t
-         `(,(ac-global-name fn) ,@(ac-args '() args env)))))
+         `(,(ac-global-name fn) ,@(ac-args '() args)))))
 
 ; compile a function call
 ; special cases for speed, to avoid compiled output like
@@ -676,30 +687,30 @@
 
 (define direct-calls #f)
 
-(define (ac-call fn args env)
+(define (ac-call fn args)
   (let ((macfn (ac-macro? fn)))
     (cond (macfn
-           (ac-mac-call macfn args env))
-          ((and (pair? fn) (eqv? (car fn) 'fn))
-           `(,(ac fn env) ,@(ac-args (cadr fn) args env)))
-          ((and direct-calls (symbol? fn) (not (lex? fn env)) (bound? fn)
+           (ac-mac-call macfn args))
+          ((car? fn 'fn)
+           `(,(ac fn) ,@(ac-args (cadr fn) args)))
+          ((and direct-calls (symbol? fn) (not (lex? fn)) (bound? fn)
                 (procedure? (bound? fn)))
-           (ac-global-call fn args env))
+           (ac-global-call fn args))
           ((memf keywordp args)
-           `(,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(,(ac fn) ,@(map ac args)))
           ((= (length args) 0)
-           `(ar-funcall0 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(ar-funcall0 ,(ac fn) ,@(map ac args)))
           ((= (length args) 1)
-           `(ar-funcall1 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(ar-funcall1 ,(ac fn) ,@(map ac args)))
           ((= (length args) 2)
-           `(ar-funcall2 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(ar-funcall2 ,(ac fn) ,@(map ac args)))
           ((= (length args) 3)
-           `(ar-funcall3 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(ar-funcall3 ,(ac fn) ,@(map ac args)))
           ((= (length args) 4)
-           `(ar-funcall4 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
+           `(ar-funcall4 ,(ac fn) ,@(map ac args)))
           (#t
-           `(ar-apply ,(ac fn env)
-                      (list ,@(map (lambda (x) (ac x env)) args)))))))
+           `(ar-apply ,(ac fn)
+                      (list ,@(map ac args)))))))
 
 (define (unzip-list l (vals '()) (keys '()))
   (cond ((null? l) (list (reverse vals) (reverse keys)))
@@ -710,21 +721,21 @@
              (unzip-list (cddr l) vals (cons (list (keywordp (car l)) (cadr l)) keys))))
         (#t (unzip-list (cdr l) (cons (car l) vals) keys))))
 
-(define (ac-mac-call m args env)
+(define (ac-mac-call m args)
   (let* ((it (unzip-list args))
          (args (car it))
          (kwargs (cadr it))
          (expr (keyword-apply m (map car kwargs) (map cadr kwargs) args)))
-    (ac expr env)))
+    (ac expr)))
 
 ; returns #f or the macro function
 
-(define (ac-macro? fn)
+(define (ac-macro? fn (kind 'mac))
   (if (symbol? fn)
       (let ((v (bound? fn)))
         (if (and v
                  (ar-tagged? v)
-                 (eq? (ar-type v) 'mac))
+                 (eq? (ar-type v) kind))
             (ar-rep v)
             #f))
       #f))
@@ -762,15 +773,14 @@
   compile
 ))
 
-(define (lex? v env)
+(define (lex? v (env (env*)))
   (memq v env))
 
 (define (xcar x)
   (and (pair? x) (car x)))
 
 (define (xcdr x)
-  (or (and (pair? x) (cdr x))
-      (and (null? x) x)))
+  (if (pair? x) (cdr x) '()))
 
 ; The next two are optimizations, except work for macros.
 
@@ -779,13 +789,12 @@
         ((null? (cdr fns)) (cons (car fns) args))
         (#t (list (car fns) (decompose (cdr fns) args)))))
 
-(define (ac-andf s env)
-  (ac (let ((gs (map (lambda (x) (ar-gensym)) (cdr s))))
+(define (ac-andf s)
+  (ac (let ((gs (map (lambda (x) (ar-gensym 'andf)) (cdr s))))
                `((fn ,gs
                    (and ,@(map (lambda (f) `(,f ,@gs))
                                (cdar s))))
-                 ,@(cdr s)))
-      env))
+                 ,@(cdr s)))))
 
 (define err error)
 
