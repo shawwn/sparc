@@ -1017,8 +1017,12 @@
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
          (string-append (ar-coerce x 'string) (ar-coerce y 'string)))
-        ((and (arc-list? x) (arc-list? y))
+        ((arc-list? x)
          (append x y))
+        ((evt? x)
+         (choice-evt x y))
+        ((path? x)
+         (build-path x y))
         (#t (+ x y))))
 
 (xdef - -)
