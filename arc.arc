@@ -37,9 +37,14 @@
                          (assign ,var ,val)))))
 
 (assign def (annotate 'mac
-               (fn (name parms . body)
-                 `(do (sref sig ',parms ',name)
-                      (safeset ,name (fn ,parms ,@body))))))
+               (fn (tag: (o kind) name parms . body)
+                 (if body
+                     `(def tag: ,kind ,name (do (sref sig ',parms ',name)
+                                                (fn ,parms ,@body)))
+                     `(safeset ,name ,(if kind `(annotate ',kind ,parms) parms))))))
+
+(def tag: mac mac (name parms . body)
+  `(def tag: mac ,name ,parms ,@body))
 
 (def caar (xs) (car (car xs)))
 (def cadr (xs) (car (cdr xs)))
@@ -47,11 +52,6 @@
 
 (def no (x) (is x nil))
 (def yes (x) (if x true false))
-
-(def bool (x)
-  (if (is (type x) 'fn)
-      (fn args (yes (apply x args)))
-      (yes x)))
 
 (def acons (x) (is (type x) 'cons))
 
@@ -85,11 +85,6 @@
        (list (list (car xs)))
       (cons (f (car xs) (cadr xs))
             (hug (cddr xs) f))))
-
-(assign mac (annotate 'mac
-              (fn (name parms . body)
-                `(do (sref sig ',parms ',name)
-                     (safeset ,name (annotate 'mac (fn ,parms ,@body)))))))
 
 (mac dbg ((o expr 'nil))
   `(debugger (lexenv) ',expr))
