@@ -1411,15 +1411,6 @@
 
 (xdef libpath ar-library-path)
 
-(define-syntax w/restore
-  (syntax-rules ()
-    ((_ var val body ...)
-     (let ((w/restore-prev var)
-           (w/restore-val  val))
-       (dynamic-wind (lambda () (set! var w/restore-val))
-                     (lambda () body ...)
-                     (lambda () (set! var w/restore-prev)))))))
-
 ; top level read-eval-print
 ; tle kept as a way to get a break loop when a scheme err
 
@@ -1498,12 +1489,6 @@
     ; (dynamic-require 'xrepl #f)
     (port-count-lines! (current-input-port))
     (read-eval-print-loop)))
-
-(define-syntax-rule (get-here)
-  (begin 
-    (let ((ccr (current-contract-region)))
-      (let-values (((here-dir here-name ignored) (split-path ccr)))
-        (build-path here-dir here-name)))))
 
 (define (aload1 p)
   (let ((x (sread p)))
