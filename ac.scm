@@ -901,8 +901,12 @@
 ; passed to the first arg, i.e. ('kids item) means (item 'kids).
         (#t (err "Function call on inappropriate object" fn args))))
 
-(xdef apply (lambda (fn . args)
-               (ar-apply fn (ar-apply-args args))))
+(xdef apply
+      (make-keyword-procedure
+        (lambda (keys vals fn . args)
+          (keyword-apply fn keys vals (ar-apply-args args)))
+        (lambda (fn . args)
+          (ar-apply fn (ar-apply-args args)))))
 
 ; special cases of ar-apply for speed and to avoid consing arg lists
 
