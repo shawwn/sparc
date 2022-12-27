@@ -74,10 +74,14 @@
 (def urlencode (s)
   (tostring 
     (each c s 
-      (writec #\%)
-      (let i (int c)
-        (if (< i 16) (writec #\0))
-        (pr (coerce i 'string 16))))))
+      (if (or (alphadig c) (in c #\. #\- #\_ #\~))
+          (writec c)
+          (is c #\space)
+          (writec #\+)
+        (each i (coerce c 'bytes 'utf8)
+          (writec #\%)
+          (if (< i 16) (writec #\0))
+          (pr (upcase:coerce i 'string 16)))))))
 
 (mac litmatch (pat string (o start 0))
   (w/uniq (gstring gstart)

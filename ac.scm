@@ -1271,6 +1271,7 @@
     ((char? x)      (case type
                       ((int)     (char->ascii x))
                       ((string)  (string x))
+                      ((bytes)   (apply ar-coerce (string x) type args))
                       ((sym)     (string->symbol (string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
