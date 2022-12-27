@@ -683,7 +683,7 @@ Strict-Transport-Security: max-age=31556900
 ; eventually promote to general util
 
 (def sortable (ht (o f >) (o key idfn))
-  (sort (compare f key:cadr) (each kv ht (out kv))))
+  (sort (compare f key:cadr) (each (k v) ht (out k v))))
 
 
 ; Background Threads
