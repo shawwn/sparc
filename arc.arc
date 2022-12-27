@@ -961,6 +961,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def int (x (o b 10)) (coerce x 'int b))
 
+(def bin (x) (if (< x 0) (+ "-" (bin (- x))) (+ "0b" (coerce x 'string 2))))
+(def oct (x) (if (< x 0) (+ "-" (oct (- x))) (+ "0o" (coerce x 'string 8))))
+(def hex (x) (if (< x 0) (+ "-" (hex (- x))) (+ "0x" (coerce x 'string 16))))
+
 (mac rand-choice exprs
   `(case (rand ,(len exprs))
      ,@(let key -1 
