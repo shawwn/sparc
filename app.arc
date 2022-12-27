@@ -472,21 +472,21 @@
 ; will be called for each valid value.  Finally done is called.
 
 (def vars-form (user fields f done (o button "update") (o lasts))
-  (taform lasts
-          (if (all [no (_ 4)] fields)
-              (fn (req))
-              (fn (req)
-                (when-umatch user req
-                  (each (k v) req!args
-                    (let name (sym k)
-                      (awhen (find [is (cadr _) name] fields)
-                        ; added sho to fix bug
-                        (let (typ id val sho mod) it
-                          (when (and mod v)
-                            (let newval (readvar typ v fail*)
-                              (unless (is newval fail*)
-                                (f name newval))))))))
-                  (done))))
+  (tarform lasts
+           (if (all [no (_ 4)] fields)
+               (fn (req))
+               (fn (req)
+                 (when-umatch user req
+                   (each (k v) req!args
+                     (let name (sym k)
+                       (awhen (find [is (cadr _) name] fields)
+                         ; added sho to fix bug
+                         (let (typ id val sho mod) it
+                           (when (and mod v)
+                             (let newval (readvar typ v fail*)
+                               (unless (is newval fail*)
+                                 (f name newval))))))))
+                   (done))))
      (tab
        (showvars fields))
      (unless (all [no (_ 4)] fields)  ; no modifiable fields

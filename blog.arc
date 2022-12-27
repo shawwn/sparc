@@ -42,20 +42,21 @@
 
 (def post-url (p) (string "/viewpost?id=" p!id))
 
+(def edit-post-url (p) (string "/editpost?id=" p!id))
+
 (def post-page (user p) (blogpage (display-post user p)))
 
 (def display-post (user p)
   (tag b (link p!title (post-url p)))
   (when user
     (sp)
-    (link "[edit]" (string "/editpost?id=" p!id)))
+    (link "[edit]" (edit-post-url p)))
   (br2)
   (pr p!text))
 
 (defopl newpost req
-  (whitepage
-    (aform [let u (get-user _)
-             (post-page u (addpost u arg!t (md-from-form arg!b)))]
+  (blogpage
+    (arform [post-url (addpost (get-user) arg!t (md-from-form arg!b))]
       (tab (row "title" (input "t" "" 60))
            (row "text"  (textarea "b" 10 80))
            (row ""      (submit))))))
@@ -68,19 +69,22 @@
 (defopl editpost req (blogop edit-post-page req))
 
 (def edit-post-page (user p)
-  (whitepage
+  (blogpage
+    (display-post user p)
+    (br2)
     (vars-form user
                `((string title ,p!title t t)
                  (mdtext text  ,p!text  t t))
                (fn (name val) (= (p name) val))
                (fn () (save-post p)
-                      (post-page user p)))))
+                      (edit-post-url p)))))
 
 (defop archive req
   (blogpage
     (tag ul
-      (each p (map post (rev (range 1 postid*)))
-        (tag li (link p!title (post-url p)))))))
+      (down i postid* 1
+        (whenlet p (post i)
+          (tag li (link p!title (post-url p))))))))
 
 (def blogmain ((o user (get-user)))
   (blogpage
