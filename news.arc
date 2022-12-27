@@ -298,12 +298,13 @@
 (mac each-loaded-item (var . body)
   (w/uniq g
     `(let ,g nil
-       (loop (= ,g maxid*) (> ,g 0) (-- ,g)
-         (whenlet ,var (items* ,g)
-           ,@body)))))
+       (accum out
+         (loop (= ,g maxid*) (> ,g 0) (-- ,g)
+           (whenlet ,var (items* ,g)
+             ,@body))))))
 
 (def loaded-items (test)
-  (accum a (each-loaded-item i (test&a i))))
+  (each-loaded-item i (test&out i)))
 
 (def newslog args (apply srvlog 'news args))
 
