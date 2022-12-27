@@ -112,7 +112,7 @@
     (br2)
     (aform (fn (req)
              (when-umatch user req
-               (withs (u (arg req "acct") p (arg req "pw"))
+               (withs (u arg!acct p arg!pw)
                  (if (or (no u) (no p) (is u "") (is p ""))
                       (pr "Bad data.")
                      (user-exists u)
@@ -237,13 +237,13 @@
 
 (def login-handler (req switch afterward)
   (logout-user (get-user req))
-  (aif (good-login (arg req "acct") (arg req "pw") req!ip)
+  (aif (good-login arg!acct arg!pw req!ip)
        (login it req!ip (user->cookie* it) afterward)
        (failed-login switch "Bad login." afterward)))
 
 (def create-handler (req switch afterward)
   (logout-user (get-user req))
-  (withs (user (arg req "acct") pw (arg req "pw") email (arg req "email"))
+  (withs (user arg!acct pw arg!pw email arg!email)
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
          (do (create-acct user pw email)
@@ -281,11 +281,11 @@
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
-      (inputs (acct  username 20 (arg "acct") 'plain)
-              (pw    password 20 (arg "pw"))
-              (email email?   20 (arg "email") 'plain))
-      (inputs (acct  username 20 (arg "acct") 'plain 'autofocus)
-              (pw    password 20 (arg "pw"))))
+      (inputs (acct  username 20 arg!acct 'plain)
+              (pw    password 20 arg!pw)
+              (email email?   20 arg!email 'plain))
+      (inputs (acct  username 20 arg!acct 'plain 'autofocus)
+              (pw    password 20 arg!pw)))
   (br)
   (submit label))
 

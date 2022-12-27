@@ -1262,7 +1262,7 @@ function vote(node) {
       ))))
 
 (defop traffic req
-  (aif (arg "on")
+  (aif arg!on
       (minipage "traffic on @it"
         (center
           (sptab
@@ -3138,7 +3138,7 @@ first asterisk isn't whitespace.
 
 (defop forgot req (forgot-page))
 
-(def forgot-page ((o subject (arg "acct")))
+(def forgot-page ((o subject arg!acct))
   (prbold "Reset your password")
   (br2)
   (aform (fn (req)
@@ -3151,7 +3151,7 @@ first asterisk isn't whitespace.
     (br)
     (submit "Send reset email")))
 
-(def forgot-url ((o subject (arg "acct")))
+(def forgot-url ((o subject arg!acct))
   (if subject (+ "/forgot?acct=" (eschtml subject)) "/forgot"))
 
 (defhook login-form args
