@@ -1324,6 +1324,9 @@
                       ((keyword) (symbol->keyword x))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
+    ((boolean? x)   (case type
+                      ((string)  (if x "t" "false"))
+                      (else      (err "Can't coerce" x type))))
     (#t             (err "Can't coerce" x type))))
 
 (xdef coerce ar-coerce)
