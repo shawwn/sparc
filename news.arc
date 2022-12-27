@@ -104,8 +104,9 @@
 (or= srv-port* (readenv "PORT" 8080))
 
 (def nsv ((o port srv-port*))
+  (load-userinfo)
   (load-news)
-  (asv port))
+  (serve port))
 
 (def run-news ((o port srv-port*))
   (ero 'srv-port*      (= srv-port* port))
@@ -117,7 +118,9 @@
 (def load-users ()
   (ero "load users: " end: "")
   (noisy-each 100 id (dir profdir*)
-    (load-user id)))
+    (load-user id))
+  (each u (keys hpasswords*)
+    (ensure-news-user u)))
 
 ; For some reason vote files occasionally get written out in a
 ; broken way.  The nature of the errors (random missing or extra
