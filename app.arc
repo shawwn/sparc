@@ -32,7 +32,7 @@
   (or req!ip "::1"))
 
 (def get-cookie (key (o req (the-req*)))
-  (alref req!cooks key))
+  (alref req!cooks (str key)))
 
 (def get-user ((o req (the-req*)))
   (let u (aand (get-cookie "user" req)
@@ -121,7 +121,7 @@
                           (admin-page user))))))
       (pwfields "create (server) account"))))
 
-(def cook-user ((o user (get-user)) (o cookie (get-cookie "user")) (o alt))
+(def cook-user ((o user (get-user)) (o cookie get-cookie!user) (o alt))
   (when user
     (let id (if (is cookie t) (new-user-cookie user) cookie)
       (unless alt
