@@ -706,17 +706,31 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; as lists of chars annotated with 'string, and modify car and cdr to get
 ; the rep of these.  That would also require hacking the reader.  
 
-(def pr args
-  (map1 disp args)
+(def pr (file: (o file (stdout))
+         sep: (o sep "")
+         end: (o end "")
+         flush: (o flush)
+         . args)
+  (let c ""
+    (map1 [do (disp c file) (disp _ file) (= c sep)]
+          args)
+    (disp end file)
+    (if flush (flushout file)))
   (car args))
 
-(def prt args
-  (map1 [if _ (disp _)] args)
+(def prt (file: (o file (stdout))
+          sep: (o sep "")
+          end: (o end "")
+          flush: (o flush)
+          . args)
+  (apply pr (keep idfn args) file: file sep: sep end: end flush: flush)
   (car args))
 
-(def prn args
-  (do1 (apply pr args)
-       (writec #\newline)))
+(def prn (file: (o file (stdout)) sep: (o sep "") flush: (o flush) . args)
+  (apply pr args end: #\newline sep: sep file: file flush: flush))
+
+(def prs (file: (o file (stdout)) end: (o end "") flush: (o flush) . args)
+  (apply pr args sep: #\space end: end file: file flush: flush))
 
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
@@ -1116,19 +1130,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def carif (x) (if (atom x) x (car x)))
 
-; Could prob be generalized beyond printing.
-
-(def prall (elts (o sep ", ") (o init "") (o end ""))
-  (pr init)
-  (when elts
-    (pr (car elts))
-    (map [pr sep _] (cdr elts)))
-  (pr end)
-  elts)
-             
-(def prs args     
-  (prall args #\space))
-
 (def tree-subst (old new tree)
   (if (is tree old)
        new
@@ -1315,7 +1316,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     `(let ,t1 (now)
        (do1 ,expr
             (let ,t2 (now)
-              (ero ,label "time: " (num (* 1000 (- ,t2 ,t1)) 2 t) " msec."))))))
+              (ero ,label "time:" (* 1000 (- ,t2 ,t1)) "msec."))))))
 
 (mac jtime (expr)
   `(do1 'ok (time ,expr)))
@@ -1614,13 +1615,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/table (var . body)
   `(let ,var (table) ,@body ,var))
 
-(def ero args
-  (w/stdout (stderr) 
-    (each a args 
-      (when a
-        (disp a)
-        (writec #\space)))
-    (writec #\newline))
+(def ero (file: (o file (stderr))
+          sep: (o sep " ")
+          end: (o end #\newline)
+          flush: (o flush t)
+          . args)
+  (apply pr args file: file sep: sep end: end flush: flush)
   (car args))
 
 (def queue () (list nil nil 0))
@@ -1663,11 +1663,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (after
          (each ,var ,val
            (when (multiple (++ ,gc) ,gn)
-             (disp "." (stderr))
-             (flushout (stderr)))
+             (ero "." end: ""))
            ,@body)
-         (writec #\newline (stderr))
-         (flushout (stderr))))))
+         (ero)))))
 
 (def downcase (x)
   (let downc (fn (c)

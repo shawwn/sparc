@@ -14,8 +14,7 @@
   (map [apply new-bgthread _] pending-bgthreads*)
   (w/socket s port
     (setuid 2) ; XXX switch from root to pg
-    (prn "ready to serve port " port)
-    (flushout)
+    (ero "ready to serve port" port)
     (= currsock* s)
     (until quitsrv*
       (handle-request s breaksrv*)))

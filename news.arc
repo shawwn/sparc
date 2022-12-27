@@ -107,15 +107,14 @@
   (asv port))
 
 (def run-news ((o port srv-port*))
-  (prn "srv-port* " (= srv-port* port))
-  (prn "srv-noisy* " (= srv-noisy* (readenv "NOISY" nil)))
-  (prn "caching* " (= caching* (readenv "CACHING" 1)))
-  (prn "explicit-flush " (declare 'explicit-flush (readenv "FLUSH" t)))
-  (flushout)
+  (ero 'srv-port*      (= srv-port* port))
+  (ero 'srv-noisy*     (= srv-noisy* (readenv "NOISY" nil)))
+  (ero 'caching*       (= caching* (readenv "CACHING" 1)))
+  (ero 'explicit-flush (declare 'explicit-flush (readenv "FLUSH" t)))
   (nsv port))
 
 (def load-users ()
-  (pr "load users: ")
+  (ero "load users: " end: "")
   (noisy-each 100 id (dir profdir*)
     (load-user id)))
 
@@ -209,7 +208,7 @@
 
 (def load-items ()
   (map rmrf (glob (+ storydir* "*.tmp")))
-  (pr "load items: ")
+  (ero "load items: " end: "")
   (withs (items (table)
           ids   (sort > (map int (dir storydir*))))
     (if ids (= maxid* (car ids)))
@@ -224,8 +223,7 @@
 (def ensure-topstories ()
   (aif (errsafe (readfile1 (+ newsdir* "topstories")))
        (= ranked-stories* (map item it))
-       (do (prn "ranking stories.")
-           (flushout)
+       (do (ero "ranking stories.")
            (gen-topstories))))
 
 (def astory   (i) (is i!type 'story))
@@ -2021,7 +2019,7 @@ function suggestTitle() {
   (and (valid-url url)
        (let toks (parse-site (rem #\space url))
          (if (isa (saferead (car toks)) 'int)
-             (tostring (prall toks "."))
+             (tostring (apply pr toks sep: "."))
              (let (t1 t2 t3 . rest) toks
                (if (and (~in t3 nil "www")
                         (or (mem t1 multi-tld-countries*)

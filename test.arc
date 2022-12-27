@@ -1128,6 +1128,15 @@
   (test? '((1 (1 2) (1 2 3))) (accum a (a 1) (a 1 2) (a 1 2 3) (apply a (a))))
   (test? '(42) (accum a (a 1) (a 1 2) (a 1 2 3) (a) (a 42))))
 
+(define-test pr
+  (test? "abc" (tostring:pr 'a 'b 'c))
+  (test? "a.b.c" (tostring:apply pr '(a b c) sep: "."))
+  (test? "abc\n" (tostring:prn 'a 'b 'c))
+  (test? "a b c" (tostring:prs 'a 'b 'c))
+  (test? 'a (pr file: (outstring) 'a 'b 'c))
+  (test? "a c" (tostring:prt 'a nil 'c sep: " "))
+  (test? nil (prt file: (outstring) nil 'b 'c)))
+
 run-tests
 
 
