@@ -735,7 +735,9 @@
                       (list ,@(map ac args)))))))
 
 (define (unzip-list l (vals '()) (keys '()))
-  (cond ((null? l) (list (reverse vals) (reverse keys)))
+  (cond ((null? l) (list (reverse vals)
+                         (sort (reverse keys)
+                               keyword<? #:key car)))
         ((keywordp (car l))
          (if (or (null? (cdr l))
                  (keywordp (cadr l)))
