@@ -386,7 +386,7 @@ Strict-Transport-Security: max-age=31556900
 ; *** Warning: does not currently urlencode args, so if need to do
 ; that replace v with (urlencode v).
 
-(def reassemble-args (req)
+(def reassemble-args ((o req (the-req*)))
   (aif req!args
        (apply string "?" (intersperse '&
                                       (map (fn ((k v))
@@ -407,9 +407,16 @@ Strict-Transport-Security: max-age=31556900
 (def gen-fnid ()
   (sym:rand-string 22))
 
-(def new-fnid ((o k))
-  (if k 
-      (or= (fnkeys* k) (gen-fnid))
+(def fnid-key ((o key) (o req (the-req*)))
+  (list (get-user)
+        req!op
+        (when (is (str req!type) "get")
+          (reassemble-args req))
+        key))
+
+(def new-fnid ((o key))
+  (if key
+      (or= (fnkeys* (fnid-key key)) (gen-fnid))
       (gen-fnid)))
 
 (def fnidf (f (o k))
