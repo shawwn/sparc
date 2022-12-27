@@ -151,7 +151,8 @@
       (ar-false? x)
       (syntax? x)
       (keywordp x)
-      (ar-tagged? x)))
+      (ar-tagged? x)
+      (ac-number-literal x)))
 
 (define (ac-literal x)
   (cond ((null? x) (list 'quote x))
@@ -319,6 +320,29 @@
         ((lex? s)           s)
         (#t                 (ac-global-name s))))
 
+(define (ac-tonumber s (base 10))
+  (with-handlers ((exn:fail? (lambda (c) #f)))
+    (ar-coerce s 'int base)))
+
+(define (ac-parse-number s)
+  (and (string? s)
+       (cond ((string-prefix? s "-")
+              (let ((n (ac-parse-number (substring s 1))))
+                (and n (- n))))
+             ((or (string-prefix? s "0x")
+                  (string-prefix? s "0X"))
+              (ac-tonumber (substring s 2) 16))
+             ((or (string-prefix? s "0b")
+                  (string-prefix? s "0B"))
+              (ac-tonumber (substring s 2) 2))
+             ((or (string-prefix? s "0o")
+                  (string-prefix? s "0O"))
+              (ac-tonumber (substring s 2) 8))
+             (#t #f))))
+
+(define (ac-number-literal s)
+  (and (symbol? s) (ac-parse-number (symbol->string s))))
+
 ; quote
 
 (define (ac-quoted x)
@@ -328,7 +352,7 @@
          ar-nil)
         ((eqv? x 't)
          ar-t)
-        (#t (or (keywordp x) x))))
+        (#t (or (keywordp x) (ac-number-literal x) x))))
 
 (define (ac-unquoted x)
   (cond ((pair? x)
