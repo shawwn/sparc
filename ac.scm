@@ -1394,9 +1394,11 @@
 ; of system in ensure-dir, but make-directory is too weak: it doesn't
 ; create intermediate directories like mkdir -p.
 
-(xdef file-exists file-exists?)
+(xdef file-exists (lambda (name)
+                    (if (file-exists? name) name #f)))
 
-(xdef dir-exists directory-exists?)
+(xdef dir-exists (lambda (name)
+                   (if (directory-exists? name) name #f)))
 
 (xdef rmfile (wrapnil delete-file))
 
