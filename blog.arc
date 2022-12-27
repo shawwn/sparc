@@ -33,22 +33,22 @@
          (w/bars (link "archive")
                  (link "new post" "newpost"))))))
 
-(defop viewpost req (blogop post-page req))
+(defop viewpost req (blogop post-page arg!id))
 
-(def blogop (f req)
-  (aif (post arg!id)
-       (f (get-user req) it) 
+(def blogop (f id)
+  (aif (post id)
+       (f it)
        (blogpage (pr "No such post."))))
 
 (def post-url (p) (string "/viewpost?id=" p!id))
 
 (def edit-post-url (p) (string "/editpost?id=" p!id))
 
-(def post-page (user p) (blogpage (display-post user p)))
+(def post-page (p) (blogpage (display-post p)))
 
-(def display-post (user p)
+(def display-post (p)
   (tag b (link p!title (post-url p)))
-  (when user
+  (when (get-user)
     (sp)
     (link "[edit]" (edit-post-url p)))
   (br2)
@@ -56,23 +56,23 @@
 
 (defopl newpost req
   (blogpage
-    (arform [post-url (addpost (get-user) arg!t (md-from-form arg!b))]
+    (arform [post-url (addpost arg!t (md-from-form arg!b))]
       (tab (row "title" (input "t" "" 60))
            (row "text"  (textarea "b" 10 80))
            (row ""      (submit))))))
 
-(def addpost (user title text)
+(def addpost (title text)
   (let p (inst 'post 'id (++ postid*) 'title title 'text text)
     (save-post p)
     (= (posts* p!id) p)))
 
-(defopl editpost req (blogop edit-post-page req))
+(defopl editpost req (blogop edit-post-page arg!id))
 
-(def edit-post-page (user p)
+(def edit-post-page (p)
   (blogpage
-    (display-post user p)
+    (display-post p)
     (br2)
-    (vars-form user
+    (vars-form (get-user)
                `((string title ,p!title t t)
                  (mdtext text  ,p!text  t t))
                (fn (name val) (= (p name) val))
@@ -84,17 +84,20 @@
     (tag ul
       (down i postid* 1
         (whenlet p (post i)
-          (tag li (link p!title (post-url p))))))))
+          (tag li (link p!title (post-url p))
+            (when (get-user)
+              (sp)
+              (link "[edit]" (edit-post-url p)))))))))
 
-(def blogmain ((o user (get-user)))
+(def blogmain ()
   (blogpage
     (for i 0 4
       (awhen (posts* (- postid* i)) 
-        (display-post user it)
+        (display-post it)
         (br 3)))))
 
-(defop blog req (blogmain (get-user req)))
-(defop ||   req (blogmain (get-user req)))
+(defop blog req (blogmain))
+(defop ||   req (blogmain))
 
 (def bsv ((o port 8080))
   (ensure-dir postdir*)
