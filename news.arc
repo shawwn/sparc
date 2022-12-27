@@ -1,3 +1,4 @@
+#!bin/arc
 ; News.  2 Sep 06.
 
 ; to run news: (nsv), then go to http://localhost:8080
