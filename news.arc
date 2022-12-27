@@ -1055,7 +1055,7 @@ function vote(node) {
     `(let ,gc (cache (fn () (* caching* ,time))
                      (fn () (tostring (let ,user nil ,@body))))
        (fn (,user)
-         (if ,user
+         (if (or ,user (arg))
              (do ,@body)
              (pr (,gc)))))))
 
