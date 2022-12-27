@@ -416,9 +416,11 @@
                    (latest-items metastory)))))
 
 (def subs (i)
-  (if (mem '/l/private i!keys)
-      i!keys
-      (cons '/l/all i!keys)))
+  (aand i!keys
+        (keep [headmatch "/l/" (string _)] it)
+        (if (mem '/l/private it)
+            it
+            (cons '/l/all it))))
 
 (defmemo match-subs (x)
   (let x (or x "all")
@@ -1073,7 +1075,7 @@ function vote(node) {
 
 (newsop l (path)
   (if (empty path)
-      (tags-page)
+      (tags-page user)
     ((or (lncache* path)
          (= (lncache* path)
             (newsfn user lncache-time* ()
@@ -3321,26 +3323,30 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (newsop welcome.html ()
   (msgpage user welcome-page* "Welcome" (pages-url "welcome")))
 
-(defcache lambdas 300
-  (withs (acc nil cs (table))
-    (each-loaded-item i
-      (each k i!keys
-        (when (headmatch "/l/" (string k))
-          (pushnew k acc)
-          (= (cs k) (or (cs k) 0))
-          (++ (cs k)))))
-    (let r nil
-      (each k acc
-        (push (list k (cs k)) r))
-      (sort (fn (a b) (> a.1 b.1)) r))))
+(def tags-list ((o by arg!sort)
+                (o rev? (or arg!rev (no arg!sort)))
+                user: (o user (get-user)))
+  (aand (each-loaded-item i
+          (when (cansee user i)
+            (map out (subs i))))
+        (counts it)
+        (sort (compare (if rev? > <)
+                       (if (is (str by) "tag") car cadr))
+              (tablist it))))
 
-(def tags-page ()
+(def sortlink (whence name (o default))
+  (withs (by   (or arg!sort (if default name))
+          rev? (or arg!rev (no arg!sort)))
+    (underlink name (+ whence "?sort=@name"
+                       (when (is name by)
+                         (unless rev? "&rev=t"))))))
+
+(newscache tags-page user 90
   (minipage "Tags"
     (sptab
-      (row (underlink "tag" "/l?sort") (underlink "count" "/l"))
-      (let tags (lambdas)
-        (each (site count) (if (arg "sort") (sort (fn (a b) (< a.0 b.0)) tags) tags)
-          (tr (td (pr (link site))) (td count)))))))
+      (row (sortlink "/l" "tag") (sortlink "/l" "count" t))
+      (each (site count) (tags-list user: user)
+        (tr (td (pr (link site))) (td count))))))
 
 ; Abuse Analysis
 
