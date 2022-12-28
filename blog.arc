@@ -26,12 +26,12 @@
   `(whitepage 
      (center
        (widtable 600 
-         (tag b (link blogtitle* "blog"))
+         (tag b (link blogtitle* "/blog"))
          (br 3)
          ,@body
          (br 3)
-         (w/bars (link "archive")
-                 (link "new post" "newpost"))))))
+         (w/bars (link "archive" "/archive")
+                 (link "new post" "/newpost"))))))
 
 (defop viewpost req (blogop post-page arg!id))
 
