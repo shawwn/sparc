@@ -725,6 +725,7 @@ Strict-Transport-Security: max-age=31556900
       (when (srvops* op)
         (prn op)
         (noisy-reload)))
+    (hook 'reload-admins)
     nil))
 
 ; pull from github periodically

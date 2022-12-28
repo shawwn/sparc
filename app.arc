@@ -24,6 +24,10 @@
     (= (user->cookie* v) k))
   t)
 
+(defhook reload-admins ()
+  (= admins* (map string (errsafe (readfile adminfile*))))
+  nil)
+
 ; idea: a bidirectional table, so don't need two vars (and sets)
 
 (or= cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
