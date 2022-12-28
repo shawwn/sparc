@@ -1460,10 +1460,12 @@
 ; top level read-eval-print
 ; tle kept as a way to get a break loop when a scheme err
 
+(define ac-verbose? (getenv "ARC_VERBOSE"))
+
 (define (arc-eval expr (lexenv #f))
   (if lexenv
       (arc-eval-boxed expr lexenv)
-      (seval (ac expr))))
+      (seval (ac (if ac-verbose? (pp expr) expr)))))
 
 (define (arc-eval-boxed expr lexenv)
   (parameterize ((boxed* (if (or (ar-false? (boxed*))
