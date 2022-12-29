@@ -466,20 +466,18 @@
          (ac-env! (cadr x)))
         ((pair? x)
          (imap ac-env! x)))
-  (env*))
+  x)
 
 (define (ac-fn-args a)
   (cond ((null? a) '())
         ((symbol? a)
-         (ac-env! a)
-         a)
+         (ac-env! a))
         ((caar? a 'o)
          (let* ((it (cdar a))
                 (var (car it))
                 (val (if (pair? (cdr it)) (cadr it) 'nil))
                 (expr (ac val)))
-           (ac-env! var)
-           (cons (list var expr)
+           (cons (list (ac-env! var) expr)
                  (ac-fn-args (cdr a)))))
         ((car? a keywordp)
          (cons (keywordp (car a))
@@ -489,8 +487,7 @@
                 (k (symbol->keyword n)))
            (ac-fn-args `(,k (o ,n) ,@(cdr a)))))
         (#t
-         (ac-env! (car a))
-         (cons (car a) (ac-fn-args (cdr a))))))
+         (cons (ac-env! (car a)) (ac-fn-args (cdr a))))))
 
 ; translate fn directly into a lambda if it has ordinary
 ; parameters, otherwise use a rest parameter and parse it.
@@ -539,8 +536,7 @@
 (define (ac-complex-args args ra is-params)
   (cond ((null? args) '())
         ((symbol? args)
-         (ac-env! args)
-         (list (list args ra)))
+         (list (list (ac-env! args) ra)))
         ((pair? args)
          (let* ((x (if (caar? args 'o)
                        (ac-complex-opt (cadar args)
@@ -564,8 +560,7 @@
 
 (define (ac-complex-opt var expr ra)
   (let ((val (ac expr)))
-    (ac-env! var)
-    (list (list var `(if (pair? ,ra) (car ,ra) ,val)))))
+    (list (list (ac-env! var) `(if (pair? ,ra) (car ,ra) ,val)))))
 
 ; extract list of variables from list of two-element lists.
 
