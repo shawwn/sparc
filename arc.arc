@@ -459,7 +459,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(atomic
      ,(if (ssyntax slot)
           `(or-assign ,(ssexpand slot) ,value)
-          (alist slot)
+          (or (alist slot) (lex? slot))
           `(or ,slot (= ,slot ,value))
         `(or (if (bound ',slot) ,slot) (= ,slot ,value)))))
 
