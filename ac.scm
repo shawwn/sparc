@@ -151,6 +151,15 @@
               (not (eq? (string-ref s 1) #\:))
               (string->symbol (substring s 1))))))
 
+(define (ac-unflag x)
+  (let* ((n (ac-flag? x))
+         (k (and n (symbol->keyword n)))
+         (v (and n (if (lex? n) n 't))))
+    (if n `(,k ,v) `(,x))))
+
+(define (ac-unflag-args args)
+  (apply append (map ac-unflag args)))
+
 (define (literal? x)
   (or (boolean? x)
       (char? x)
@@ -723,7 +732,8 @@
 (define direct-calls #f)
 
 (define (ac-call fn args)
-  (let ((macfn (ac-macro? fn)))
+  (let ((args (ac-unflag-args args))
+        (macfn (ac-macro? fn)))
     (cond (macfn
            (ac-mac-call macfn args))
           ((car? fn 'fn)
