@@ -706,31 +706,24 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; as lists of chars annotated with 'string, and modify car and cdr to get
 ; the rep of these.  That would also require hacking the reader.  
 
-(def pr (file: (o file (stdout))
-         sep: (o sep "")
-         end: (o end "")
-         flush: (o flush)
-         . args)
+(def pr (:file :flush :sep :end . args)
+  (or= file (stdout) sep "")
   (let c ""
     (map1 [do (disp c file) (disp _ file) (= c sep)]
           args)
-    (disp end file)
+    (if end (disp end file))
     (if flush (flushout file)))
   (car args))
 
-(def prt (file: (o file (stdout))
-          sep: (o sep "")
-          end: (o end "")
-          flush: (o flush)
-          . args)
-  (apply pr (keep idfn args) file: file sep: sep end: end flush: flush)
+(def prt (:file :flush :sep :end . args)
+  (apply pr (keep idfn args) :file :flush :sep :end)
   (car args))
 
-(def prn (file: (o file (stdout)) sep: (o sep "") flush: (o flush) . args)
-  (apply pr args end: #\newline sep: sep file: file flush: flush))
+(def prn (:file :flush :sep . args)
+  (apply pr args :file :flush :sep end: #\newline))
 
-(def prs (file: (o file (stdout)) end: (o end "") flush: (o flush) . args)
-  (apply pr args sep: #\space end: end file: file flush: flush))
+(def prs (:file :flush :end . args)
+  (apply pr args :file :flush :end sep: #\space))
 
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
@@ -1619,13 +1612,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/table (var . body)
   `(let ,var (table) ,@body ,var))
 
-(def ero (file: (o file (stderr))
-          sep: (o sep " ")
-          end: (o end #\newline)
-          flush: (o flush t)
+(def ero ((o :file (stderr))
+          (o :flush t)
+          (o :sep " ")
+          (o :end #\newline)
           . args)
-  (apply pr args file: file sep: sep end: end flush: flush)
-  (car args))
+  (apply pr args :file :flush :sep :end))
 
 (def queue () (list nil nil 0))
 
