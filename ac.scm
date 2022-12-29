@@ -143,6 +143,14 @@
                   (not (eq? (string-ref s (- (string-length s) 2)) #\:))
                   (symbol->keyword (string->symbol (substring s 0 (- (string-length s) 1)))))))))
 
+(define (ac-flag? x)
+  (and (symbol? x)
+       (let ((s (symbol->string x)))
+         (and (> (string-length s) 1)
+              (eq? (string-ref s 0) #\:)
+              (not (eq? (string-ref s 1) #\:))
+              (string->symbol (substring s 1))))))
+
 (define (literal? x)
   (or (boolean? x)
       (char? x)
@@ -467,6 +475,10 @@
         ((car? a keywordp)
          (cons (keywordp (car a))
                (ac-fn-args (cdr a))))
+        ((car? a ac-flag?)
+         (let* ((n (ac-flag? (car a)))
+                (k (symbol->keyword n)))
+           (ac-fn-args `(,k (o ,n) ,@(cdr a)))))
         (#t
          (ac-env! (car a))
          (cons (car a) (ac-fn-args (cdr a))))))
