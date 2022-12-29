@@ -735,7 +735,7 @@
   (let ((args (ac-unflag-args args))
         (macfn (ac-macro? fn)))
     (cond (macfn
-           (ac-mac-call macfn args))
+           (ac (ac-mac-call macfn args)))
           ((car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
           ((and direct-calls (symbol? fn) (not (lex? fn)) (bound? fn)
@@ -769,11 +769,10 @@
         (#t (unzip-list (cdr l) (cons (car l) vals) keys))))
 
 (define (ac-mac-call m args)
-  (let* ((it (unzip-list args))
+  (let* ((it (unzip-list (ac-unflag-args args)))
          (args (car it))
-         (kwargs (cadr it))
-         (expr (keyword-apply m (map car kwargs) (map cadr kwargs) args)))
-    (ac expr)))
+         (kwargs (cadr it)))
+    (keyword-apply m (map car kwargs) (map cadr kwargs) args)))
 
 ; returns #f or the macro function
 
@@ -789,12 +788,12 @@
 
 ; macroexpand the outer call of a form as much as possible
 
-(define (ac-macex e . once)
+(define (ac-macex e (once #f))
   (if (pair? e)
       (let ((m (ac-macro? (car e))))
         (if m
-            (let ((expansion (apply m (cdr e))))
-              (if (null? once) (ac-macex expansion) expansion))
+            (let ((expansion (ac-mac-call m (cdr e))))
+              (if once expansion (ac-macex expansion)))
             e))
       e))
 
