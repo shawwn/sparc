@@ -38,23 +38,33 @@
 (def blogop (f id)
   (aif (post id)
        (f it)
-       (blogpage (pr "No such post."))))
+       (is id t)
+       (f)
+     (blogpage (pr "No such post."))))
 
-(def post-url (p) (string "/viewpost?id=" p!id))
+(def blogopa (f id whence)
+  (if (admin)
+      (blogop f id)
+      (login-page 'both "Please log in as an administrator."
+                  (list (fn (u ip)) whence))))
 
-(def edit-post-url (p) (string "/editpost?id=" p!id))
+(def post-url (id) (string "/viewpost?id=" id))
+
+(def edit-post-url (id) (string "/editpost?id=" id))
 
 (def post-page (p) (blogpage (display-post p)))
 
 (def display-post (p)
-  (tag b (link p!title (post-url p)))
+  (tag b (link p!title (post-url p!id)))
   (when (get-user)
     (sp)
-    (link "[edit]" (edit-post-url p)))
+    (link "[edit]" (edit-post-url p!id)))
   (br2)
   (pr p!text))
 
-(defopl newpost req
+(defop newpost req (blogopa new-post-page t "/newpost"))
+
+(def new-post-page ()
   (blogpage
     (arform [post-url (addpost arg!t (md-from-form arg!b))]
       (tab (row "title" (input "t" "" 60))
@@ -66,7 +76,7 @@
     (save-post p)
     (= (posts* p!id) p)))
 
-(defopl editpost req (blogop edit-post-page arg!id))
+(defop editpost req (blogopa edit-post-page arg!id (edit-post-url arg!id)))
 
 (def edit-post-page (p)
   (blogpage
@@ -77,17 +87,17 @@
                  (mdtext text  ,p!text  t t))
                (fn (name val) (= (p name) val))
                (fn () (save-post p)
-                      (edit-post-url p)))))
+                      (edit-post-url p!id)))))
 
 (defop archive req
   (blogpage
     (tag ul
       (down i postid* 1
         (whenlet p (post i)
-          (tag li (link p!title (post-url p))
+          (tag li (link p!title (post-url p!id))
             (when (get-user)
               (sp)
-              (link "[edit]" (edit-post-url p)))))))))
+              (link "[edit]" (edit-post-url p!id)))))))))
 
 (def blogmain ()
   (blogpage
