@@ -1327,8 +1327,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac onsort body
   (let self (ac-lexname)
     `(withs (f (if key (compare f key) f)
-             xs (listify xs) ys (listify ys))
-       (aif (if sorted zs (map [sort f (listify _)] zs))
+             xs (listify xs) ys (listify ys) zs (map listify zs))
+       (aif (if sorted zs (map [sort f _] zs))
              (apply ,self :sorted test: f (,self test: f xs ys) it)
             (unset? ys)
              xs
