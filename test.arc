@@ -1141,6 +1141,18 @@
   (test? "a c" (tostring:prt 'a nil 'c sep: " "))
   (test? nil (prt file: (outstring) nil 'b 'c)))
 
+(define-test sets
+  (test? '(a b c d) (union '(a b c) '(b d) :sorted))
+  (test? '(d c b a) (union '(c a b) '(d b) test: >))
+  (test? '(a b c d) (union '(c a b) '(d b)))
+  (test? '(a c) (difference '(a b c) '(b d) :sorted))
+  (test? '(a c) (difference '(c a b) '(d b)))
+  (test? '(b) (intersect '(a b c) '(b d) :sorted))
+  (test? '(b) (intersect '(c a b) '(d b)))
+  (test? '((a 1) (c 2)) (difference '((a 1) (b 2) (c 2))
+                                    '((b 1) (d 2))
+                                    key: car)))
+
 run-tests
 
 
