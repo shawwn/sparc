@@ -1321,18 +1321,41 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac time10 (expr)
   `(time (repeat 10 ,expr)))
 
-(def union (f xs ys)
-  (+ xs (rem (fn (y) (some [f _ y] xs))
-             ys)))
+; Optimized set operations. Runs in linear time if :sorted,
+; otherwise sorts the args.
 
-(def intersect (f xs ys)
-  (keep (fn (y) (some [f _ y] xs)) ys))
+(mac onsort body
+  (let self (ac-lexname)
+    `(let f (if key (compare f key) f)
+       (aif (if sorted zs (map [sort f _] zs))
+             (apply ,self :sorted test: f (,self test: f xs ys) it)
+            (no ys)
+             xs
+            (afn ((x . xs) (y . ys))
+              (if ,@body))
+             (it (if sorted xs (sort f xs))
+                 (if sorted ys (sort f ys)))))))
 
-(def difference (f xs ys)
-  (let zs (intersect f xs ys)
-    (union f
-           (rem [mem _ zs] xs)
-           (rem [mem _ zs] ys))))
+(def union (:sorted :key test: (o f <) xs (o ys) . zs)
+  (onsort (no x)  (consif y ys)
+          (no y)  (cons x xs)
+          (f x y) (cons x (self xs (cons y ys)))
+          (f y x) (cons y (self (cons x xs) ys))
+                  (cons x (self xs ys))))
+
+(def intersect (:sorted :key test: (o f <) xs (o ys false) . zs)
+  (onsort (no x)  nil
+          (no y)  nil
+          (f x y)         (self xs (cons y ys))
+          (f y x)         (self (cons x xs) ys)
+                  (cons x (self xs ys))))
+
+(def difference (:sorted :key test: (o f <) xs (o ys) . zs)
+  (onsort (no x)  nil
+          (no y)  (cons x xs)
+          (f x y) (cons x (self xs (cons y ys)))
+          (f y x)         (self (cons x xs) ys)
+                          (self xs ys)))
 
 (or= templates* (table))
 
@@ -1345,7 +1368,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac addtem (name . fields)
   `(= (templates* ',name) 
-      (union (fn (x y) (is (car x) (car y)))
+      (union key: car
              (list ,@(map (fn ((k v)) `(list ',k (fn () ,v)))
                           (hug fields)))
              (templates* ',name))))
