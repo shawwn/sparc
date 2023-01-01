@@ -1327,30 +1327,32 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac onsort body
   (let self (ac-lexname)
     `(let f (if key (compare f key) f)
-       (aif (if sorted zs (map [sort f _] zs))
+       (= xs (listify xs)
+          ys (listify ys))
+       (aif (if sorted zs (map [sort f (listify _)] zs))
              (apply ,self :sorted test: f (,self test: f xs ys) it)
-            (no ys)
+            (id ys unset)
              xs
             (afn ((x . xs) (y . ys))
               (if ,@body))
              (it (if sorted xs (sort f xs))
                  (if sorted ys (sort f ys)))))))
 
-(def union (:sorted :key test: (o f <) xs (o ys) . zs)
+(def union (:sorted :key test: (o f <) (o xs) (o ys) . zs)
   (onsort (no x)  (consif y ys)
           (no y)  (cons x xs)
           (f x y) (cons x (self xs (cons y ys)))
           (f y x) (cons y (self (cons x xs) ys))
                   (cons x (self xs ys))))
 
-(def intersect (:sorted :key test: (o f <) xs (o ys false) . zs)
+(def intersect (:sorted :key test: (o f <) (o xs) (o ys unset) . zs)
   (onsort (no x)  nil
           (no y)  nil
           (f x y)         (self xs (cons y ys))
           (f y x)         (self (cons x xs) ys)
                   (cons x (self xs ys))))
 
-(def difference (:sorted :key test: (o f <) xs (o ys) . zs)
+(def difference (:sorted :key test: (o f <) (o xs) (o ys) . zs)
   (onsort (no x)  nil
           (no y)  (cons x xs)
           (f x y) (cons x (self xs (cons y ys)))

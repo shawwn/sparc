@@ -1149,9 +1149,18 @@
   (test? '(a c) (difference '(c a b) '(d b)))
   (test? '(b) (intersect '(a b c) '(b d) :sorted))
   (test? '(b) (intersect '(c a b) '(d b)))
-  (test? '((a 1) (c 2)) (difference '((a 1) (b 2) (c 2))
-                                    '((b 1) (d 2))
-                                    key: car)))
+  (test? '((b 2) (c 3)) (difference '((a 1) (b 2) (c 3))
+                                    '((a 1) (d 4))
+                                    key: car))
+  (test? '() (union))
+  (test? '(a) (union '(a)))
+  (test? '(a b c) (union '(a) '(b) '(c)))
+  (test? '(a b c) (union 'a 'b 'c))
+  (test? '(a b c) (union '(a) 'b '(c)))
+  (test? '() (intersect '(a) '()))
+  (test? '(a) (intersect '(a)))
+  (test? '(a) (difference '(a b c) 'b 'c))
+  (test? "fo" (cat:apply union (coerce "foo" 'cons))))
 
 run-tests
 
