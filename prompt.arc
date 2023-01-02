@@ -13,6 +13,8 @@
   (whitepage
     (prbold "Prompt")
     (hspace 20)
+    (link "repl")
+    (hspace 20)
     (pr user " | ")
     (link "logout")
     (when msg (hspace 10) (apply pr msg))
@@ -23,7 +25,13 @@
             (td (ulink 'edit   (edit-app app)))
             (td (ulink 'run    (run-app  app)))
             (td (hspace 40)
-                (ulink 'delete (rem-app  app))))))
+                (ulink 'delete
+                  (whitepage
+                    (pr "Do you want @{app} to be deleted?")
+                    (br)
+                    (w/bars
+                      (ulink 'yes (rem-app app))
+                      (link  'no  "prompt"))))))))
     (br2)
     (aform (fn (req)
              (when-umatch user req
