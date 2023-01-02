@@ -20,52 +20,52 @@
     (tag (table border 0 cellspacing 10)
       (each app (dir (+ appdir* user))
         (tr (td app)
-            (td (ulink user 'edit   (edit-app user app)))
-            (td (ulink user 'run    (run-app  user app)))
+            (td (ulink 'edit   (edit-app app)))
+            (td (ulink 'run    (run-app  app)))
             (td (hspace 40)
-                (ulink user 'delete (rem-app  user app))))))
+                (ulink 'delete (rem-app  app))))))
     (br2)
     (aform (fn (req)
              (when-umatch user req
                (aif (goodname (arg req "app"))
-                    (edit-app user it)
-                    (prompt-page :user "Bad name."))))
+                    (edit-app it)
+                    (prompt-page "Bad name."))))
        (tab (row "name:" (input "app") (submit "create app"))))))
 
-(def app-path (user app) 
-  (and user app (+ appdir* user "/" app)))
+(def app-path (app)
+  (let user (get-user)
+    (and user app (+ appdir* user "/" app))))
 
-(def read-app (user app)
-  (aand (app-path user app) 
+(def read-app (app)
+  (aand (app-path app)
         (file-exists it)
         (readfile it)))
 
-(def write-app (user app exprs)
-  (awhen (app-path user app)
+(def write-app (app exprs)
+  (awhen (app-path app)
     (w/outfile o it 
       (each e exprs (write e o)))))
 
-(def rem-app (user app)
-  (let file (app-path user app)
+(def rem-app (app)
+  (let file (app-path app)
     (if (file-exists file)
-        (do (rmfile (app-path user app))
-            (prompt-page user "Program " app " deleted."))
-        (prompt-page user "No such app."))))
+        (do (rmfile (app-path app))
+            (prompt-page "Program " app " deleted."))
+        (prompt-page "No such app."))))
 
-(def edit-app (user app)
+(def edit-app (app (o :user (get-user)))
   (whitepage
     (pr "user: " user " app: " app)
     (br2)
     (aform (fn (req)
-             (let u2 (get-user req)
-               (if (is u2 user)
-                   (do (when (is (arg req "cmd") "save")
-                         (write-app user app (readall (arg req "exprs"))))
-                       (prompt-page user))
-                   (login-page 'both nil
-                               (fn (u ip) (prompt-page u))))))
+             (if (is (get-user) user)
+                 (do (when (is (arg req "cmd") "save")
+                       (write-app app (readall (arg req "exprs"))))
+                     (prompt-page))
+                 (login-page 'both nil
+                             (fn (u ip) (prompt-page)))))
       (textarea "exprs" 10 82
-        (pprcode (read-app user app)))
+        (pprcode (read-app app)))
       (br2)
       (buts 'cmd "save" "cancel"))))
 
@@ -74,25 +74,25 @@
     (ppr e) 
     (pr "\n\n")))
 
-(def view-app (user app)
+(def view-app (app)
   (whitepage
-    (pr "user: " user " app: " app)
+    (pr "user: " (get-user) " app: " app)
     (br2)
-    (tag xmp (pprcode (read-app user app)))))
+    (tag xmp (pprcode (read-app app)))))
 
-(def run-app (user app)
-  (let exprs (read-app user app)
+(def run-app (app)
+  (let exprs (read-app app)
     (if exprs 
         (on-err (fn (c) (pr "Error: " (details c)))
           (fn () (map eval exprs)))
-        (prompt-page user "Error: No application " app " for user " user))))
+        (prompt-page "Error: No application " app " for user " (get-user)))))
 
 (or= repl-history* nil)
 
 (= repl-history-max* 10000)
 
 (defop repl req
-  (if (admin (get-user req))
+  (if (admin)
       (replpage req)
       (pr "Sorry.")))
 
