@@ -653,7 +653,7 @@
   (if (null? exprs)
       '()
       (cons (parameterize ((env* (env*)))
-              (ac-dbname! (xcar names))
+              (ac-dbname! (car? names))
               (ac (car exprs)))
             (ac-args (if (pair? names) (cdr names) '())
                      (cdr exprs)))))
@@ -820,12 +820,6 @@
 
 (define (lex? v (env (env*)))
   (memq v env))
-
-(define (xcar x)
-  (and (pair? x) (car x)))
-
-(define (xcdr x)
-  (if (pair? x) (cdr x) '()))
 
 ; The next two are optimizations, except work for macros.
 
