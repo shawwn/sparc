@@ -297,8 +297,8 @@
   (threefry-2x32 key (threefry-seed data)))
 
 (def threefry-reduce (key data)
-  (rreduce (fn (x k) (threefry-fold-in k x))
-           (append data (list key))))
+  (reduce (fn (x k) (threefry-fold-in k x))
+          (append data (list key))))
 
 (def list->rng (l)
   (if (acons (car l))
@@ -312,9 +312,9 @@
   (threefry-reduce (threefry-seed 0) (rng->list r)))
 
 (def randu ((o bits 32))
-  (rreduce (fn (x (o y 0)) (+ (lshift y 8) x))
-           (n-of (floordiv bits 8)
-                 (randb))))
+  (reduce (fn (x (o y 0)) (+ (lshift y 8) x))
+          (n-of (floordiv bits 8)
+                (randb))))
 
 (= current-rng current-pseudo-random-generator)
 

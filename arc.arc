@@ -57,17 +57,15 @@
 
 (def atom (x) (no (acons x)))
 
-; Can return to this def once Rtm gets ac to make all rest args
-; nil-terminated lists.
+(def list args args)
 
-; (def list args args)
+(def reduce (f xs)
+  (if (no (cdr xs))
+      (car xs)
+      (f (car xs) (reduce f (cdr xs)))))
 
-(def copylist (xs)
-  (if (no xs) 
-      nil 
-      (cons (car xs) (copylist (cdr xs)))))
-
-(def list args (copylist args))
+(def cons args
+  (reduce join args))
 
 (def idfn (x) x)
 
@@ -1194,7 +1192,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def copy (x . args)
   (let x2 (case (type x)
             sym    x
-            cons   (copylist x) ; (apply (fn args args) x)
+            cons   (apply (fn args args) x)
             string (let new (newstring (len x))
                      (forlen i x
                        (= (new i) (x i)))
@@ -1543,16 +1541,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (each (k v) (counts seq)
       (when (> v n) (= winner k n v)))
     (list winner n)))
-
-(def reduce (f xs)
-  (if (cddr xs)
-      (reduce f (cons (f (car xs) (cadr xs)) (cddr xs)))
-      (apply f xs)))
-
-(def rreduce (f xs)
-  (if (cddr xs)
-      (f (car xs) (rreduce f (cdr xs)))
-      (apply f xs)))
 
 (let argsym (uniq)
 

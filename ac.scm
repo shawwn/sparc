@@ -981,9 +981,7 @@
 
 
 
-
-
-(xdef cons cons)
+(xdef join cons)
 
 (xdef car (lambda (x)
              (cond ((pair? x)     (car x))
