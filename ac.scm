@@ -1518,9 +1518,8 @@
                  (ac stx))))))
 
  (define (ac-prompt-read)
-   (if (syntax? (ac-that-expr*))
-       (display (format "arc:~a> " (source-location-line (ac-that-expr*))))
-       (display "arc:0> "))
+   ; (display (format "arc:~a> " (source-location-line (ac-that-expr*))))
+   (display "arc> ")
   (let ((in ((current-get-interaction-input-port))))
     (parameterize ((current-read-interaction ac-read-interaction))
       ((current-read-interaction) (object-name in) in))))
