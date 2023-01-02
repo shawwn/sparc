@@ -2,9 +2,6 @@
 
 ; adapted from test.l in https://github.com/sctb/lumen
 
-(= passed* 0
-   failed* 0)
-
 (or= tests* (obj))
 
 (mac test! (x msg)
@@ -32,8 +29,7 @@
          (= (tests* ',name) ,id))))
 
 (def run-tests ()
-  (= passed* 0
-     failed* 0)
+  (= passed* 0 failed* 0)
   (each (name f) tests*
     (let result (f)
       (when (isa result 'string)
