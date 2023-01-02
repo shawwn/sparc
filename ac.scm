@@ -51,7 +51,7 @@
 ; sread = scheme read. eventually replace by writing read
 
 (define (shebang? (port (current-input-port)))
-  (equal? "#!" (peek-string 2 0 port)))
+  (string=? "#!" (peek-string 2 0 port)))
 
 (define (sread (p (current-input-port)) (eof eof))
   (parameterize ((read-accept-lang #t)
@@ -1027,13 +1027,13 @@
 (define (ar-id a b)
   (or (eqv? a b)
       (and (number? a) (number? b) (= a b))
-      (and (string? a) (string? b) (string=? a b))))
+      (and (string? a) (string? b) (string=? a b))
+      (and (bytes? a) (bytes? b) (bytes=? a b))))
 
 (xdef id (lambda args (pairwise ar-id args)))
 
 (define (ar-is2 a b)
   (or (ar-id a b)
-      (and (bytes? a) (bytes? b) (bytes=? a b))
       (and (ar-false? a) (ar-false? b))))
 
 ; for all other uses of is
@@ -1051,8 +1051,6 @@
   (or (null? seq)
       (and (test (car seq)) (all test (cdr seq)))))
 
-(define (arc-list? x) (or (pair? x) (ar-nil? x)))
-
 ; Generic +: strings, lists, numbers.
 ; Return val has same type as first argument.
 
@@ -1062,7 +1060,7 @@
                   (apply string-append
                          (map (lambda (a) (ar-coerce a 'string))
                               args)))
-                 ((arc-list? (car args))
+                 ((list? (car args))
                   (apply append args))
                  ((evt? (car args))
                   (apply choice-evt args))
@@ -1075,7 +1073,7 @@
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
          (string-append (ar-coerce x 'string) (ar-coerce y 'string)))
-        ((arc-list? x)
+        ((list? x)
          (append x y))
         ((evt? x)
          (choice-evt x y))
