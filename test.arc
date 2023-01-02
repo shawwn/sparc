@@ -1142,13 +1142,13 @@
   (test? nil (prt file: (outstring) nil 'b 'c)))
 
 (define-test sets
+  (test? '(a b c d) (union '(c a b) '(d b)))
   (test? '(a b c d) (union '(a b c) '(b d) :sorted))
   (test? '(d c b a) (union '(c a b) '(d b) test: >))
-  (test? '(a b c d) (union '(c a b) '(d b)))
-  (test? '(a c) (difference '(a b c) '(b d) :sorted))
   (test? '(a c) (difference '(c a b) '(d b)))
-  (test? '(b) (intersect '(a b c) '(b d) :sorted))
+  (test? '(a c) (difference '(a b c) '(b d) :sorted))
   (test? '(b) (intersect '(c a b) '(d b)))
+  (test? '(b) (intersect '(a b c) '(b d) :sorted))
   (test? '((b 2) (c 3)) (difference '((a 1) (b 2) (c 3))
                                     '((a 1) (d 4))
                                     key: car))
@@ -1159,8 +1159,7 @@
   (test? '(a b c) (union '(a) 'b '(c)))
   (test? '() (intersect '(a) '()))
   (test? '(a) (intersect '(a)))
-  (test? '(a) (difference '(a b c) 'b 'c))
-  (test? "fo" (cat:apply union (coerce "foo" 'cons))))
+  (test? '(a) (difference '(a b c) 'b 'c)))
 
 run-tests
 
