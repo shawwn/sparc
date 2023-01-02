@@ -921,6 +921,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
    (if (isa src 'string) (instring src) src)
    n))
 
+(def allcode (src (o n))
+  (readall src n nil))
+
 (def allbytes ((o str (stdin)))
   (drain (readb str)))
 
