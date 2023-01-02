@@ -80,12 +80,10 @@
       (cons (f (car xs)) (map1 f (cdr xs)))))
 
 (def hug (xs (o f list))
-  (if (no xs)
-       nil
-      (no (cdr xs))
-       (list (list (car xs)))
-      (cons (f (car xs) (cadr xs))
-            (hug (cddr xs) f))))
+  (if (no xs)       nil
+      (no (cdr xs)) (list (f (car xs)))
+                    (cons (f (car xs) (cadr xs))
+                          (hug (cddr xs) f))))
 
 (mac dbg ((o expr 'nil))
   `(debugger (lexenv) ',expr))
