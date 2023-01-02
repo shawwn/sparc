@@ -4,7 +4,9 @@
 ; To run:
 ; arc> (load "blog.arc")
 ; arc> (bsv)
-; go to http://localhost:8080/blog
+; go to http://localhost:8080
+; $ echo test > arc/admins
+; click "new post", then create a user named test
 
 (= postdir*   (libpath "arc/posts/")
    blogtitle* "A Blog")
