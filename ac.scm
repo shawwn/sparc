@@ -113,8 +113,6 @@
 
 (define ar-nil '())
 (define ar-t #t)
-(define nil '())
-(define t #t)
 (define unset undefined)
 (define (unset? x) (eq? x unset))
 
@@ -805,7 +803,7 @@
   begin begin-for-syntax
   + - / *
   < <= = == >= > 
-  #t #f true false t nil
+  true false t nil
   car cdr caar cadr cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
   lib require provide module load eof read write eval
   length empty last keep set max min fill-table abs round count
@@ -815,7 +813,7 @@
   sort close error with-handlers
   date tokens
   place place* place/context place-kill
-  compile
+  compile partition
 ))
 
 (define (lex? v (env (env*)))
