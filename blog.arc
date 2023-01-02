@@ -68,7 +68,8 @@
 
 (def new-post-page ()
   (blogpage
-    (arform [post-url (addpost arg!t (md-from-form arg!b))]
+    (arform [let p (addpost arg!t (md-from-form arg!b))
+              (post-url p!id)]
       (tab (row "title" (input "t" "" 60))
            (row "text"  (textarea "b" 10 80))
            (row ""      (submit))))))
