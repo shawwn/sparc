@@ -889,11 +889,6 @@
 (define (ar-xcdr x)
   (if (ar-nil? x) x (cdr x)))
 
-; convert #f from a Scheme predicate to NIL.
-
-(define (ar-nill x)
-  (if (or (ar-nil? x) (eq? x #f) (void? x)) ar-nil x))
-
 ; definition of falseness for Arc if.
 ; must include '() since sometimes Arc functions see
 ; Scheme lists (e.g. . body of a macro).
@@ -1776,21 +1771,17 @@
         (#t (err "chan-fn: invalid channel: " c))))
 
 (xdef <- (lambda (c . args)
-           (ar-nill
-             (if (null? args)
-                 ((chan-fn c 'get) c)
-                 (begin ((chan-fn c 'put) c args)
-                        args)))))
+           (if (null? args)
+               ((chan-fn c 'get) c)
+               (begin ((chan-fn c 'put) c args)
+                      args))))
 
 (xdef <-? (lambda (c . args)
-            (ar-nill
-              (if (null? args)
-                  ((chan-fn c 'try-get) c)
-                  (let* ((evt ((chan-fn c 'put-evt) c args))
-                         (ret (sync/timeout 0 evt)))
-                    (if (eq? ret #f)
-                        ar-nil
-                        args))))))
+            (if (null? args)
+                ((chan-fn c 'try-get) c)
+                (let* ((evt ((chan-fn c 'put-evt) c args))
+                       (ret (sync/timeout 0 evt)))
+                  (if (eq? ret #f) ar-nil args)))))
 
 ; Added because Mzscheme buffers output.  Not a permanent part of Arc.
 ; Only need to use when declare explicit-flush optimization.
