@@ -19,19 +19,17 @@
   (/ (codetree file) (codelines file))) 
 
 (def tokcount (files)
-  (let counts (table)
+  (with counts (table)
     (each f files
       (each token (flat (readall (infile f)))
-        (++ (counts token 0))))
-    counts))
+        (++ (counts token 0))))))
 
 (def common-tokens (files)
   (let counts (tokcount files)
-    (let ranking nil
+    (with ranking nil
       (each (k v) counts
         (unless (nonop k)
-          (insort (compare > cadr) (list k v) ranking)))
-      ranking)))
+          (insort (compare > cadr) (list k v) ranking))))))
 
 (def nonop (x)
   (in x 'quote 'unquote 'quasiquote 'unquote-splicing))
@@ -45,14 +43,13 @@
 
 (def space-eaters (files)
   (let counts (tokcount files)
-    (let ranking nil
+    (with ranking nil
       (each (k v) counts
         (when (and (isa k 'sym) (bound k))
           (insort (compare > [* (len (string (car _)))
                                 (cadr _)])
                   (list k v (* (len (string k)) v))
-                  ranking)))
-    ranking)))
+                  ranking))))))
 
 ;(top40 (space-eaters allfiles*))
 

@@ -670,13 +670,12 @@ Strict-Transport-Security: max-age=31556900
   (when (admin (get-user req))
     (whitepage
       (sptab
-        (each ip (let leaders nil 
+        (each ip (with leaders nil 
                    (each (ip n) requests/ip*
                      (when (>= n 1)
                        (insort (compare > requests/ip*)
                                ip
-                               leaders)))
-                   leaders)
+                               leaders))))
           (let n (requests/ip* ip)
             (row ip n (pr (num (* 10 (/ n requests*)) 1)))))))))
 

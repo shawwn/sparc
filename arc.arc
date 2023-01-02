@@ -574,11 +574,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
             (cons fx (trues f (cdr xs)))
             (trues f (cdr xs))))))
 
+(mac with (var val . body)
+  `(let ,var ,val
+     ,@body
+     ,var))
+
 (mac do1 args
   (w/uniq g
-    `(let ,g ,(car args)
-       ,@(cdr args)
-       ,g)))
+    `(with ,g ,(car args)
+       ,@(cdr args))))
 
 (mac guard body
   `(on-err [list nil _]
@@ -1007,10 +1011,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def best (f seq)
   (if (no seq)
       nil
-      (let wins (car seq)
+      (with wins (car seq)
         (each elt (cdr seq)
-          (if (f elt wins) (= wins elt)))
-        wins)))
+          (if (f elt wins) (= wins elt))))))
               
 (def max args (best > args))
 (def min args (best < args))
@@ -1108,15 +1111,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac summing (sumfn . body)
   (w/uniq (gc gt)
-    `(let ,gc 0
+    `(with ,gc 0
        (let ,sumfn (fn (,gt) (if ,gt (++ ,gc)))
-         ,@body)
-       ,gc)))
+         ,@body))))
 
 (def sum (f xs)
-  (let n 0
-    (each x xs (++ n (f x)))
-    n))
+  (with n 0
+    (each x xs (++ n (f x)))))
 
 (def treewise (f base tree)
   (if (atom tree)
@@ -1162,10 +1163,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (each kv h (out kv)))
 
 (def listtab (al)
-  (let h (table)
+  (with h (table)
     (map (fn ((k v)) (= (h k) v))
-         al)
-    h))
+         al)))
 
 (mac obj args
   `(listtab (list ,@(map (fn ((k v))
@@ -1194,14 +1194,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (let x2 (case (type x)
             sym    x
             cons   (apply (fn args args) x)
-            string (let new (newstring (len x))
+            string (with new (newstring (len x))
                      (forlen i x
-                       (= (new i) (x i)))
-                     new)
-            table  (let new (table)
+                       (= (new i) (x i))))
+            table  (with new (table)
                      (each (k v) x 
-                       (= (new k) v))
-                     new)
+                       (= (new k) v)))
                    (err "Can't copy " x))
     (map (fn ((k v)) (= (x2 k) v))
          (hug args))
@@ -1374,12 +1372,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
              (templates* ',name))))
 
 (def inst (tem . args)
-  (let x (table)
+  (with x (table)
     (each (k v) (if (acons tem) tem (templates* tem))
       (unless (no v) (= (x k) (v))))
     (each (k v) (hug args)
-      (= (x k) v))
-    x))
+      (= (x k) v))))
 
 ; To write something to be read by temread, (write (tablist x))
 
@@ -1586,18 +1583,16 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (read x eof nil))
 
 (def load-code (file (o evalfn (if (arcfile? file) eval seval)))
-  (let x nil
+  (with x nil
     (w/infile f file
       (whiler e (read-code f eof) eof
-        (= x (evalfn e))))
-    x))
+        (= x (evalfn e))))))
 
 (def load (file (o loaded))
-  (let value (unless loaded
-               (or (hook 'load file)
-                   (load-code file)))
-    (notetime file)
-    value))
+  (with value (unless loaded
+                (or (hook 'load file)
+                    (load-code file)))
+    (notetime file)))
 
 ; This file is already loaded; note it.
 (load (libpath "arc.arc") 'loaded)
@@ -1623,7 +1618,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (and (number x) (> x 0)))
 
 (mac w/table (var . body)
-  `(let ,var (table) ,@body ,var))
+  `(with ,var (table) ,@body))
 
 (def ero ((o :file (stderr))
           (o :flush t)
@@ -1715,9 +1710,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (throw index)))))
 
 (def memtable (ks)
-  (let h (table)
-    (each k ks (set (h k)))
-    h))
+  (with h (table)
+    (each k ks (set (h k)))))
 
 (= bar* " | ")
 
@@ -1785,10 +1779,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac evtil (expr test)
   (w/uniq gv
-    `(let ,gv ,expr
+    `(with ,gv ,expr
        (while (no (,test ,gv))
-         (= ,gv ,expr))
-       ,gv)))
+         (= ,gv ,expr)))))
 
 (def rand-key (h)
   (if (empty h)
@@ -1832,9 +1825,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def tmpfile ((o val "") (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path (libpath "arc/tmp/")))
   (ensure-dir path)
-  (let file (+ path (map [if (is _ #\X) (rand-char) _] name))
-    (w/outfile o file (writer val o))
-    file))
+  (with file (+ path (map [if (is _ #\X) (rand-char) _] name))
+    (w/outfile o file (writer val o))))
 
 (def call-w/tmpfile (val f (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path (libpath "arc/tmp/")))
   (let file (tmpfile val writer name path)

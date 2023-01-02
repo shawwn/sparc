@@ -63,9 +63,8 @@
     *env))
 
 (def dbg-copy (tbl)
-  (let new (table)
-    (maptable (fn (k v) (sref new v k)) tbl)
-    new))
+  (with new (table)
+    (maptable (fn (k v) (sref new v k)) tbl)))
 
 (def dbg-copyenv ()
   (dbg-copy *env))
@@ -139,13 +138,12 @@
     (eval expr lenv)))
 
 (def dbg-prexpr (e lenv expr (o printer) (o o (stdout)) (o i (stdin)))
-  (let result (w/stdout o (w/stdin i (dbg-eval e expr lenv)))
+  (with result (w/stdout o (w/stdin i (dbg-eval e expr lenv)))
     (if printer
       (printer expr result)
       (prnred (dbg-pps result)))
     (= thatexpr expr)
-    (= that result)
-    result))
+    (= that result)))
 
 ;(def dbgerr (c)
 ;  (prn:details c)

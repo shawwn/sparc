@@ -39,10 +39,9 @@
   (alref req!cooks (str key)))
 
 (def get-user ((o req (the-req*)))
-  (let u (aand (get-cookie "user" req)
-               (cookie->user* (sym it)))
-    (when u (= (logins* u) (get-ip req)))
-    u))
+  (with u (aand (get-cookie "user" req)
+                (cookie->user* (sym it)))
+    (when u (= (logins* u) (get-ip req)))))
 
 (defmemo auth-hash (cookie)
   (shash:string cookie))
@@ -127,13 +126,12 @@
 
 (def cook-user ((o user (get-user)) (o cookie get-cookie!user) (o alt))
   (when user
-    (let id (if (is cookie t) (new-user-cookie user) cookie)
+    (with id (if (is cookie t) (new-user-cookie user) cookie)
       (unless alt
         (= (user->cookie* user) id))
       (unless (is (cookie->user* id) user)
         (= (cookie->user* id) user)
-        (save-table cookie->user* cookfile*))
-      id)))
+        (save-table cookie->user* cookfile*)))))
 
 (def cook-user! ((o user (get-user)) (o cookie (new-user-cookie user)))
   (whenlet c (cook-user user cookie)
