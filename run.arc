@@ -52,9 +52,9 @@
   (aand (readall:cat arg)
         (if (cdr it) it (car it))))
 
-(def main args
+(def run args
   (each arg args
     (= that (eval:readarg arg))
     (if that (prn that))))
 
-main
+run
