@@ -3,12 +3,11 @@
 (= appdir* (libpath "arc/apps/"))
 
 (defop prompt req 
-  (let user (get-user req)
-    (if (admin user)
-        (prompt-page user)
-        (pr "Sorry."))))
+  (if (admin)
+      (prompt-page)
+      (pr "Sorry.")))
 
-(def prompt-page (user . msg)
+(def prompt-page ((o :user (get-user)) . msg)
   (ensure-dir appdir*)
   (ensure-dir (string appdir* user))
   (whitepage
@@ -30,7 +29,7 @@
              (when-umatch user req
                (aif (goodname (arg req "app"))
                     (edit-app user it)
-                    (prompt-page user "Bad name."))))
+                    (prompt-page :user "Bad name."))))
        (tab (row "name:" (input "app") (submit "create app"))))))
 
 (def app-path (user app) 

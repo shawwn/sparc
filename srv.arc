@@ -555,10 +555,14 @@ Strict-Transport-Security: max-age=31556900
 ; bad to have both flink and linkf; rename flink something like fnid-link
 
 (mac linkf (text parms . body)
-  `(tag (a href (flink (fn ,parms ,@body))) (pr ,text)))
+  (w/uniq gtext
+    `(let ,gtext ,text
+       (tag (a href (flink (fn ,parms ,@body))) (pr ,gtext)))))
 
 (mac rlinkf (text parms . body)
-  `(tag (a href (rflink (fn ,parms ,@body))) (pr ,text)))
+  (w/uniq gtext
+    `(let ,gtext ,text
+       (tag (a href (rflink (fn ,parms ,@body))) (pr ,gtext)))))
 
 ;(defop top req (linkf 'whoami? (req) (pr "I am " (get-user req))))
 
