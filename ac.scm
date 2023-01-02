@@ -27,14 +27,14 @@
 (print-hash-table #t)
 (print-syntax-width 10000)
 
-(define (car? l (k undefined) (test equal?))
+(define (car? l (k undefined) #:test (test ar-id))
   (and (pair? l)
-       (or (and (eq? k undefined) (car l))
-           (and (procedure? k) (k (car l)))
-           (test (car l) k))))
+       (if (eq? k undefined) (car l)
+         (if (procedure? k) (k (car l))
+           (test (car l) k)))))
 
-(define (caar? l (k undefined) (test equal?))
-  (car? (car? l) k test))
+(define (caar? l (k undefined) #:test (test ar-id))
+  (car? (car? l) k #:test test))
 
 (define (ar-tagged type . rep)
   `(lit ,type ,@rep))
