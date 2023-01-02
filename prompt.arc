@@ -27,11 +27,10 @@
             (td (hspace 40)
                 (ulink 'delete
                   (whitepage
-                    (pr "Do you want @{app} to be deleted?")
-                    (br)
-                    (w/bars
-                      (ulink 'yes (rem-app app))
-                      (link  'no  "prompt"))))))))
+                    (tab (row "Delete @{app}?")
+                         (row (w/bars
+                                (ulink 'yes (rem-app app))
+                                (link  'no  "prompt"))))))))))
     (br2)
     (aform (fn (req)
              (when-umatch user req
