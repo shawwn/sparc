@@ -201,7 +201,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac point (name . body)
   (w/uniq (g p)
-    `(call/ec
+    `(#'call/ec
        (fn (,g)
          (let ,name (fn ((o ,p)) (,g ,p))
            ,@body)))))
@@ -459,7 +459,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(atomic
      ,(if (ssyntax slot)
           `(or-assign ,(ssexpand slot) ,value)
-          (or (alist slot) (lex? slot))
+          (or (alist slot) (#'lex? slot))
           `(or ,slot (= ,slot ,value))
         `(or (if (bound ',slot) ,slot) (= ,slot ,value)))))
 
@@ -1325,7 +1325,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; otherwise sorts the args.
 
 (mac onsort body
-  (let self (ac-lexname)
+  (let self (#'ac-lexname)
     `(withs (f (if key (compare f key) f)
              xs (listify xs) ys (listify ys) zs (map listify zs))
        (aif (if sorted zs (map [sort f _] zs))
