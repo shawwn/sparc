@@ -67,6 +67,9 @@
 (def cons args
   (reduce join args))
 
+(def snoc args
+  (+ (car args) (cdr args)))
+
 (def idfn (x) x)
 
 ; Maybe later make this internal.  Useful to let xs be a fn?
