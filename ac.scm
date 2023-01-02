@@ -64,8 +64,7 @@
 
 (define (sdata (p (current-input-port)) (eof eof))
   (parameterize ((read-accept-lang #f)
-                 (read-accept-reader #f)
-                 (current-readtable #f))
+                 (read-accept-reader #f))
     (if (shebang? p)
         (begin (read-line p) (sdata p eof))
         (let ((expr (read p)))
