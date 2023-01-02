@@ -380,7 +380,7 @@
 
 ;# From scipy special/cephes/ndrti.c
 
-(with
+(withs
   ; approximation for 0 <= abs(z - 0.5) <= 3/8
   (P0 '(-5.99633501014107895267E1
         9.80010754185999661536E1
