@@ -51,7 +51,7 @@
 ; sread = scheme read. eventually replace by writing read
 
 (define (shebang? (port (current-input-port)))
-  (string=? "#!" (peek-string 2 0 port)))
+  (equal? "#!" (peek-string 2 0 port)))
 
 (define (sread (p (current-input-port)) (eof eof))
   (parameterize ((read-accept-lang #t)
