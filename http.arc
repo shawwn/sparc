@@ -1,5 +1,3 @@
-(declare 'atstrings t)
-
 (def http-gen-req-header (host (o path "/") (o method "GET") (o accept "*/*") (o agent "curl/7.64.1"))
   (+ "@method @path HTTP/1.1\r\n"
      "Host: @{host}\r\n"

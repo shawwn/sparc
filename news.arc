@@ -6,8 +6,6 @@
 
 ; bug: somehow (+ votedir* nil) is getting evaluated.
 
-(declare 'atstrings t)
-
 (load (libpath "firebase.arc"))
 (load (libpath "algolia.arc"))
 

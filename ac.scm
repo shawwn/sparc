@@ -121,7 +121,7 @@
 (define (ar-nil? x)
   (eqv? x ar-nil))
 
-(define atstrings #f)
+(define atstrings #t)
 
 (define (ac-string s)
   (if atstrings

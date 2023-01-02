@@ -1,7 +1,6 @@
 #!bin/arc
 
 ; adapted from test.l in https://github.com/sctb/lumen
-(declare 'atstrings t)
 
 (= passed* 0
    failed* 0)
