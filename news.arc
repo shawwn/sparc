@@ -1,7 +1,7 @@
 #!bin/arc
 ; News.  2 Sep 06.
 
-; to run news: (nsv), then go to http://localhost:8080
+; to run news: ./news.arc or (nsv), then go to http://localhost:8080
 ; put usernames of admins, separated by whitespace, in arc/admins
 
 ; bug: somehow (+ votedir* nil) is getting evaluated.
