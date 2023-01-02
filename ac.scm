@@ -66,8 +66,10 @@
   (parameterize ((read-accept-lang #f)
                  (read-accept-reader #f)
                  (current-readtable #f))
-    (let ((expr (read p)))
-      (if (eof-object? expr) eof (ac-quoted expr)))))
+    (if (shebang? p)
+        (begin (read-line p) (sdata p eof))
+        (let ((expr (read p)))
+          (if (eof-object? expr) eof (ac-quoted expr))))))
 
 (define (syn x (src #f))
   (if (syntax? x)
