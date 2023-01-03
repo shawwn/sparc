@@ -19,18 +19,18 @@
     (link "logout")
     (when msg (hspace 10) (apply pr msg))
     (br2)
-    (tag (table border 0 cellspacing 10)
+    (sptab
       (each app (dir (+ appdir* user))
-        (tr (td app)
-            (td (ulink 'edit   (edit-app app)))
-            (td (ulink 'run    (run-app  app)))
-            (td (hspace 40)
-                (ulink 'delete
-                  (whitepage
-                    (tab (row "Delete @{app}?")
-                         (row (w/bars
-                                (ulink 'yes (rem-app app))
-                                (link  'no  "prompt"))))))))))
+        (row app
+          (ulink 'edit   (edit-app app))
+          (ulink 'run    (run-app  app))
+          (hspace 40)
+          (ulink 'delete
+            (whitepage
+              (tab (row "Delete @{app}?")
+                   (row (w/bars
+                          (ulink 'yes (rem-app app))
+                          (link  'no  "prompt")))))))))
     (br2)
     (aform (fn (req)
              (when-umatch user req
