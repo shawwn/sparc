@@ -85,12 +85,14 @@
 ; same it was generated for.  For extra protection could log the 
 ; username and ip addr of every genlink, and check if they match.
 
-(mac ulink (text . body)  
-  (w/uniq (u req)
-    `(let ,u (get-user)
-       (linkf ,text (,req) 
-         (when-umatch ,u ,req ,@body)))))
-
+(mac ulink (text :redir . body)
+  (let op (if redir 'rlinkf 'linkf)
+    (unless (is redir t)
+      (if redir (snoc! body redir)))
+    (w/uniq (u req)
+      `(let ,u (get-user)
+         (,op ,text (,req) 
+           (when-umatch ,u ,req ,@body))))))
 
 (defop admin req (admin-gate (get-user req)))
 
