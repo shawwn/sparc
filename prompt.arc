@@ -21,9 +21,9 @@
     (br2)
     (sptab
       (each app (dir (+ appdir* user))
-        (row app
-          (ulink 'edit   (edit-app app))
+        (row (app-link app)
           (ulink 'run    (run-app  app))
+          (ulink 'edit   (edit-app app))
           (hspace 40)
           (ulink 'delete
             (whitepage
@@ -39,14 +39,29 @@
                     (prompt-page "Bad name."))))
        (tab (row "name:" (input "app") (submit "create app"))))))
 
+(def app-link (app)
+  (if (has-vim)
+      (ulink app redir: "prompt" (vim-app app))
+      (pr app)))
+
 (def app-path (app)
   (let user (get-user)
     (and user app (+ appdir* user "/" app))))
 
-(def read-app (app)
+(def app-exists (app)
   (aand (app-path app)
-        (file-exists it)
+        (file-exists it)))
+
+(def read-app (app)
+  (aand (app-exists app)
         (readfile it)))
+
+(defmemo has-vim ()
+  (shellsafe 'which 'mvim))
+
+(def vim-app (app)
+  (aand (app-exists app)
+        (shell 'mvim it :async)))
 
 (def write-app (app exprs)
   (awhen (app-path app)
