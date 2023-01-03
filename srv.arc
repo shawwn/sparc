@@ -534,11 +534,10 @@ Strict-Transport-Security: max-age=31556900
   (string rfnurl* "?fnid=" (fnid f k)))
 
 (def fredir (f redir)
-  (w/uniq ga
-    (if (and redir (isnt redir t))
-        `(fn (,ga) (,f ,ga) ,redir)
-        redir
-        f
+  (w/uniq (ga gx gr)
+    (if redir
+        `(fn (,ga) (withs (,gx (,f ,ga) ,gr ,redir)
+                     (if (isa ,gr 'string) ,gr ,gx)))
         `(fn (,ga) (prn) (,f ,ga)))))
 
 (mac flink (f (o k '(lexkey)) :redir)
