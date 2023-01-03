@@ -70,6 +70,9 @@
 (def snoc args
   (+ (car args) (cdr args)))
 
+(mac snoc! (var . args)
+  `(zap snoc ,var ,@args))
+
 (def idfn (x) x)
 
 ; Maybe later make this internal.  Useful to let xs be a fn?
