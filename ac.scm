@@ -342,6 +342,7 @@
     (ar-coerce s 'int base)))
 
 (define (ac-parse-number s)
+  (set! s (string-replace s "_" ""))
   (and (string? s)
        (cond ((string-prefix? s "-")
               (let ((n (ac-parse-number (substring s 1))))
@@ -355,7 +356,7 @@
              ((or (string-prefix? s "0o")
                   (string-prefix? s "0O"))
               (ac-tonumber (substring s 2) 8))
-             (#t #f))))
+             (#t (ac-tonumber s)))))
 
 (define (ac-number-literal s)
   (and (symbol? s) (ac-parse-number (symbol->string s))))
