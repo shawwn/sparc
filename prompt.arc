@@ -11,7 +11,7 @@
   (ensure-dir appdir*)
   (ensure-dir (string appdir* user))
   (whitepage
-    (prbold "Prompt")
+    (prbold (link "Prompt" "prompt"))
     (hspace 20)
     (link "repl")
     (hspace 20)
