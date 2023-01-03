@@ -89,7 +89,7 @@
 
 (def run-app (app)
   (let exprs (read-app app)
-    (if exprs 
+    (if (or exprs (app-exists app))
         (on-err (fn (c) (pr "Error: " (details c)))
           (fn () (map eval exprs)))
         (prompt-page "Error: No application " app " for user " (get-user)))))
