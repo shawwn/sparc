@@ -34,7 +34,7 @@
     (br2)
     (aform (fn (req)
              (when-umatch user req
-               (aif (goodname arg!app)
+               (aif (+ (goodname arg!app) ".arc")
                     (edit-app it)
                     (prompt-page "Bad name."))))
        (tab (row "name:" (input "app") (submit "create app"))))))
