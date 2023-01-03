@@ -54,45 +54,41 @@
 (def is-auth (auth (o user (get-user)))
   (is auth (get-auth user)))
 
-(mac when-umatch (user req . body)
+(mac when-umatch (user req :redir . body)
   `(if (is ,user (get-user ,req))
        (do ,@body)
-       (mismatch-message)))
+       redir
+        "mismatch"
+        (mismatch-message)))
 
 (def mismatch-message () 
   (prn "Dead link: users don't match."))
 
 (mac when-umatch/r (user req . body)
-  `(if (is ,user (get-user ,req))
-       (do ,@body)
-       "mismatch"))
+  `(when-umatch ,user ,req :redir ,@body))
 
 (defop mismatch req (mismatch-message))
 
-(mac uform (user req after . body)
-  `(aform (fn (,req)
-            (when-umatch ,user ,req
-              ,after))
+(mac uform (user req :redir after . body)
+  `(aform redir: ,redir
+     (fn (,req)
+       (when-umatch ,user ,req redir: ,redir
+         ,after))
      ,@body))
 
 (mac urform (user req after . body)
-  `(arform (fn (,req)
-             (when-umatch/r ,user ,req 
-               ,after))
-     ,@body))
+  `(uform :redir ,user ,req ,after ,@body))
 
 ; Like onlink, but checks that user submitting the request is the
 ; same it was generated for.  For extra protection could log the 
 ; username and ip addr of every genlink, and check if they match.
 
 (mac ulink (text :redir . body)
-  (let op (if redir 'rlinkf 'linkf)
-    (unless (is redir t)
-      (if redir (snoc! body redir)))
-    (w/uniq (u req)
-      `(let ,u (get-user)
-         (,op ,text (,req) 
-           (when-umatch ,u ,req ,@body))))))
+  (w/uniq (u req)
+    `(let ,u (get-user)
+       (linkf ,text (,req) redir: ,redir
+         (when-umatch ,u ,req redir: ,redir
+           ,@body)))))
 
 (defop admin req (admin-gate (get-user req)))
 

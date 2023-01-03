@@ -533,43 +533,54 @@ Strict-Transport-Security: max-age=31556900
 (def rflinkf (f (o k))
   (string rfnurl* "?fnid=" (fnid f k)))
 
-(mac flink  (f (o k '(lexkey))) `(flinkf ,f ,k))
-(mac rflink (f (o k '(lexkey))) `(rflinkf ,f ,k))
+(def fredir (f redir)
+  (w/uniq ga
+    (if (and redir (isnt redir t))
+        `(fn (,ga) (,f ,ga) ,redir)
+        redir
+        f
+        `(fn (,ga) (prn) (,f ,ga)))))
+
+(mac flink (f (o k '(lexkey)) :redir)
+  (if redir
+      `(rflinkf ,(fredir f redir) ,k)
+      `(flinkf ,f ,k)))
+
+(mac rflink (f (o k '(lexkey)))
+  `(flink ,f ,k :redir))
   
 ; Since it's just an expr, gensym a parm for (ignored) args.
 
-(mac w/link (expr . body)
-  `(tag (a href (flink (fn (,(uniq)) ,expr)))
+(mac w/link (expr :redir . body)
+  `(tag (a href (flink redir: ,redir (fn (,(uniq)) ,expr)))
      ,@body))
 
 (mac w/rlink (expr . body)
-  `(tag (a href (rflink (fn (,(uniq)) ,expr)))
-     ,@body))
+  `(w/link :redir ,expr ,@body))
 
-(mac onlink (text . body)
-  `(w/link (do ,@body) (pr ,text)))
+(mac onlink (text :redir . body)
+  `(w/link redir: ,redir (do ,@body) (pr ,text)))
 
 (mac onrlink (text . body)
-  `(w/rlink (do ,@body) (pr ,text)))
+  `(onlink :redir ,text ,@body))
 
 ; bad to have both flink and linkf; rename flink something like fnid-link
 
-(mac linkf (text parms . body)
+(mac linkf (text parms :redir . body)
   (w/uniq gtext
     `(let ,gtext ,text
-       (tag (a href (flink (fn ,parms ,@body))) (pr ,gtext)))))
+       (tag (a href (flink redir: ,redir (fn ,parms ,@body)))
+         (pr ,gtext)))))
 
 (mac rlinkf (text parms . body)
-  (w/uniq gtext
-    `(let ,gtext ,text
-       (tag (a href (rflink (fn ,parms ,@body))) (pr ,gtext)))))
+  `(linkf :redir ,text ,parms ,@body))
 
 ;(defop top req (linkf 'whoami? (req) (pr "I am " (get-user req))))
 
 ;(defop testf req (w/link (pr "ha ha ha") (pr "laugh")))
 
-(mac w/link-if (test expr . body)
-  `(tag-if ,test (a href (flink (fn (,(uniq)) ,expr)))
+(mac w/link-if (test expr :redir . body)
+  `(tag-if ,test (a href (flink redir: ,redir (fn (,(uniq)) ,expr)))
      ,@body))
 
 (def fnid-field (id)
@@ -588,13 +599,10 @@ Strict-Transport-Security: max-age=31556900
 ; Could also make a version that uses just an expr, and var capture.
 ; Is there a way to ensure user doesn't use "fnid" as a key?
 
-(mac aform (f . body)
-  (w/uniq ga
-    `(tag (form method 'post action fnurl*)
-       (fnid-field (fnid (fn (,ga)
-                           (prn)
-                           (,f ,ga))))
-       ,@body)))
+(mac aform (f :redir . body)
+  `(tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
+     (fnid-field (fnid ,(fredir f redir)))
+     ,@body))
 
 ;(defop test1 req
 ;  (fnform (fn (req) (prn) (pr req))
@@ -607,38 +615,28 @@ Strict-Transport-Security: max-age=31556900
 ; Like aform except creates a fnid that will last for lasts seconds
 ; (unless the server is restarted).
 
-(mac taform (lasts f . body)
-  (w/uniq (gl gf gi ga ge)
+(mac taform (lasts f :redir . body)
+  (w/uniq (gl gf gi ge)
     `(withs (,gl ,lasts
              ,ge (lexkey)
-             ,gf (fn (,ga) (prn) (,f ,ga)))
-       (tag (form method 'post action fnurl*)
+             ,gf ,(fredir f redir))
+       (tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
          (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
          ,@body))))
 
 (mac arform (f . body)
-  `(tag (form method 'post action rfnurl*)
-     (fnid-field (fnid ,f))
-     ,@body))
-
-; overlong
+  `(aform :redir ,f ,@body))
 
 (mac tarform (lasts f . body)
-  (w/uniq (gl gf ge)
-    `(withs (,ge (lexkey) ,gl ,lasts ,gf ,f)
-       (tag (form method 'post action rfnurl*)
-         (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
-         ,@body))))
+  `(taform :redir ,lasts ,f ,@body))
 
-(mac aformh (f . body)
-  `(tag (form method 'post action fnurl*)
-     (fnid-field (fnid ,f))
+(mac aformh (f :redir . body)
+  `(tag (form method 'post action ,(if redir 'rfnurl2* 'fnurl*))
+     (fnid-field (fnid ,(fredir f redir)))
      ,@body))
 
 (mac arformh (f . body)
-  `(tag (form method 'post action rfnurl2*)
-     (fnid-field (fnid ,f))
-     ,@body))
+  `(aformh ,f :redir ,@body))
 
 ; only unique per server invocation
 
