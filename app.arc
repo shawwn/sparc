@@ -777,9 +777,13 @@
       (unless (is code 0)
         (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
 
-(def shell (cmd . args)
-  (tostring
-    (shellrun cmd args)))
+(def shell (cmd :async . args)
+  (if async
+      (thread:shellrun cmd args)
+      (tostring:shellrun cmd args)))
+
+(def shellsafe (cmd :async . args)
+  (errsafe (apply shell cmd :async args)))
 
 (def GET (url)
   (shell "curl" "-fsSL" (clean-url url)))
