@@ -551,6 +551,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (last (cdr xs))
       (car xs)))
 
+(def almost (xs)
+  (if (cdr xs)
+      (cons (car xs) (almost (cdr xs)))))
+
 (def rem (test seq)
   (let f (testify test)
     (if (alist seq)
