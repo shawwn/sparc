@@ -37,11 +37,11 @@
                          (assign ,var ,val)))))
 
 (assign def (annotate 'mac
-               (fn (tag: (o kind) name parms . body)
+               (fn (:tag name parms . body)
                  (if body
-                     `(def tag: ,kind ,name (do (sref sig ',parms ',name)
-                                                (fn ,parms ,@body)))
-                     `(safeset ,name ,(if kind `(annotate ',kind ,parms) parms))))))
+                     `(def tag: ,tag ,name (do (sref sig ',parms ',name)
+                                               (fn ,parms ,@body)))
+                     `(safeset ,name ,(if tag `(annotate ',tag ,parms) parms))))))
 
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
