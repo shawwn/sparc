@@ -258,6 +258,7 @@
   (test? '() (list))
   (test? () (list))
   (test? '(a) (list 'a))
+  (test? '(false) (list false))
   (test? '(a) (quote (a)))
   (test? '(()) (list (list)))
   (test? 0 (len (list)))

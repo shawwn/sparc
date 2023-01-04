@@ -370,6 +370,10 @@
          ar-nil)
         ((eqv? x 't)
          ar-t)
+        ((eqv? x 'true)
+         ar-t)
+        ((eqv? x 'false)
+         #f)
         (#t (or (keywordp x) (ac-number-literal x) x))))
 
 (define (ac-unquoted x)
@@ -379,6 +383,8 @@
          'nil)
         ((eqv? x ar-t)
          't)
+        ((eqv? x #f)
+         'false)
         (#t x)))
 
 ; quasiquote
