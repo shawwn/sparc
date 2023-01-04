@@ -546,7 +546,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
           (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
-  `(while (iflet ,var ,test (do ,@body))))
+  `(while (iflet ,var ,test (do ,@body t))))
 
 (def last (xs)
   (if (cdr xs)
