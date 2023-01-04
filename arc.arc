@@ -544,11 +544,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
           (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
-  (w/uniq (gf gp)
-    `((rfn ,gf (,gp)
-        (let ,var ,gp
-          (when ,var ,@body (,gf ,test))))
-      ,test)))
+  `(while (iflet ,var ,test (do ,@body))))
 
 (def last (xs)
   (if (cdr xs)
@@ -569,20 +565,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def keep (test seq) 
   (rem (complement (testify test)) seq))
 
-;(def trues (f seq) 
-;  (rem nil (map f seq)))
-
-(def trues (f xs)
-  (and xs
-      (let fx (f (car xs))
-        (if fx
-            (cons fx (trues f (cdr xs)))
-            (trues f (cdr xs))))))
+(def trues (f seq) 
+  (rem nil (map f seq)))
 
 (mac do1 args
-  (w/uniq g
-    `(with ,g ,(car args)
-       ,@(cdr args))))
+  `(with ,(uniq) ,(car args)
+     ,@(cdr args)))
 
 (mac guard body
   `(on-err [list nil _]
@@ -604,13 +592,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; but can't insert objects into expansions in Mzscheme.
 
 (mac caselet (var expr . args)
-  (let ex (afn (args)
-            (if (no (cdr args)) 
-                (car args)
-                `(if (mem ,var '(,@(listify (car args))))
-                     ,(cadr args)
-                     ,(self (cddr args)))))
-    `(let ,var ,expr ,(ex args))))
+  (def ex (args)
+    (if (no (cdr args)) 
+        (car args)
+        `(if (mem ,var ',(listify (car args)))
+             ,(cadr args)
+             ,(ex (cddr args)))))
+  `(let ,var ,expr ,(ex args)))
 
 (mac case (expr . args)
   `(caselet ,(uniq) ,expr ,@args))
@@ -764,20 +752,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/accum body
   (w/uniq ga
     `(accum ,ga
-       ,@(map [do `(aif ,_ (,ga it))]
-              body))))
+       ,@(each expr body
+           (out `(aif ,expr (,ga it)))))))
 
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
 (mac drain (expr (o eof nil))
-  (w/uniq (gacc gdone gres)
-    `(withs (,gacc nil ,gdone nil)
-       (while (no ,gdone)
-         (let ,gres ,expr
-           (if (is ,gres ,eof)
-               (= ,gdone t)
-               (push ,gres ,gacc))))
-       (rev ,gacc))))
+  (w/uniq (gacc gres)
+    `(accum ,gacc
+       (let ,gres nil
+         (while (isnt (= ,gres ,expr) ,eof)
+           (,gacc ,gres))))))
 
 ; For the common C idiom while x = snarfdata != stopval.
 ; Rename this if use it often.
