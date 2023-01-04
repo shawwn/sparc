@@ -34,14 +34,14 @@ then
     Linux*)
       set -ex
       cd "${home}/bin"
-      wget https://download.racket-lang.org/releases/8.7/installers/racket-minimal-8.7-x86_64-linux-cs.tgz
+      wget https://download.racket-lang.org/releases/8.7/installers/racket-minimal-8.7-x86_64-linux-cs.tgz -O racket-minimal-8.7-x86_64-linux-cs.tgz
       tar xvf racket-minimal-8.7-x86_64-linux-cs.tgz
       set +ex
       ;;
     Darwin*)
       set -ex
       cd "${home}/bin"
-      wget https://download.racket-lang.org/releases/8.7/installers/racket-minimal-8.7-aarch64-macosx-cs.tgz
+      wget https://download.racket-lang.org/releases/8.7/installers/racket-minimal-8.7-aarch64-macosx-cs.tgz -O racket-minimal-8.7-aarch64-macosx-cs.tgz
       tar xvf racket-minimal-8.7-aarch64-macosx-cs.tgz
       set +ex
       ;;
