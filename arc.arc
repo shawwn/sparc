@@ -499,15 +499,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac repeat (n . body)
   `(for ,(uniq) 1 ,n ,@body))
 
+(def accfn ((o l))
+  (fn xs
+    (if (cdr xs) (cons! l xs)
+        xs       (cons! l (car xs))
+                 (atwith r (rev l)
+                   (= l nil)))))
+
 (mac accum (accfn . body)
-  (w/uniq gacc
-    `(withs (,gacc nil ,accfn (fn args
-                                (let n (len args)
-                                  (if (is n 0) (atomic:do1 (rev ,gacc) (wipe ,gacc))
-                                      (is n 1) (push (car args) ,gacc)
-                                               (push args ,gacc)))))
-       ,@body
-       (,accfn))))
+  `(let ,accfn (accfn)
+     ,@body
+     (,accfn)))
 
 (def across (l f)
   (if (alist l)
