@@ -70,8 +70,11 @@
 (def snoc args
   (+ (car args) (cdr args)))
 
+(mac cons! (var . args)
+  `(atomic (= ,var (cons ,@args ,var))))
+
 (mac snoc! (var . args)
-  `(zap snoc ,var ,@args))
+  `(atomic (= ,var (snoc ,var ,@args))))
 
 (def idfn (x) x)
 
