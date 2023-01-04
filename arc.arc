@@ -33,8 +33,11 @@
 
 (assign safeset (annotate 'mac
                   (fn (var val)
-                    `(do (warnset ',var)
-                         (assign ,var ,val)))))
+                    (if (#'ac-lexname)
+                        `(do (#'define ,(#'ac-env! var) ,val)
+                             ,var)
+                        `(do (warnset ',var)
+                             (assign ,var ,val))))))
 
 (assign def (annotate 'mac
                (fn (:tag name parms . body)
@@ -324,7 +327,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; If ok to do with =, why not with def?  But see if use it.
 
 (mac defs args
-  `(do ,@(map [cons 'def _] (tuples args 3))))
+  `(do ,@(map [cons 'def _] (hug args))))
 
 (def caris (x val) 
   (and (acons x) (is (car x) val)))
@@ -466,15 +469,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (expand=list args))
 
 (mac or= args
-  `(do ,@(map [cons 'or-assign _] (hug args))))
-
-(mac or-assign (slot value)
-  `(atomic
-     ,(if (ssyntax slot)
-          `(or-assign ,(ssexpand slot) ,value)
-          (or (alist slot) (#'lex? slot))
-          `(or ,slot (= ,slot ,value))
-        `(or (if (bound ',slot) ,slot) (= ,slot ,value)))))
+  (def getter (var)
+    (if (or (alist var) (#'lex? var)) var `(bound ',var)))
+  `(do ,@(hug (map1 ssexpand args)
+              (fn (var val)
+                `(atomic (or ,(getter var) (= ,var ,val)))))))
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
@@ -1285,23 +1284,21 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Also by Eli.
 
 (def merge (less? x y)
+  (def lup (r x y r-x?) ; r-x? for optimization -- is r connected to x?
+    (if (less? (car y) (car x))
+      (do (if r-x? (scdr r y))
+          (if (cdr y) (lup y x (cdr y) nil) (scdr y x)))
+      ; (car x) <= (car y)
+      (do (if (no r-x?) (scdr r x))
+          (if (cdr x) (lup x (cdr x) y t) (scdr x y)))))
   (if (no x) y
       (no y) x
-      (let lup nil
-        (assign lup
-                (fn (r x y r-x?) ; r-x? for optimization -- is r connected to x?
-                  (if (less? (car y) (car x))
-                    (do (if r-x? (scdr r y))
-                        (if (cdr y) (lup y x (cdr y) nil) (scdr y x)))
-                    ; (car x) <= (car y)
-                    (do (if (no r-x?) (scdr r x))
-                        (if (cdr x) (lup x (cdr x) y t) (scdr x y))))))
-        (if (less? (car y) (car x))
-          (do (if (cdr y) (lup y x (cdr y) nil) (scdr y x))
-              y)
-          ; (car x) <= (car y)
-          (do (if (cdr x) (lup x (cdr x) y t) (scdr x y))
-              x)))))
+      (less? (car y) (car x))
+      (do (if (cdr y) (lup y x (cdr y) nil) (scdr y x))
+          y)
+      ; (car x) <= (car y)
+      (do (if (cdr x) (lup x (cdr x) y t) (scdr x y))
+          x)))
 
 (def bestn (n f seq)
   (firstn n (sort f seq)))
