@@ -121,6 +121,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `((fn (,var) ,@body)
     ,val))
 
+(mac with (var val . body)
+  `(let ,var ,val
+     ,@body
+     ,var))
+
 (mac withs (parms . body)
   (if (no parms) 
       `(do ,@body)
@@ -332,6 +337,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac atlet args
   `(atomic (let ,@args)))
   
+(mac atwith args
+  `(atomic (with ,@args)))
+
 (mac atwiths args
   `(atomic (withs ,@args)))
 
@@ -566,11 +574,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (if fx
             (cons fx (trues f (cdr xs)))
             (trues f (cdr xs))))))
-
-(mac with (var val . body)
-  `(let ,var ,val
-     ,@body
-     ,var))
 
 (mac do1 args
   (w/uniq g
