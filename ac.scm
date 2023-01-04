@@ -983,7 +983,9 @@
 
 
 
-(xdef join cons)
+(xdef join (lambda ((x ar-nil) (y ar-nil))
+             (if (unset? x) y (cons x y))))
+
 
 (xdef car (lambda (x)
              (cond ((pair? x)     (car x))

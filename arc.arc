@@ -84,7 +84,7 @@
 
 (def hug (xs (o f list))
   (if (no xs)       nil
-      (no (cdr xs)) (list (f (car xs)))
+      (no (cdr xs)) (cons (f (car xs)) nil)
                     (cons (f (car xs) (cadr xs))
                           (hug (cddr xs) f))))
 
@@ -498,23 +498,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,@body
        (,accfn))))
 
-; could bind index instead of gensym
+(def across (l f)
+  (if (alist l)
+       (map1 [do (f _) unset] l)
+      (isa l 'table)
+       (maptable (fn args (f args)) l)
+       (for i 0 (- (len l) 1)
+         (f (l i)))))
 
 (mac each (var expr . body)
-  (w/uniq (gseq gf gv)
-    `(accum out
-       (let ,gseq ,expr
-         (if (alist ,gseq)
-              ((rfn ,gf (,gv)
-                 (when (acons ,gv)
-                   (let ,var (car ,gv) ,@body)
-                   (,gf (cdr ,gv))))
-               ,gseq)
-             (isa ,gseq 'table)
-              (maptable (fn ,var ,@body)
-                        ,gseq)
-              (for ,gv 0 (- (len ,gseq) 1)
-                (let ,var (,gseq ,gv) ,@body)))))))
+  `(accum out
+     (across ,expr (fn (,var) ,@body))))
 
 (def clamp (x a b)
   (if (< x a) a
@@ -552,12 +546,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def rem (test seq)
   (let f (testify test)
     (if (alist seq)
-        ((afn (s)
-           (if (no s)       nil
-               (f (car s))  (self (cdr s))
-                            (cons (car s) (self (cdr s)))))
-          seq)
-        (str (rem test (coerce seq 'cons))))))
+        (map1 [if (f _) unset _] seq)
+        (coerce (rem test (coerce seq 'cons)) (type seq)))))
 
 ; Seems like keep doesn't need to testify-- would be better to
 ; be able to use tables as fns.  But rem does need to, because
