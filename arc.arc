@@ -1561,6 +1561,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def loaded-files () (rev loaded-files*))
 
+(def loaded (file) (car:mem (expandpath file) (loaded-files)))
+
 (def loadtime (file) (loaded-file-times* file))
 
 (def notetime (file (o secs (modtime file)))
@@ -1580,14 +1582,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (whiler e (read-code f eof) eof
         (= x (evalfn e))))))
 
-(def load (file (o loaded))
-  (with value (unless loaded
+(def load (file :once)
+  (with value (unless (and once (loaded file))
                 (or (hook 'load file)
                     (load-code file)))
     (notetime file)))
 
 ; This file is already loaded; note it.
-(load (libpath "arc.arc") 'loaded)
+(notetime (libpath "arc.arc"))
 
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
