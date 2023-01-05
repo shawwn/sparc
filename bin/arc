@@ -2,6 +2,10 @@
 
 dir="$(pwd)"
 bin="$0"
+while [ -L "$(dirname "${bin}")" ]
+do
+  bin="$(readlink "$(dirname "${bin}")")/$(basename "${bin}")"
+done
 while [ -L "${bin}" ]
 do
     x="$(readlink "${bin}")"
