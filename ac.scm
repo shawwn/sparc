@@ -86,6 +86,7 @@
 ; need in order to decide whether set should create a global.
 
 (define (ac s)
+  (set! s (ac-macex s))
   (cond ((syntax? s) (syn (ac (syntax->datum s)) s))
         ((literal? s) (ac-literal s))
         ((ssyntax? s) (ac (expand-ssyntax s)))
@@ -737,11 +738,8 @@
 (define direct-calls #f)
 
 (define (ac-call fn args)
-  (let ((args (ac-unflag-args args))
-        (macfn (ac-macro? fn)))
-    (cond (macfn
-           (ac (ac-mac-call macfn args)))
-          ((car? fn 'fn)
+  (let ((args (ac-unflag-args args)))
+    (cond ((car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
           ((and direct-calls (symbol? fn) (not (lex? fn)) (bound? fn)
                 (procedure? (bound? fn)))
@@ -798,7 +796,9 @@
       (let ((m (ac-macro? (car e))))
         (if m
             (let ((expansion (ac-mac-call m (cdr e))))
-              (if once expansion (ac-macex expansion)))
+              (if (car? expansion '%expansion)
+                  (cadr expansion)
+                  (if once expansion (ac-macex expansion))))
             e))
       e))
 
