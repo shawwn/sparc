@@ -852,9 +852,7 @@ function vote(node) {
                (fn () "/newsadmin"))
     (br2)
     (arform (fn (req)
-              (ero 'here)
-              (withs (user (get-user req) subject (arg req "id"))
-                (ero 'user user 'subject subject)
+              (let subject arg!id
                 (if (profile subject)
                     (do (killallby subject)
                         (submitted-url subject))
@@ -862,9 +860,8 @@ function vote(node) {
       (single-input "" 'id 20 "kill all by"))
     (br2)
     (arform (fn (req)
-              (let user (get-user req)
-                (set-ip-ban user (arg req "ip") t)
-                "/newsadmin"))
+              (set-ip-ban (get-user) arg!ip t)
+              "/newsadmin")
       (single-input "" 'ip 20 "ban ip"))))
 
 (defmemo suggested-title (url)
@@ -2085,7 +2082,7 @@ function suggestTitle() {
 (diskvar  comment-kill*    (+ newsdir* "comment-kill"))
 (diskvar  comment-ignore*  (+ newsdir* "comment-ignore"))
 
-(= comment-kill* nil ip-ban-threshold* 3)
+(= ip-ban-threshold* 3)
 
 (def set-ip-ban (user ip yesno (o info))
   (= (banned-ips* ip) (and yesno (list user (seconds) info)))
