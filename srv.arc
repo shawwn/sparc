@@ -695,22 +695,31 @@ Strict-Transport-Security: max-age=31556900
 
 ; Background Threads
 
-(or= bgthreads* (table) pending-bgthreads* nil)
+(or= bgthreads* (table) pending-bgthreads* nil bgthreads-noisy* (readenv "DEV" nil))
+
+(mac bgthread (name f sec)
+  `(let ,name (fn ()
+                (while t
+                  (sleep ,sec)
+                  (when bgthreads-noisy*
+                    (ero sep: "" "Running background thread " ',name " via " ,f " (every " ,sec "s)"))
+                  (,f)))
+     (new-thread ,name)))
 
 (def new-bgthread (id f sec)
   (aif (bgthreads* id) (break-thread it))
-  (= (bgthreads* id) (new-thread (fn () 
-                                   (while t
-                                     (sleep sec)
-                                     (f))))))
+  (= (bgthreads* id) (eval `(bgthread ,id ,f ,sec))))
 
 ; should be a macro for this?
 
 (mac defbg (id sec . body)
-  `(do (pull [caris _ ',id] pending-bgthreads*)
-       (push (list ',id (fn () ,@body) ,sec) 
-             pending-bgthreads*)))
-
+  (let name (+ id '-bg)
+    `(do (def ,name () ,@body)
+         (pull [caris _ ',id] pending-bgthreads*)
+         (push (list ',id ',name ,sec)
+               pending-bgthreads*)
+         (when (bgthreads* ',id)
+           (new-bgthread ',id ',name ,sec)))))
 
 ; reload changed code each request
 
