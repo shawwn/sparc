@@ -1160,6 +1160,11 @@
   (test? '(a) (intersect '(a)))
   (test? '(a) (difference '(a b c) 'b 'c)))
 
-run-tests
+(define-test brackets
+  (def f ((o :op +) . args)
+    (apply op args))
+  (test? '(2 3 4) (map [f _ 1      ] '(1 2 3)))
+  (test? '(0 1 2) (map [f _ 1 op: -] '(1 2 3))))
 
+run-tests
 

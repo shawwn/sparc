@@ -97,10 +97,12 @@
 (mac dbg ((o expr 'nil))
   `(debugger (lexenv) ',expr))
 
-(mac %brackets body
-"The function invoked on square-bracket calls.
-For example, [car _] => (%brackets car _) => (fn (_) (car _))"
-  `(fn (_) ,body))
+(mac %brackets
+  (#'make-keyword-procedure
+    (fn (ks vs . body)
+      `(fn (_) ,(apply + body (map list ks vs))))
+    (fn body
+      `(fn (_) ,body))))
 
 (mac %braces body
 "The function invoked on curly-bracket calls.
