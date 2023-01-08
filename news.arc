@@ -966,7 +966,7 @@ function vote(node) {
     `(sexpr   keys       ,(p 'keys)                               ,a  ,a)
     `(hexcol  topcolor   ,(or (p 'topcolor) (hexrep site-color*)) ,k  ,k)
     `(int     delay      ,(p 'delay)                              ,u  ,u)
-    `(string  password    ,(changepw-link s)                      ,u  nil "")
+    `(string  password    ,(changepw-link)                        ,u  nil "")
     `(string  submissions ,(submissions-link s)                    t  nil "")
     `(string  comments    ,(comments-link s)                       t  nil "")
     `(string  upvoted     ,(+ (upvoted-link s)   " (private)")    ,u  nil "")
@@ -976,8 +976,8 @@ function vote(node) {
 (def verify-link (u (o label "verify email"))
   (tostring (underlink label "/verify?u=@u")))
 
-(def changepw-link (u (o label "change password"))
-  (tostring (underlink label "/changepw?u=@u")))
+(def changepw-link ((o label "change password"))
+  (tostring (underlink label "/changepw")))
 
 (def submissions-link (u (o label "submissions"))
   (tostring (underlink label (submitted-url u))))
@@ -3074,35 +3074,32 @@ first asterisk isn't whitespace.
 ; Reset PW
 
 (defopg changepw req
-  (withs (user (get-user req)
-          subject (arg req "u"))
-    (changepw-page user subject)))
+  (changepw-page (get-user)))
 
-(def changepw-page (user subject (o msg))
-  (let subject (or subject user)
-    (if (~or (admin user) (is user subject))
-        (pr "Sorry.")
+(def changepw-page (subject (o msg))
+  (if (nor (admin) (is (get-user) subject))
+      (pr "Sorry.")
       (minipage "Reset Password for @subject"
         (if msg
              (pr msg)
-            (blank (uvar user email))
+            (blank (uvar subject email))
              (do (pr "Before you do this, please add your email address to your ")
-                 (underlink "profile" (user-url user))
+                 (underlink "profile" (user-url subject))
                  (pr ". Otherwise you could lose your account if you mistype
                       your new password.")))
         (br2)
-        (urform user req (try-changepw user subject arg!oldpw arg!pw)
+        (urform (get-user) req (try-changepw subject arg!oldpw arg!pw)
           (tab
             (row "Current Password:" (input 'oldpw "" 20 type: 'password))
             (row "New Password:"     (input 'pw    "" 20 type: 'password))
-            (row ""                  (submit "Change"))))))))
+            (row ""                  (submit "Change")))))))
 
-(def try-changepw (user subject oldpw newpw)
+(def try-changepw (subject oldpw newpw)
   (if (or (len< newpw 4) (len> newpw 72))
-       (flink [changepw-page user subject "Passwords should be between 4 and 72 characters long.
+       (flink [changepw-page subject "Passwords should be between 4 and 72 characters long.
                              Please choose another."])
       (~check-pw subject oldpw)
-       (flink [changepw-page user subject "Current password incorrect. Please try again."])
+       (flink [changepw-page subject "Current password incorrect. Please try again."])
        (do (set-pw subject newpw)
            (logout-user subject)
            "/news")))
