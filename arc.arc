@@ -1763,10 +1763,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (or= hooks* (table))
 
 (def hook (name . args)
-  (aif (hooks* name) (apply it args)))
+  (with r nil
+    (each (id it) (rev:hooks* name)
+      (= r (apply it args)))))
 
-(mac defhook (name . rest)
-  `(= (hooks* ',name) (fn ,@rest)))
+(mac defhook (name name: (o id 'hook) . rest)
+  (let f (+ name '-- id)
+    `(let ,f (fn ,@rest)
+       (pull [caris _ ',id] (hooks* ',name))
+       (push (list ',id ,f) (hooks* ',name)))))
 
 ; if renamed this would be more natural for (map [_ user] pagefns*)
 
