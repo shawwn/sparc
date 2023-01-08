@@ -1585,11 +1585,16 @@
               (newline)))
           (atests1 p)))))
 
+(define (call-with-load-file filename thunk)
+  (set! filename (ar-expand-path filename))
+  (parameterize ((current-directory (ar-expand-path ".." filename)))
+    (call-with-input-file filename thunk)))
+
 (define (aload filename)
-  (call-with-input-file filename aload1))
+  (call-with-load-file filename aload1))
 
 (define (test filename)
-  (call-with-input-file filename atests1))
+  (call-with-load-file filename atests1))
 
 (define (acompile1 ip op)
   (let ((x (sread ip)))
@@ -1608,7 +1613,7 @@
   (let ((outname (string-append inname ".scm")))
     (when (file-exists? outname)
       (delete-file outname))
-    (call-with-input-file inname
+    (call-with-load-file inname
       (lambda (ip)
         (call-with-output-file outname
           (lambda (op)

@@ -1565,33 +1565,37 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def loaded (file) (car:mem (expandpath file) (loaded-files)))
 
-(def loadtime (file) (loaded-file-times* file))
+(def loadtime (file) (loaded-file-times* (expandpath file)))
 
 (def notetime (file (o secs (modtime file)))
+  (zap expandpath file)
   (pushnew file loaded-files*)
   (= (loaded-file-times* file) secs))
 
 (def arcfile? (file)
   (and (> (len file) 4)
-       (is ".arc" (cut file (- (len file) 4)))))
+       (is ".arc" (cut file -4))))
 
 (def read-code ((o x (stdin)) (o eof eof))
   (read x eof nil))
 
 (def load-code (file (o evalfn (if (arcfile? file) eval seval)))
+  (zap expandpath file)
   (with x nil
     (w/infile f file
-      (whiler e (read-code f eof) eof
-        (= x (evalfn e))))))
+      (w/param cwd (expandpath ".." file)
+        (whiler e (read-code f eof) eof
+          (= x (evalfn e)))))))
 
 (def load (file :once)
+  (zap expandpath file)
   (with value (unless (and once (loaded file))
                 (or (hook 'load file)
                     (load-code file)))
     (notetime file)))
 
 ; This file is already loaded; note it.
-(notetime (libpath "arc.arc"))
+(notetime "arc.arc")
 
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
