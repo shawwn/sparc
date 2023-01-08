@@ -1049,31 +1049,45 @@
 ; Generic +: strings, lists, numbers.
 ; Return val has same type as first argument.
 
-(xdef + (lambda args
-           (cond ((null? args) 0)
-                 ((char-or-string? (car args))
-                  (apply string-append
-                         (map (lambda (a) (ar-coerce a 'string))
-                              args)))
-                 ((list? (car args))
-                  (apply append args))
-                 ((evt? (car args))
-                  (apply choice-evt args))
-                 ((path? (car args))
-                  (apply build-path args))
-                 (#t (apply + args)))))
+(define (ar-to type)
+  (lambda (x) (ar-coerce x type)))
+
+(define ar-tostr (ar-to 'string))
+(define ar-tosym (ar-to 'sym))
+
+(define (ar-+ . args)
+  (cond ((null? args) 0)
+        ((char-or-string? (car args))
+         (apply string-append
+                (map ar-tostr args)))
+        ((list? (car args))
+         (apply append args))
+        ((evt? (car args))
+         (apply choice-evt args))
+        ((path? (car args))
+         (apply build-path args))
+        ((symbol? (car args))
+         (string->symbol
+           (apply string-append
+                  (map ar-tostr args))))
+        (#t (apply + args))))
+
+(xdef + ar-+)
 
 (define (char-or-string? x) (or (string? x) (char? x)))
 
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
-         (string-append (ar-coerce x 'string) (ar-coerce y 'string)))
+         (string-append (ar-tostr x) (ar-tostr y)))
         ((list? x)
          (append x y))
         ((evt? x)
          (choice-evt x y))
         ((path? x)
          (build-path x y))
+        ((symbol? x)
+         (string->symbol
+           (string-append (ar-tostr x) (ar-tostr y))))
         (#t (+ x y))))
 
 (xdef - -)
@@ -1320,9 +1334,9 @@
                                      (if (null? args)
                                          (bytes->string/latin-1 (list->bytes x))
                                          (bytes->string/utf-8 (list->bytes x)))
-                                     (apply string-append
-                                            (map (lambda (y) (ar-coerce y 'string))
-                                                 x))))
+                                     (apply string-append (map ar-tostr x))))
+                      ((sym)     (string->symbol (apply string-append (map ar-tostr x))))
+                      ((keyword) (string->keyword (apply string-append (map ar-tostr x))))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((ar-nil? x)    (case type
