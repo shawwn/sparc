@@ -1586,23 +1586,32 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (and (> (len file) 4)
        (is ".arc" (cut file -4))))
 
+(def arcenv (file)
+  (zap expandpath file)
+  (list (list '__file__ file)))
+
+(def evaluator (file)
+  (if (arcfile? file)
+      (let env (arcenv file)
+        (with eval [eval _ env]))
+      seval))
+
 (def read-code ((o x (stdin)) (o eof eof))
   (read x eof nil))
 
-(def load-code (file (o evalfn (if (arcfile? file) eval seval)))
-  (zap expandpath file)
+(def load-code (file (o evalfn (evaluator file)))
   (with x nil
     (w/infile f file
-      (w/param cwd (expandpath ".." file)
-        (whiler e (read-code f eof) eof
-          (= x (evalfn e)))))))
+      (whiler e (read-code f eof) eof
+        (= x (evalfn e))))))
 
 (def load (file :once)
   (zap expandpath file)
-  (with value (unless (and once (loaded file))
-                (or (hook 'load file)
-                    (load-code file)))
-    (notetime file)))
+  (w/param cwd (expandpath ".." file)
+    (with value (unless (and once (loaded file))
+                  (do1 (load-code file)
+                       (hook 'load file)))
+      (notetime file))))
 
 ; This file is already loaded; note it.
 (notetime "arc.arc")
