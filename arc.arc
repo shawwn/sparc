@@ -1598,10 +1598,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (or= reload-count* 0)
 
-(def reload ((o file (loaded-files)))
+(def reload ((o file (loaded-files)) :force)
   (if (acons file)
-       (map reload file)
-      (file-changed? file)
+       (map [reload _ :force] file)
+      (or force (file-changed? file))
        (do1 (list file (load file))
             (++ reload-count*))))
 
