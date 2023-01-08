@@ -11,7 +11,7 @@
   (str (intersperse c seq)))
 
 (def seq (s)
-  (coerce (if (isa s 'sym) (str s) s) 'cons))
+  (coerce s 'cons))
 
 (def tokens (s (o sep whitec))
   (let test (testify sep)

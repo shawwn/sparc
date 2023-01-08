@@ -580,8 +580,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                            (< start 0) (+ n start)
                            start)
                        0 n))
-      (if (isa seq 'string)
-          (#'substring seq start end)
+      (if (~alist seq)
+          (coerce (#'substring (str seq) start end) (type seq))
           (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
