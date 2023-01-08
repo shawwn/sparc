@@ -14,7 +14,7 @@
    site-email*   "tl@@tensorfork.com"
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
-   discord-url*  "https://discord.gg/x52Xz3y"
+   discord-url*  nil
    site-url*     "https://www.tensorfork.com"
    parent-url*   "https://www.tensorfork.com"
    welcome-url*  "/welcome.html"
@@ -731,7 +731,8 @@ function vote(node) {
     (when user
       (toplink "threads" (threads-url user) label))
     (toplink "comments" "/newcomments" label)
-    (toplink "discord"  discord-url* label)
+    (when discord-url*
+      (toplink "discord"  discord-url* label))
     (hook 'toprow user label)
     (link "tags" "/l")
     (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
