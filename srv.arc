@@ -682,7 +682,7 @@ Strict-Transport-Security: max-age=31556900
   (defop || req (pr "It's alive.")))
 
 (defop topips req
-  (when (admin (get-user req))
+  (when (admin)
     (whitepage
       (sptab
         (each ip (with leaders nil 
@@ -695,7 +695,7 @@ Strict-Transport-Security: max-age=31556900
             (row ip n (pr (num (* 10 (/ n requests*)) 1)))))))))
 
 (defop spurned req
-  (when (admin (get-user req))
+  (when (admin)
     (whitepage
       (sptab
         (map (fn ((ip n)) (row ip n))
