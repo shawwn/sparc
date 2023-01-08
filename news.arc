@@ -2196,8 +2196,8 @@ function suggestTitle() {
   (newslog ip user 'create-poll title)
   (let p (inst 'item 'type 'poll 'id (new-item-id)
                      'title title 'text text 'by user 'ip ip)
-    (= p!parts (map get!id (map [create-pollopt p nil nil _ user ip]
-                                (paras opts))))
+    (= p!parts (map [do _!id] (map [create-pollopt p nil nil _ user ip]
+                                   (paras opts))))
     (save-item p)
     (= (items* p!id) p)
     (push p stories*)
