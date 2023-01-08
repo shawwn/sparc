@@ -455,11 +455,21 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (err "Can't invert " (cons f args))
        (cons f args)))
 
+(def uniq-place (place)
+  (assign place (rem 'quote (flat:map ssexpand (flat:listify place))))
+  (let g (keep [or (alphadig _)
+                   (in _ #\* #\- #\=)]
+               (reduce (fn (x y) (+ '|| x '-- y))
+                       (if (<= (len place) 1)
+                           (snoc place 'fn)
+                           place)))
+    (if (#'lex? g) (uniq g) g)))
+
 (def expand= (place val)
   (if (and (isa place 'sym) (~ssyntax place))
       `(assign ,place ,val)
       (let (vars prev setter) (setforms place)
-        (w/uniq g
+        (let g (uniq-place place)
           `(atwiths ,(+ vars (list g val))
              (,setter ,g))))))
 
@@ -476,6 +486,33 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(do ,@(hug (map1 ssexpand args)
               (fn (var val)
                 `(atomic (or ,(getter var) (= ,var ,val)))))))
+
+(def <= args
+  (or (no args)
+      (no (cdr args))
+      (and (no (> (car args) (cadr args)))
+           (apply <= (cdr args)))))
+
+(def >= args
+  (or (no args)
+      (no (cdr args))
+      (and (no (< (car args) (cadr args)))
+           (apply >= (cdr args)))))
+
+(def whitec (c)
+  (in c #\space #\newline #\tab #\return))
+
+(def nonwhite (c) (no (whitec c)))
+
+(def letter (c) (or (<= #\a c #\z) (<= #\A c #\Z)))
+
+(def digit (c) (<= #\0 c #\9))
+
+(def alphadig (c) (or (letter c) (digit c)))
+
+(def punc (c)
+  (in c #\. #\, #\; #\: #\! #\?
+      ))
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
@@ -1068,33 +1105,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac defmemo (name parms . body)
   `(safeset ,name (memo (fn ,parms ,@body))))
-
-(def <= args
-  (or (no args)
-      (no (cdr args))
-      (and (no (> (car args) (cadr args)))
-           (apply <= (cdr args)))))
-
-(def >= args
-  (or (no args)
-      (no (cdr args))
-      (and (no (< (car args) (cadr args)))
-           (apply >= (cdr args)))))
-
-(def whitec (c)
-  (in c #\space #\newline #\tab #\return))
-
-(def nonwhite (c) (no (whitec c)))
-
-(def letter (c) (or (<= #\a c #\z) (<= #\A c #\Z)))
-
-(def digit (c) (<= #\0 c #\9))
-
-(def alphadig (c) (or (letter c) (digit c)))
-
-(def punc (c)
-  (in c #\. #\, #\; #\: #\! #\?
-      ))
 
 (def readline ((o str (stdin)))
   (awhen (readc str)
