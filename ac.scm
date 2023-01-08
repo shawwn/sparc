@@ -935,7 +935,7 @@
          (hash-ref fn
                    (car args)
                    (if (pair? (cdr args)) (cadr args) ar-nil)))
-        ((and (sequence? fn) (not (null? fn)))
+        ((and (ar-seq? fn) (not (null? fn)))
          (sequence-ref fn (car args)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
@@ -1055,12 +1055,15 @@
 (define ar-tostr (ar-to 'string))
 (define ar-tosym (ar-to 'sym))
 
+(define (ar-list? x)
+  (or (null? x) (pair? x)))
+
 (define (ar-+ . args)
   (cond ((null? args) 0)
         ((char-or-string? (car args))
          (apply string-append
                 (map ar-tostr args)))
-        ((list? (car args))
+        ((ar-list? (car args))
          (apply append args))
         ((evt? (car args))
          (apply choice-evt args))
@@ -1079,7 +1082,7 @@
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
          (string-append (ar-tostr x) (ar-tostr y)))
-        ((list? x)
+        ((ar-list? x)
          (append x y))
         ((evt? x)
          (choice-evt x y))
@@ -1119,11 +1122,19 @@
 
 (xdef < (lambda args (pairwise ar-<2 args)))
 
+(define (ar-seq? x)
+  (and (sequence? x)
+       (not (number? x))
+       (not (null? x))
+       (not (hash? x))))
+
 (xdef len (lambda (x)
-             (cond ((string? x) (string-length x))
+             (cond ((ar-list? x) (length x))
+                   ((ar-seq? x) (sequence-length x))
                    ((hash? x) (hash-count x))
-                   ((sequence? x) (sequence-length x))
-                   (#t (length x)))))
+                   ((symbol? x) (string-length (ar-tostr x)))
+                   ((keyword? x) (string-length (ar-tostr x)))
+                   (#t (err "Can't get len of" x)))))
 
 (define (ar-tag type rep)
   (cond ((eqv? (ar-type rep) type) rep)
