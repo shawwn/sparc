@@ -418,7 +418,7 @@
 
 (def nbsp () (pr "&nbsp;"))
 
-(def link (text (o dest (+ "/" text)) (o color) (o onclick) (o title))
+(def link (text (o dest (+ (if (headmatch "/" (str text)) "" "/") text)) (o color) (o onclick) (o title))
   (tag (a href dest onclick onclick title title)
     (tag-if color (font color color)
       (pr text))))

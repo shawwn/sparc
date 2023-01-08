@@ -56,8 +56,8 @@
 
 (mac when-umatch (user req :redir . body)
   `(if (is ,user (get-user ,req))
-       (do ,@body)
-       redir
+        (do ,@body)
+       ,redir
         "mismatch"
         (mismatch-message)))
 
@@ -130,7 +130,11 @@
         (= (user->cookie* user) id))
       (unless (is (cookie->user* id) user)
         (= (cookie->user* id) user)
-        (save-table cookie->user* cookfile*)))))
+        (save-table cookie->user* cookfile*))
+      (let req (the-req*)
+        (pull [caris _ "user"] req!cooks)
+        (push (list "user" id) req!cooks)
+        id))))
 
 (def cook-user! ((o user (get-user)) (o cookie (new-user-cookie user)))
   (whenlet c (cook-user user cookie)

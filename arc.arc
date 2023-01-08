@@ -170,6 +170,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (let g (uniq 'complement)
     `(fn ,g (no (apply ,f ,g)))))
 
+(def con (x)
+  (fn args x))
+
 (def rev (xs) 
   ((afn (xs acc)
      (if (no xs)
