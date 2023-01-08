@@ -2145,7 +2145,7 @@ function suggestTitle() {
 ; option to sort the elements of a poll when displaying
 ; exclusive field? (means only allow one vote per poll)
 
-(= poll-threshold* 20)
+(= poll-threshold* 0)
 
 (newsop newpoll ()
   (if (and user (> (karma user) poll-threshold*))
@@ -2186,10 +2186,10 @@ function suggestTitle() {
   (newslog ip user 'create-poll title)
   (with p (inst 'item 'type 'poll 'id (new-item-id)
                       'title title 'text text 'by user 'ip ip)
-    (= p!parts (map [do _!id] (map [create-pollopt p nil nil _ user ip]
-                                   (paras opts))))
-    (save-item p)
     (= (items* p!id) p)
+    (= p!parts (map !id (map [create-pollopt p nil nil _ user ip]
+                             (paras opts))))
+    (save-item p)
     (push p stories*)))
 
 (def create-pollopt (p url title text (o user (get-user)) (o ip (get-ip)))
