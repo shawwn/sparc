@@ -2194,22 +2194,20 @@ function suggestTitle() {
 
 (def create-poll (title text opts user ip)
   (newslog ip user 'create-poll title)
-  (let p (inst 'item 'type 'poll 'id (new-item-id)
-                     'title title 'text text 'by user 'ip ip)
+  (with p (inst 'item 'type 'poll 'id (new-item-id)
+                      'title title 'text text 'by user 'ip ip)
     (= p!parts (map [do _!id] (map [create-pollopt p nil nil _ user ip]
                                    (paras opts))))
     (save-item p)
     (= (items* p!id) p)
-    (push p stories*)
-    p))
+    (push p stories*)))
 
 (def create-pollopt (p url title text user ip)
-  (let o (inst 'item 'type 'pollopt 'id (new-item-id)
-                     'url url 'title title 'text text 'parent p!id
-                     'by user 'ip ip)
+  (with o (inst 'item 'type 'pollopt 'id (new-item-id)
+                      'url url 'title title 'text text 'parent p!id
+                      'by user 'ip ip)
     (save-item o)
-    (= (items* o!id) o)
-    o))
+    (= (items* o!id) o)))
 
 (def add-pollopt-page (p user)
   (minipage "Add Poll Choice"
