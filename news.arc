@@ -966,7 +966,7 @@ function vote(node) {
     `(sexpr   keys       ,(p 'keys)                               ,a  ,a)
     `(hexcol  topcolor   ,(or (p 'topcolor) (hexrep site-color*)) ,k  ,k)
     `(int     delay      ,(p 'delay)                              ,u  ,u)
-    `(string  password    ,(resetpw-link s)                       ,u  nil "")
+    `(string  password    ,(changepw-link s)                      ,u  nil "")
     `(string  submissions ,(submissions-link s)                    t  nil "")
     `(string  comments    ,(comments-link s)                       t  nil "")
     `(string  upvoted     ,(+ (upvoted-link s)   " (private)")    ,u  nil "")
@@ -976,8 +976,8 @@ function vote(node) {
 (def verify-link (u (o label "verify email"))
   (tostring (underlink label "/verify?u=@u")))
 
-(def resetpw-link (u (o label "reset password"))
-  (tostring (underlink label "/resetpw?u=@u")))
+(def changepw-link (u (o label "change password"))
+  (tostring (underlink label "/changepw?u=@u")))
 
 (def submissions-link (u (o label "submissions"))
   (tostring (underlink label (submitted-url u))))
@@ -3073,18 +3073,16 @@ first asterisk isn't whitespace.
 
 ; Reset PW
 
-(defopg resetpw req
+(defopg changepw req
   (withs (user (get-user req)
           subject (arg req "u"))
-    (resetpw-page user subject)))
+    (changepw-page user subject)))
 
-(def resetpw-page (user subject (o msg))
+(def changepw-page (user subject (o msg))
   (let subject (or subject user)
     (if (~or (admin user) (is user subject))
         (pr "Sorry.")
-      (minipage "Reset Password"
-        (pr "Resetting password for @subject")
-        (br2)
+      (minipage "Reset Password for @subject"
         (if msg
              (pr msg)
             (blank (uvar user email))
@@ -3093,34 +3091,39 @@ first asterisk isn't whitespace.
                  (pr ". Otherwise you could lose your account if you mistype
                       your new password.")))
         (br2)
-        (uform user req (try-resetpw user subject (arg req "p"))
-          (single-input "New password: " 'p 20 "reset" t))))))
+        (urform user req (try-changepw user subject arg!oldpw arg!pw)
+          (tab
+            (row "Current Password:" (input 'oldpw "" 20 type: 'password))
+            (row "New Password:"     (input 'pw    "" 20 type: 'password))
+            (row ""                  (submit "Change"))))))))
 
-(def try-resetpw (user subject newpw)
-  (if (len< newpw 4)
-      (resetpw-page user subject "Passwords should be a least 4 characters long.
-                          Please choose another.")
-      (do (set-pw subject newpw)
-          (newspage user))))
+(def try-changepw (user subject oldpw newpw)
+  (if (or (len< newpw 4) (len> newpw 72))
+       (flink [changepw-page user subject "Passwords should be between 4 and 72 characters long.
+                             Please choose another."])
+      (~check-pw subject oldpw)
+       (flink [changepw-page user subject "Current password incorrect. Please try again."])
+       (do (set-pw subject newpw)
+           (logout-user subject)
+           "/news")))
 
 (def send-resetpw (subject email)
   (send-email site-email*
               email
               "@site-name* password recovery"
-              (let s (+ "Someone (hopefully you) requested we reset your password for @subject at @(do site-name*). If you want to change it, please visit "
-                        site-url*
-                        (flink [force-resetpw-page subject])
-                        "\n\n"
-                        "If not, just ignore this message.\n")
+              (with s (+ "Someone (hopefully you) requested we reset your password for @subject at @(do site-name*). If you want to change it, please visit "
+                         site-url*
+                         (flink [force-resetpw-page subject])
+                         "\n\n"
+                         "If not, just ignore this message.\n")
                 (when (readenv "DEV" nil)
-                  (disp s (stderr)))
-                s)))
+                  (ero s)))))
 
 (def force-resetpw-page (subject (o msg))
   (minipage "Reset Password for @subject"
     (if msg (pr msg))
     (br2)
-    (aform (fn (req) (try-force-resetpw subject (arg req "pw")))
+    (aform [try-force-resetpw subject arg!pw]
       (single-input "New password: " 'pw 20 "reset" t))))
 
 (def try-force-resetpw (subject newpw)
@@ -3128,6 +3131,7 @@ first asterisk isn't whitespace.
       (force-resetpw-page subject "Passwords should be a least 4 characters long.
                           Please choose another.")
       (do (set-pw subject newpw)
+          (logout-user subject)
           (newspage nil))))
 
 (defop forgot req (forgot-page))
