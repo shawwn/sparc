@@ -398,17 +398,33 @@ Strict-Transport-Security: max-age=31556900
 
 (def lexval (e)
   (each (id getx setx) e
-    (out (if (isa getx 'fn) (getx) getx))))
+    (let v (if (isa getx 'fn) (getx) getx)
+      (unless (or (is v (the-req*))
+                  (isa v 'fn))
+        (out v)))))
 
-(mac lexkey () `(lexval (lexenv)))
+(def lextree (x)
+  (treewise cons [case (type _)
+                   sym (rem digit _)
+                   fn  (sym:tostring:pr _)
+                       _]
+            x))
+
+(def lexcompile (expr)
+  (lextree (ac expr)))
+
+(mac lexkey (name . body)
+  `(list ',name
+         (lexval (lexenv))
+         ',(map lexcompile body)))
 
 ; count on huge (expt 64 22) size of fnid space to avoid clashes
 
 (def gen-fnid ()
   (sym:rand-string 22))
 
-(def fnid-key ((o key) (o req (the-req*)))
-  (list (get-user)
+(def fnid-key (key (o req (the-req*)))
+  (list (get-user req)
         req!op
         (when (is (str req!type) "get")
           (reassemble-args req))
@@ -416,36 +432,34 @@ Strict-Transport-Security: max-age=31556900
 
 (def new-fnid ((o key))
   (if key
-      (or= (fnkeys* (fnid-key key)) (gen-fnid))
+      (or= (fnkeys* (fnid-key key))
+           (gen-fnid))
       (gen-fnid)))
 
-(def fnidf (f (o k))
-  (atlet key (new-fnid k)
+(def fnidf (f k)
+  (atwith key (new-fnid k)
     (= (fns* key) f
        (fnids* key) (list (now) (get-user)))
-    (wipe (timed-fnids* key))
-    key))
+    (wipe (timed-fnids* key))))
 
-(def timed-fnidf (lasts f (o k))
-  (atlet key (new-fnid k)
+(def timed-fnidf (lasts f k)
+  (atwith key (new-fnid k)
     (= (fns* key) f
        (timed-fnids* key) (list (now) lasts (get-user)))
-    (wipe (fnids* key))
-    key))
+    (wipe (fnids* key))))
 
-(mac fnid             (f (o k '(lexkey))) `(fnidf ,f ,k))
-(mac timed-fnid (lasts f (o k '(lexkey))) `(timed-fnidf ,lasts ,f ,k))
+(mac fnid             (f (o k `(lexkey fnid ,f))) `(fnidf ,f ,k))
+(mac timed-fnid (lasts f (o k `(lexkey fnid ,f))) `(timed-fnidf ,lasts ,f ,k))
 
 ; Within f, it will be bound to the fn's own fnid.  Remember that this is
 ; so low-level that need to generate the newline to separate from the headers
 ; within the body of f.
 
-(mac afnid (f)
-  `(atlet it (new-fnid (lexkey))
+(mac afnid (f (o k `(lexkey afnid ,f)))
+  `(atwith it (new-fnid ,k)
      (= (fns* it) ,f
         (fnids* it) (list (now) (get-user)))
-     (wipe (timed-fnids* it))
-     it))
+     (wipe (timed-fnids* it))))
 
 ;(defop test-afnid req
 ;  (tag (a href (url-for (afnid (fn (req) (prn) (pr "my fnid is " it)))))
@@ -527,10 +541,10 @@ Strict-Transport-Security: max-age=31556900
 (def url-for (fnid)
   (string fnurl* "?fnid=" fnid))
 
-(def flinkf (f (o k))
+(def flinkf (f k)
   (string fnurl* "?fnid=" (fnid (fn (req) (prn) (f req)) k)))
 
-(def rflinkf (f (o k))
+(def rflinkf (f k)
   (string rfnurl* "?fnid=" (fnid f k)))
 
 (def fredir (f redir)
@@ -540,13 +554,13 @@ Strict-Transport-Security: max-age=31556900
                      (if (isa ,gr 'string) ,gr ,gx)))
         `(fn (,ga) (prn) (,f ,ga)))))
 
-(mac flink (f (o k '(lexkey)) :redir)
+(mac flink (f (o k `(lexkey flink ,f)) :redir)
   (if redir
       `(rflinkf ,(fredir f redir) ,k)
       `(flinkf ,f ,k)))
 
-(mac rflink (f (o k '(lexkey)))
-  `(flink ,f ,k :redir))
+(mac rflink (f)
+  `(flink ,f :redir))
   
 ; Since it's just an expr, gensym a parm for (ignored) args.
 
@@ -592,7 +606,7 @@ Strict-Transport-Security: max-age=31556900
     (fnid-field (fnid f k))
     (bodyfn)))
 
-(mac fnform (f bodyfn (o redir) (o k '(lexkey)))
+(mac fnform (f bodyfn (o redir) (o k `(lexkey fnform ,f ,bodyfn ,redir)))
   `(fnformf ,f ,bodyfn ,redir ,k))
 
 ; Could also make a version that uses just an expr, and var capture.
@@ -600,7 +614,7 @@ Strict-Transport-Security: max-age=31556900
 
 (mac aform (f :redir . body)
   `(tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
-     (fnid-field (fnid ,(fredir f redir)))
+     (fnid-field (fnid ,(fredir f redir) (lexkey aform ,f ,@body)))
      ,@body))
 
 ;(defop test1 req
@@ -617,7 +631,7 @@ Strict-Transport-Security: max-age=31556900
 (mac taform (lasts f :redir . body)
   (w/uniq (gl gf gi ge)
     `(withs (,gl ,lasts
-             ,ge (lexkey)
+             ,ge (lexkey taform ,f ,@body)
              ,gf ,(fredir f redir))
        (tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
          (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
@@ -631,7 +645,7 @@ Strict-Transport-Security: max-age=31556900
 
 (mac aformh (f :redir . body)
   `(tag (form method 'post action ,(if redir 'rfnurl2* 'fnurl*))
-     (fnid-field (fnid ,(fredir f redir)))
+     (fnid-field (fnid ,(fredir f redir) (lexkey aformh ,f ,@body)))
      ,@body))
 
 (mac arformh (f . body)
