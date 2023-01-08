@@ -725,16 +725,15 @@ Strict-Transport-Security: max-age=31556900
 
 (def noisy-reload ()
   (awhen (any:reload)
-    (write it)
-    (prn)))
+    (ero it)))
 
 (when (readenv "DEV" nil)
   (defhook respond (str op args cooks ips . rest)
+    (noisy-reload)
+    (hook 'reload-admins)
     (let (op args) (parseop op args)
       (when (srvops* op)
-        (prn op)
-        (noisy-reload)))
-    (hook 'reload-admins)
+        (ero op)))
     nil))
 
 ; pull from github periodically
