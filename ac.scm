@@ -1348,11 +1348,13 @@
     ((keyword? x)    (case type
                       ((string)  (keyword->string x))
                       ((sym)     (keyword->symbol x))
+                      ((cons)    (string->list (keyword->string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((symbol? x)    (case type
                       ((string)  (symbol->string x))
                       ((keyword) (symbol->keyword x))
+                      ((cons)    (string->list (symbol->string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((boolean? x)   (case type
