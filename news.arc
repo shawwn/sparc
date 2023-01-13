@@ -329,7 +329,7 @@
                                         (contro-factor s))))
 
 (def contro-factor (s)
-  (aif (check (visible-family nil s) [> _ 20])
+  (aif (check (visible-family s) [> _ 20])
        (min 1 (expt (/ (realscore s) it) 2))
        1))
 
