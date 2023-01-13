@@ -192,10 +192,10 @@
   (+ "$2b$" (int work-factor) "$" (rand-string 22)))
 
 (def clean-hash (h)
-  (last:tokens h))
+  (and h (last:tokens h)))
 
 (def user-pw (user)
-  (and user (clean-hash:hpasswords* user)))
+  (clean-hash:hpasswords* user))
 
 (def bcrypt-pw (user pw)
   (aand (<= (len pw) 72) (user-pw user) (is it (bcrypt pw it nil))))
