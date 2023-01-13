@@ -46,11 +46,7 @@
        (f)
      (blogpage (pr "No such post."))))
 
-(def blogopa (f id whence)
-  (if (admin)
-      (blogop f id)
-      (login-page 'both "Please log in as an administrator."
-                  (list (fn (u ip)) whence))))
+(def blogopa (f id whence) (admin-gate whence blogop f id))
 
 (def post-url (id) (string "/viewpost?id=" id))
 
@@ -70,8 +66,9 @@
 
 (def new-post-page ()
   (blogpage
-    (arform [let p (addpost arg!t (md-from-form arg!b))
-              (post-url p!id)]
+    (urform (get-user) req
+      (let p (addpost arg!t (md-from-form arg!b))
+              (post-url p!id))
       (tab (row "title" (input "t" "" 60))
            (row "text"  (textarea "b" 10 80))
            (row ""      (submit))))))
@@ -87,8 +84,7 @@
   (blogpage
     (display-post p)
     (br2)
-    (vars-form (get-user)
-               `((string title ,p!title t t)
+    (vars-form `((string title ,p!title t t)
                  (mdtext text  ,p!text  t t))
                (fn (name val) (= (p name) val))
                (fn () (save-post p)

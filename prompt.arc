@@ -2,25 +2,22 @@
 
 (= appdir* (libpath "arc/apps/"))
 
-(defop prompt req 
-  (if (admin)
-      (prompt-page)
-      (pr "Sorry.")))
+(defop prompt req (admin-gate "/prompt" prompt-page))
 
-(def prompt-page ((o :user (get-user)) . msg)
+(def prompt-page msg
   (ensure-dir appdir*)
-  (ensure-dir (string appdir* user))
+  (ensure-dir (string appdir* (get-user)))
   (whitepage
-    (prbold (link "Prompt" "prompt"))
+    (prbold (link "Prompt" "/prompt"))
     (hspace 20)
-    (link "repl")
+    (link "repl" "/repl")
     (hspace 20)
-    (pr user " | ")
-    (link "logout")
+    (pr (get-user) " | ")
+    (link "logout" "/logout")
     (when msg (hspace 10) (apply pr msg))
     (br2)
     (sptab
-      (each app (dir (+ appdir* user))
+      (each app (dir (+ appdir* (get-user)))
         (row (app-link app)
           (ulink 'run    (run-app  app))
           (ulink 'edit   (edit-app app))
@@ -30,23 +27,21 @@
               (tab (row "Delete @{app}?")
                    (row (w/bars
                           (ulink 'yes (rem-app app))
-                          (link  'no  "prompt")))))))))
+                          (link  'no  "/prompt")))))))))
     (br2)
-    (aform (fn (req)
-             (when-umatch user req
-               (aif (+ (goodname arg!app) ".arc")
-                    (edit-app it)
-                    (prompt-page "Bad name."))))
-       (tab (row "name:" (input "app") (submit "create app"))))))
+    (urform (get-user) req
+            (aif (+ (goodname arg!app) ".arc")
+                 (flink [edit-app it])
+                 (flink [prompt-page "Bad name."]))
+      (tab (row "name:" (input "app") (submit "create app"))))))
 
 (def app-link (app)
   (if (has-vim)
-      (ulink app redir: "prompt" (vim-app app))
+      (ulink app redir: "/prompt" (vim-app app))
       (pr app)))
 
 (def app-path (app)
-  (let user (get-user)
-    (and user app (+ appdir* user "/" app))))
+  (and (get-user) app (+ appdir* (get-user) "/" app)))
 
 (def app-exists (app)
   (aand (app-path app)
@@ -75,17 +70,14 @@
             (prompt-page "Program " app " deleted."))
         (prompt-page "No such app."))))
 
-(def edit-app (app (o :user (get-user)))
+(def edit-app (app)
   (whitepage
-    (pr "user: " user " app: " app)
+    (pr "user: " (get-user) " app: " app)
     (br2)
-    (aform (fn (req)
-             (if (is (get-user) user)
-                 (do (when (is arg!cmd "save")
-                       (write-app app (readall arg!exprs)))
-                     (prompt-page))
-                 (login-page 'both nil
-                             (fn (u ip) (prompt-page)))))
+    (urform (get-user) req
+            (do (when (is arg!cmd "save")
+                  (write-app app (readall arg!exprs)))
+                "/prompt")
       (textarea "exprs" 10 82
         (pprcode (read-app app)))
       (br2)
@@ -106,23 +98,20 @@
   (let exprs (read-app app)
     (if (or exprs (app-exists app))
         (on-err (fn (c) (pr "Error: " (details c)))
-          (fn () (map eval exprs)))
+                (fn () (map eval exprs)))
         (prompt-page "Error: No application " app " for user " (get-user)))))
 
 (or= repl-history* nil)
 
 (= repl-history-max* 10000)
 
-(defop repl req
-  (if (admin)
-      (replpage)
-      (pr "Sorry.")))
+(defop repl req (admin-gate "/repl" replpage))
 
 (def replpage ()
   (whitepage
-    (link "apps" "prompt")
+    (link "apps" "/prompt")
     (br2)
-    (repl (readall (or arg!expr "")) "repl")))
+    (repl (readall (or arg!expr "")) "/repl")))
 
 (def repl (exprs url)
     (each expr exprs 

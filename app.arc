@@ -38,10 +38,18 @@
 (def get-cookie (key (o req (the-req*)))
   (alref req!cooks (str key)))
 
-(def get-user ((o req (the-req*)))
-  (with u (aand (get-cookie "user" req)
+(def set-cookie (key val (o req (the-req*)))
+  ; TODO: alset?
+  (pull [caris _ (str key)] req!cooks)
+  (push (list (str key) val) req!cooks)
+  val)
+
+(def get-user ()
+  (with u (aand get-cookie!user
                 (cookie->user* (sym it)))
-    (when u (= (logins* u) (get-ip req)))))
+    (when u (= (logins* u) (get-ip)))))
+
+(def is-user (u) (is (get-user) u))
 
 (defmemo auth-hash (cookie)
   (shash:string cookie))
@@ -54,8 +62,8 @@
 (def is-auth (auth (o user (get-user)))
   (is auth (get-auth user)))
 
-(mac when-umatch (user req :redir . body)
-  `(if (is ,user (get-user ,req))
+(mac when-umatch (user :redir . body)
+  `(if (is ,user (get-user))
         (do ,@body)
        ,redir
         "mismatch"
@@ -64,15 +72,15 @@
 (def mismatch-message () 
   (prn "Dead link: users don't match."))
 
-(mac when-umatch/r (user req . body)
-  `(when-umatch ,user ,req :redir ,@body))
+(mac when-umatch/r (user . body)
+  `(when-umatch ,user :redir ,@body))
 
 (defop mismatch req (mismatch-message))
 
 (mac uform (user req :redir after . body)
   `(aform redir: ,redir
      (fn (,req)
-       (when-umatch ,user ,req redir: ,redir
+       (when-umatch ,user redir: ,redir
          ,after))
      ,@body))
 
@@ -87,40 +95,38 @@
   (w/uniq (u req)
     `(let ,u (get-user)
        (linkf ,text (,req) redir: ,redir
-         (when-umatch ,u ,req redir: ,redir
+         (when-umatch ,u redir: ,redir
            ,@body)))))
 
-(defop admin req (admin-gate (get-user req)))
+(defop admin req (admin-gate "/admin" admin-page))
 
-(def admin-gate (u)
-  (if (admin u)
-      (admin-page u)
-      (login-page 'login nil
-                  (fn (u ip)  (admin-gate u)))))
+(def admin-gate (whence f (o :onlogin (fn () nil)) . args)
+  (if (admin)
+      (apply f args)
+      (login-page 'both "Please log in as an administrator."
+                  (list onlogin whence))))
 
 (def admin ((o u (get-user))) (and u (mem u admins*)))
 
 (def user-exists (u) (and u (hpasswords* u) u))
 
-(def admin-page (user . msg)
+(def admin-page msg
   (whitepage 
     (prbold "Admin: ")
     (hspace 20)
-    (pr user " | ")
-    (w/link (do (logout-user user)
-                (whitepage (pr "Bye " user ".")))
-      (pr "logout"))
+    (pr (get-user) " | ")
+    (ulink 'logout
+      (whitepage (pr "Bye " (logout-user) ".")))
     (when msg (hspace 10) (map pr msg))
     (br2)
-    (aform (fn (req)
-             (when-umatch user req
-               (withs (u arg!acct p arg!pw)
-                 (if (or (no u) (no p) (is u "") (is p ""))
-                      (pr "Bad data.")
-                     (user-exists u)
-                      (admin-page user "User already exists: " u)
-                      (do (create-acct u p)
-                          (admin-page user))))))
+    (urform (get-user) req
+      (withs (u arg!acct p arg!pw)
+        (if (or (no u) (no p) (is u "") (is p ""))
+            (flink [admin-page "Bad data."])
+            (user-exists u)
+            (flink [admin-page "User already exists: " u])
+            (do (create-acct u p)
+                "/admin")))
       (pwfields "create (server) account"))))
 
 (def cook-user ((o user (get-user)) (o cookie get-cookie!user) (o alt))
@@ -131,10 +137,7 @@
       (unless (is (cookie->user* id) user)
         (= (cookie->user* id) user)
         (save-table cookie->user* cookfile*))
-      (let req (the-req*)
-        (pull [caris _ "user"] req!cooks)
-        (push (list "user" id) req!cooks)
-        id))))
+      (set-cookie 'user id))))
 
 (def cook-user! ((o user (get-user)) (o cookie (new-user-cookie user)))
   (whenlet c (cook-user user cookie)
@@ -166,19 +169,21 @@
         (a c)))))
 
 (def logout-user ((o user (get-user)))
-  (each c (user-cookies user)
-    (wipe (cookie->user* c)))
-  (save-table cookie->user* cookfile*)
-  (wipe (user->cookie* user))
-  (wipe (logins* user)))
+  (when user
+    (each c (user-cookies user)
+      (wipe (cookie->user* c)))
+    (save-table cookie->user* cookfile*)
+    (wipe (user->cookie* user))
+    (wipe (logins* user)))
+  user)
 
 (def create-acct (user pw (o email))
   (set (dc-usernames* (downcase user)))
-  (set-pw user pw)
+  (set-pw pw user)
   (= (user->email* user) email))
 
 (def disable-acct (user)
-  (set-pw user (rand-string 20))
+  (set-pw (rand-string 20) user)
   (logout-user user))
 
 (= bcrypt-work-factor* 10) ; must be >= 10
@@ -198,18 +203,18 @@
 (def sha1-pw (user pw)
   (aand (<= (len pw) 72) (user-pw user) (is it (shash pw))))
 
-(def check-pw (user pw)
+(def check-pw (pw (o user (get-user)))
   (or (bcrypt-pw user pw)
       (and (sha1-pw user pw)
-           (do (set-pw user pw)
+           (do (set-pw pw user)
                (bcrypt-pw user pw)))))
   
-(def set-pw (user pw)
+(def set-pw (pw (o user (get-user)))
   (= (hpasswords* user) (bcrypt pw (rand-salt)))
   (save-table hpasswords* hpwfile*))
 
-(def hello-page (user ip)
-  (whitepage (prs "hello" user "at" ip)))
+(def hello-page ()
+  (whitepage (prs "hello" (get-user) "at" (get-ip))))
 
 (defop login req (login-page 'both))
 
@@ -241,28 +246,28 @@
           (acons afterward)))
 
 (def login-handler (req switch afterward)
-  (logout-user (get-user req))
-  (aif (good-login arg!acct arg!pw req!ip)
-       (login it req!ip (user->cookie* it) afterward)
+  (logout-user)
+  (aif (good-login arg!acct arg!pw)
+       (login it (user->cookie* it) afterward)
        (failed-login switch "Bad login." afterward)))
 
 (def create-handler (req switch afterward)
-  (logout-user (get-user req))
+  (logout-user)
   (withs (user arg!acct pw arg!pw email arg!email)
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
          (do (create-acct user pw email)
-             (login user req!ip (cook-user! user) afterward)))))
+             (login user (cook-user! user) afterward)))))
 
-(def login (user ip cookie afterward)
-  (= (logins* user) ip)
+(def login (user cookie afterward)
+  (= (logins* user) (get-ip))
   (prcookie cookie)
   (if (acons afterward)
       (let (f url) afterward
-        (f user ip)
+        (f)
         url)
       (do (prn)
-          (afterward user ip))))
+          (afterward))))
 
 (def merge-args (args (o req (the-req*)))
   (let args1 req!args
@@ -296,9 +301,9 @@
 
 (or= good-logins* (queue) bad-logins* (queue))
 
-(def good-login (user pw ip)
-  (let record (list (seconds) ip user)
-    (if (check-pw user pw)
+(def good-login (user pw)
+  (let record (list (seconds) (get-ip) user)
+    (if (check-pw pw user)
         (do (cook-user! user)
             (enq-limit record good-logins*)
             user)
@@ -335,16 +340,15 @@
        str))
 
 (defop logout req
-  (aif (get-user req)
-       (do (logout-user it)
-           (pr "Logged out."))
+  (aif (logout-user)
+       (pr "Logged out.")
        (pr "You were not logged in.")))
 
 (defop whoami req
-  (aif (get-user req)
-       (if (admin it)
-           (prs it 'at req!ip (tostring:write:the-req*))
-           (prs it 'at req!ip))
+  (aif (get-user)
+       (if (admin)
+           (prs (get-user) 'at req!ip (tostring:write:the-req*))
+           (prs (get-user) 'at req!ip))
        (do (pr "You are not logged in. ")
            (w/link (login-page 'both) (pr "Log in"))
            (pr "."))))
@@ -476,12 +480,12 @@
 ; a fn f and generates a form such that when submitted (f label newval) 
 ; will be called for each valid value.  Finally done is called.
 
-(def vars-form (user fields f done (o button "update") (o lasts))
+(def vars-form (fields f done (o button "update") (o lasts) (o :user (get-user)))
   (tarform lasts
            (if (all [no (_ 4)] fields)
                (fn (req))
                (fn (req)
-                 (when-umatch user req
+                 (when-umatch user
                    (each (k v) req!args
                      (let name (sym k)
                        (awhen (find [is (cadr _) name] fields)
@@ -762,11 +766,11 @@
 
 (mac defopl (name parm . body)
   `(defop ,name ,parm
-     (if (get-user ,parm)
+     (if (get-user)
          (do ,@body) 
          (login-page 'both
                      "You need to be logged in to do that."
-                     (list (fn (u ip))
+                     (list (fn () nil)
                            (string ',name (reassemble-args ,parm)))))))
 
 (def shellquote (str)
@@ -968,7 +972,7 @@
   (strftime "+%a, %d %b %Y %H:%M:%S GMT" secs))
 
 (def send-email (from to subject message)
-  (tostring:shell "python2" (libpath "../sendmail.py") from to subject message))
+  (tostring:shellsafe "python2" (libpath "../sendmail.py") from to subject message))
 
 ; (let ts (seconds)
 ;   (each c "%aAbBcCdDeFgGhHIjklmMnNpPqrRsStTuUVwWxXyYzZ"

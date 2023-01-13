@@ -39,7 +39,7 @@
   c)
 
 (def dbg-stats ()
-  (pp (sorted (map [list _.1 _.0] (tablist *fncounts)))))
+  (pp (sorted (map [list _!1 _!0] (tablist *fncounts)))))
 
 (def dbg-wipestats ()
   (each k (keys *fncounts)
@@ -102,11 +102,8 @@
     (intersperse #\space
       (map [trim:tostring:pprint _] xs))))
 
-(def dbg-slot (slot)
-  (when (>= len.slot 2)
-    (list slot.0 (if (is (type slot.1) 'fn)
-                     (slot.1)
-                     slot.1))))
+(def dbg-slot ((k v))
+  (list k (if (isa v 'fn) (v) v)))
 
 (def dbg-locals (lenv)
   (map dbg-slot lenv))
@@ -147,8 +144,8 @@
 
 ;(def dbgerr (c)
 ;  (prn:details c)
-;  (map pp stacktrace.c)
-;  (map pp fulltrace.c)
+;  (map pp (stacktrace c))
+;  (map pp (fulltrace c))
 ;  c)
 
 (assign dbgerr debugger:tlerr)

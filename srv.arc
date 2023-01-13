@@ -424,7 +424,7 @@ Strict-Transport-Security: max-age=31556900
   (sym:rand-string 22))
 
 (def fnid-key (key (o req (the-req*)))
-  (list (get-user req)
+  (list (get-user)
         req!op
         (when (is (str req!type) "get")
           (reassemble-args req))
@@ -588,7 +588,7 @@ Strict-Transport-Security: max-age=31556900
 (mac rlinkf (text parms . body)
   `(linkf :redir ,text ,parms ,@body))
 
-;(defop top req (linkf 'whoami? (req) (pr "I am " (get-user req))))
+;(defop top req (linkf 'whoami? (req) (pr "I am " (get-user))))
 
 ;(defop testf req (w/link (pr "ha ha ha") (pr "laugh")))
 

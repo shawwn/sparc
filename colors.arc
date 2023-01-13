@@ -46,10 +46,11 @@
 
 (def windows () nil)
 
-(def prcode (codes (o sep #\;))
+(def prcode (codes (o sep #\;
+                      ))
   (unless (windows)
     (let xs (flat:list codes)
-      (pr (cat "\033[" (apply cat (intersperse sep denil.xs)) "m")))))
+      (pr (cat "\033[" (apply cat (intersperse sep (denil xs))) "m")))))
 
 
 (def lerp (a b vt)
@@ -69,10 +70,10 @@
     (= fxs (list fxs)))
   (each val fxs
     (if (acons val)
-        (if (is len.val 3)  (apply termrgb val)
-            (caris val 'fg) (apply termrgb (cdr val))
-            (caris val 'bg) (apply termrgb (+ (cdr val) '(t)))
-                            (err "termfx: unknown spec" val))
+        (if (is (len val) 3) (apply termrgb val)
+            (caris val 'fg)  (apply termrgb (cdr val))
+            (caris val 'bg)  (apply termrgb (+ (cdr val) '(t)))
+                             (err "termfx: unknown spec" val))
         (prcode (term*!attrs val)))))
 
 (def termrgb (r g b (o bg))
