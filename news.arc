@@ -164,7 +164,7 @@
      (profs* u) (make-user u email))
   (save-votes u)
   (save-prof u)
-  (newslog (get-ip) u 'noob email)
+  (newslog 'noob email)
   u)
 
 ; Need this because can create users on the server (for other apps)
@@ -172,7 +172,7 @@
 ; See the admin op in app.arc.  So all calls to login-page from the
 ; news app need to call this in the after-login fn.
 
-(def ensure-news-user (u)
+(def ensure-news-user ((o u (get-user)))
   (if (profile u) u (init-user u)))
 
 (def save-votes ((o u (get-user))) (save-table (votes* u) (+ votedir* u)))
@@ -307,7 +307,7 @@
 (def loaded-items (test)
   (each-loaded-item i (test&out i)))
 
-(def newslog args (apply srvlog 'news args))
+(def newslog args (apply srvlog 'news (get-ip) (get-user) args))
 
 
 ; Ranking
@@ -763,7 +763,7 @@ function vote(node) {
          (login-page 'both nil
                      (list (fn (u ip)
                              (ensure-news-user u)
-                             (newslog ip u 'top-login))
+                             (newslog 'top-login))
                            whence)))))
 
 (def noob ((o user (get-user)))
@@ -795,7 +795,7 @@ function vote(node) {
        (withs (user (get-user ,gr) ip (,gr 'ip))
          (withs ,(and parms (mappend [list _ (list 'arg gr (string _))]
                                      parms))
-           (newslog ip user ',name ,@parms)
+           (newslog ',name ,@parms)
            ,@body)))))
 
 (or= newsop-names* nil)
@@ -826,7 +826,7 @@ function vote(node) {
 ; News Admin
 
 (defopa newsadmin req
-  (newslog (get-ip) (get-user) 'newsadmin)
+  (newslog 'newsadmin)
   (newsadmin-page))
 
 ; Note that caching* is reset to val in source when restart server.
@@ -1340,7 +1340,7 @@ function vote(node) {
             (afnid (fn (req)
                      (prn)
                      (let url  (url-for it)     ; it bound by afnid
-                       (newslog (get-ip) (get-user) 'more label)
+                       (newslog 'more label)
                        (longpage (now) nil label title url
                          (apply f items label title url args))))))
           rel 'nofollow)
@@ -1508,7 +1508,7 @@ function vote(node) {
          (login-page 'both "You have to be logged in to vote."
                      (list (fn (u ip)
                              (ensure-news-user u)
-                             (newslog ip u 'vote-login)
+                             (newslog 'vote-login)
                              (when (canvote i dir)
                                (vote-for i dir)
                                (logvote ip u i)))
@@ -1748,7 +1748,7 @@ function vote(node) {
     (link "link" (item-url story!id))))
 
 (def logvote (ip user story)
-  (newslog ip user 'vote (story 'id) (list (story 'title))))
+  (newslog 'vote (story 'id) (list (story 'title))))
 
 (def text-age (a (o day t) (o hrs t))
   (tostring
@@ -1862,7 +1862,7 @@ function vote(node) {
   (login-page 'both "You have to be logged in to submit."
               (fn (user ip)
                 (ensure-news-user user)
-                (newslog ip user 'submit-login)
+                (newslog 'submit-login)
                 (submit-page sub url title showtext text))))
 
 (def clean-sub (x)
@@ -2034,7 +2034,7 @@ function suggestTitle() {
                    "ycombinator"))
 
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
-  (newslog ip user 'create sub url (list title))
+  (newslog 'create sub url (list title))
   (let s (inst 'item 'type 'story 'id (new-item-id)
                      'url url 'title title 'text text 'by user 'ip ip)
     (when sub
@@ -2183,7 +2183,7 @@ function suggestTitle() {
         "newest")))
 
 (def create-poll (title text opts (o user (get-user)) (o ip (get-ip)))
-  (newslog ip user 'create-poll title)
+  (newslog 'create-poll title)
   (with p (inst 'item 'type 'poll 'id (new-item-id)
                       'title title 'text text 'by user 'ip ip)
     (= (items* p!id) p)
@@ -2523,7 +2523,7 @@ function suggestTitle() {
   (login-page 'both "You have to be logged in to comment."
               (fn (u ip)
                 (ensure-news-user u)
-                (newslog ip u 'comment-login)
+                (newslog 'comment-login)
                 (addcomment-page parent whence text))))
 
 (def addcomment-page (parent whence (o text) (o msg))
@@ -2594,7 +2594,7 @@ function suggestTitle() {
   (or (ignored u) (< (karma u) comment-threshold*)))
 
 (def create-comment (parent text user (o ip (get-ip)))
-  (newslog ip user 'comment parent!id)
+  (newslog 'comment parent!id)
   (let c (inst 'item 'type 'comment 'id (new-item-id)
                      'text text 'parent parent!id 'by user 'ip ip)
     (save-item c)
@@ -2736,7 +2736,7 @@ function suggestTitle() {
             (login-page 'both "You have to be logged in to comment."
                         (fn (u ip)
                           (ensure-news-user u)
-                          (newslog ip u 'comment-login)
+                          (newslog 'comment-login)
                           (addcomment-page i whence))))
         (pr "No such item."))))
 
