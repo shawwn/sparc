@@ -11,7 +11,7 @@
 
 (= site-name*    "Tensorfork Labs"
    site-abbrev*  "TL"
-   site-email*   "tl@@tensorfork.com"
+   site-email*   "shawnpresser@@gmail.com"
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
    discord-url*  nil
@@ -2555,7 +2555,7 @@ function suggestTitle() {
          (if (bad-user) (kill c 'ignored/karma))
          (if (dupe-reply c) (kill c 'dupe))
          (submit-item c)
-         (process-reply parent!by c)
+         (process-reply parent c)
          (+ whence "#" (aif (dupe-reply c) it!id c!id)))))
 
 (def dupe-reply (c)
@@ -2564,16 +2564,17 @@ function suggestTitle() {
              (is _!by c!by)]
         (siblings c)))
 
-(def process-reply (subject c)
-  (aand subject
-        (isnt subject c!by)
-        (live c)
-        (uvar subject notify)
-        (uvar subject email)
-        (if (is it (uvar subject verified)) it)
-        (send-email site-email* it "New reply from @c!by"
-                    "@(do site-url*)@(item-url c!id) on: @((superparent c) 'title)")
-        t))
+(def process-reply (parent c)
+  (whenlet subject parent!by
+    (aand (isnt subject c!by)
+          (live c)
+          (uvar subject notify)
+          (uvar subject email)
+          (if (is it (uvar subject verified)) it)
+          (let p (superparent c)
+            (send-email site-email* it
+                        "New reply from @c!by"
+                        "@{site-url*}@(item-url c!id) on: @p!title")))))
 
 (def bad-user ((o u (get-user)))
   (or (ignored u) (< (karma u) comment-threshold*)))
