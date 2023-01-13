@@ -762,7 +762,7 @@ function vote(node) {
        (onlink "login"
          (login-page 'both nil
                      (list (fn (u ip)
-                             (ensure-news-user u)
+                             (ensure-news-user)
                              (newslog 'top-login))
                            whence)))))
 
@@ -777,7 +777,7 @@ function vote(node) {
      (if (,test (get-user ,parm))
          (do ,@body)
          (login-page 'both (+ "Please log in" ,msg ".")
-                     (list (fn (u ip) (ensure-news-user u))
+                     (list (fn (u ip) (ensure-news-user))
                            (string ',name (reassemble-args ,parm)))))))
 
 (mac defopg (name parm . body)
@@ -1507,15 +1507,15 @@ function vote(node) {
         (no user)
          (login-page 'both "You have to be logged in to vote."
                      (list (fn (u ip)
-                             (ensure-news-user u)
+                             (ensure-news-user)
                              (newslog 'vote-login)
                              (when (canvote i dir)
                                (vote-for i dir)
-                               (logvote ip u i)))
+                               (logvote i)))
                            whence))
         (canvote i dir)
          (do (vote-for i dir)
-             (logvote ip by i))
+             (logvote i))
          (pr "Can't make that vote."))))
 
 (def itemline (i)
@@ -1747,8 +1747,8 @@ function vote(node) {
     (pr bar*)
     (link "link" (item-url story!id))))
 
-(def logvote (ip user story)
-  (newslog 'vote (story 'id) (list (story 'title))))
+(def logvote (story)
+  (newslog 'vote story!id (list story!title)))
 
 (def text-age (a (o day t) (o hrs t))
   (tostring
@@ -1861,7 +1861,7 @@ function vote(node) {
 (def submit-login-warning ((o sub) (o url) (o title) (o showtext) (o text))
   (login-page 'both "You have to be logged in to submit."
               (fn (user ip)
-                (ensure-news-user user)
+                (ensure-news-user)
                 (newslog 'submit-login)
                 (submit-page sub url title showtext text))))
 
@@ -2522,7 +2522,7 @@ function suggestTitle() {
 (def comment-login-warning (parent whence (o text))
   (login-page 'both "You have to be logged in to comment."
               (fn (u ip)
-                (ensure-news-user u)
+                (ensure-news-user)
                 (newslog 'comment-login)
                 (addcomment-page parent whence text))))
 
@@ -2735,7 +2735,7 @@ function suggestTitle() {
             (addcomment-page i whence)
             (login-page 'both "You have to be logged in to comment."
                         (fn (u ip)
-                          (ensure-news-user u)
+                          (ensure-news-user)
                           (newslog 'comment-login)
                           (addcomment-page i whence))))
         (pr "No such item."))))
