@@ -511,6 +511,9 @@
     (gentag link rel  "shortcut icon"   href "")
 
     (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
+
+    (gentag link rel  'icon type 'image/png sizes '512x512 href (static-src "android-chrome-512x512.png"))
+    (gentag link rel  'icon type 'image/png sizes '192x192 href (static-src "android-chrome-192x192.png"))
     (gentag link rel  'icon type 'image/png sizes '32x32   href (static-src "favicon-32x32.png"))
     (gentag link rel  'icon type 'image/png sizes '16x16   href (static-src "favicon-16x16.png"))
 
