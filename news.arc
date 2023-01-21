@@ -508,7 +508,7 @@
     (gentag link rel  'manifest                  href (static-src "site.webmanifest"))
     (gentag link rel  'stylesheet type 'text/css href (static-src "news.css"))
     (gentag link rel  'mask-icon                 href (static-src "safari-pinned-tab.svg") color teal)
-    (gentag link rel  "shortcut icon"   href "")
+    (gentag link rel  "shortcut icon"            href "favicon.ico")
 
     (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
 
