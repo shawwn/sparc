@@ -113,6 +113,7 @@
 (attribute img        hspace         opnum)
 (attribute img        src            opstring)
 (attribute meta       name           opstring)
+(attribute meta       property       opstring)
 (attribute meta       content        opstring)
 (attribute link       rel            opsym)
 (attribute link       type           opstring)

@@ -22,8 +22,11 @@
    site-desc*    "Tensorfork Labs"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
-   prefer-url*   t)
-
+   prefer-url*   t
+   site-img*     (obj url    "https://user-images.githubusercontent.com/59632/213842621-78c527ed-c657-4126-b27d-2670f35fb053.png"
+                      type   "image/png"
+                      width  512
+                      height 512))
 
 ; Structures
 
@@ -498,30 +501,44 @@
 (def rss-url ((o label))
   (if (is label "comments") "/rsscomments" "/rss"))
 
+(mac w/newlines body
+  `(do ,@(each expr body
+           (out expr)
+           (out '(prn)))))
+
 (def gen-head (title label)
   (tag head
-    (gentag meta name 'viewport content "width=device-width, initial-scale=1.0")
-    (gentag meta name 'description             content site-desc*)
-    (gentag meta name 'theme-color             content "#@(hexrep sand)")
-    (gentag meta name 'msapplication-TileColor content "#@(hexrep orangered)")
+    (w/newlines
+      (gentag meta name 'viewport content "width=device-width, initial-scale=1.0")
+      (gentag meta name 'description             content site-desc*)
+      (gentag meta name 'theme-color             content "#@(hexrep sand)")
+      (gentag meta name 'msapplication-TileColor content "#@(hexrep orangered)")
 
-    (gentag link rel  'manifest                  href (static-src "site.webmanifest"))
-    (gentag link rel  'stylesheet type 'text/css href (static-src "news.css"))
-    (gentag link rel  'mask-icon                 href (static-src "safari-pinned-tab.svg") color teal)
-    (gentag link rel  "shortcut icon"            href "favicon.ico")
+      (gentag meta property 'og:type             content "website")
+      (gentag meta property 'og:title            content title)
+      (gentag meta property 'og:site_name        content site-name*)
+      (gentag meta property 'og:description      content site-desc*)
+      (gentag meta property 'og:image            content site-img*!url)
+      (gentag meta property 'og:image:type       content site-img*!type)
+      (gentag meta property 'og:image:width      content site-img*!width)
+      (gentag meta property 'og:image:height     content site-img*!height)
 
-    (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
+      (gentag link rel  'manifest                  href (static-src "site.webmanifest"))
+      (gentag link rel  'stylesheet type 'text/css href (static-src "news.css"))
+      (gentag link rel  'mask-icon                 href (static-src "safari-pinned-tab.svg") color teal)
+      (gentag link rel  "shortcut icon"            href "favicon.ico")
 
-    (gentag link rel  'icon type 'image/png sizes '512x512 href (static-src "android-chrome-512x512.png"))
+      (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
+      (gentag link rel  'icon type 'image/png sizes '512x512 href (static-src "android-chrome-512x512.png"))
 
-    (gentag link rel   'alternate type 'application/rss+xml
-                 title 'RSS       href (rss-url label))
+      (gentag link rel   'alternate type 'application/rss+xml
+                   title 'RSS       href (rss-url label))
 
-    (tag title (pr:eschtml title))
-    (tag (script) (pr votejs*))
-    (when (in label "place" "/l/place")
-      (tag (script src (static-src "place.js")))
-      (tag (style) (pr "body { background-color: #@(hexrep sand); }")))))
+      (tag title (pr:eschtml title))
+      (tag (script) (pr votejs*))
+      (when (in label "place" "/l/place")
+        (tag (script src (static-src "place.js")))
+        (tag (style) (pr "body { background-color: #@(hexrep sand); }"))))))
 
 (mac npage (title label . body)
   `(tag html
