@@ -178,6 +178,9 @@
 (def ensure-news-user ((o u (get-user)))
   (if (profile u) u (init-user u)))
 
+(defhook login name: news (user)
+  (ensure-news-user user))
+
 (def save-votes ((o u (get-user))) (save-table (votes* u) (+ votedir* u)))
 
 (def save-prof  ((o u (get-user))) (save-table (profs* u) (+ profdir* u)) (hook 'save-prof (profs* u)))
@@ -774,7 +777,6 @@ function vote(node) {
        (onlink "login"
          (login-page 'both nil
                      (list (fn ()
-                             (ensure-news-user)
                              (newslog 'top-login))
                            whence)))))
 
@@ -789,7 +791,7 @@ function vote(node) {
      (if (,test (get-user))
          (do ,@body)
          (login-page 'both (+ "Please log in" ,msg ".")
-                     (list (fn () (ensure-news-user))
+                     (list (fn () nil)
                            (string ',name (reassemble-args ,parm)))))))
 
 (mac defopg (name parm . body)
@@ -1519,7 +1521,6 @@ function vote(node) {
         (no user)
          (login-page 'both "You have to be logged in to vote."
                      (list (fn ()
-                             (ensure-news-user)
                              (newslog 'vote-login)
                              (when (canvote i dir)
                                (vote-for i dir)
@@ -1865,7 +1866,6 @@ function vote(node) {
 (def submit-login-warning ((o sub) (o url) (o title) (o showtext) (o text))
   (login-page 'both "You have to be logged in to submit."
               (fn ()
-                (ensure-news-user)
                 (newslog 'submit-login)
                 (submit-page sub url title showtext text))))
 
@@ -2526,7 +2526,6 @@ function suggestTitle() {
 (def comment-login-warning (parent whence (o text))
   (login-page 'both "You have to be logged in to comment."
               (fn ()
-                (ensure-news-user)
                 (newslog 'comment-login)
                 (addcomment-page parent whence text))))
 
@@ -2738,7 +2737,6 @@ function suggestTitle() {
             (addcomment-page i whence)
             (login-page 'both "You have to be logged in to comment."
                         (fn ()
-                          (ensure-news-user)
                           (newslog 'comment-login)
                           (addcomment-page i whence))))
         (pr "No such item."))))

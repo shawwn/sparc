@@ -262,6 +262,7 @@
 (def login (user cookie afterward)
   (= (logins* user) (get-ip))
   (prcookie cookie)
+  (hook 'login user)
   (if (acons afterward)
       (let (f url) afterward
         (f)
