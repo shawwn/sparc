@@ -3229,7 +3229,7 @@ first asterisk isn't whitespace.
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
 <a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.tensorfork.com/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
-  <u>post to @(do site-abbrev*)</u>
+  <u>post to @{site-abbrev*}</u>
 </a>
 
 <br><br>
@@ -3281,9 +3281,9 @@ Please limit your use of uppercase; it looks like shouting and is hard to read.
 ; Welcome
 
 (diskfile welcome-page* (+ newsdir* "welcome.html") (md-from-form
-"_Welcome to @(do site-name*)_
+"_Welcome to @{site-name*}_
 
-<a href=\"/\"><u>@(do site-name*)</u></a> is a bit different from other community sites, and we'd appreciate it if you'd take a minute to read the following as well as the <a href=\"/guidelines.html\"><u>official guidelines</u></a>.
+<a href=\"/\"><u>@{site-name*}</u></a> is a bit different from other community sites, and we'd appreciate it if you'd take a minute to read the following as well as the <a href=\"/guidelines.html\"><u>official guidelines</u></a>.
 
 @site-abbrev* is an experiment. As a rule, a community site that becomes popular will decline in quality. Our hypothesis is that this is not inevitable—that by making a conscious effort to resist decline, we can keep it from happening.
 
@@ -3295,13 +3295,13 @@ What does \"deeply interesting\" mean? It means stuff that teaches you about the
 
 The worst thing to post or upvote is something that's intensely but shallowly interesting: gossip about famous people, funny or cute pictures or videos, partisan political articles, etc. If you let that sort of thing onto a news site, it will push aside the deeply interesting stuff, which tends to be quieter.
 
-The most important principle on @(do site-abbrev*), though, is to make thoughtful comments. Thoughtful in both senses: civil and substantial.
+The most important principle on @{site-abbrev*}, though, is to make thoughtful comments. Thoughtful in both senses: civil and substantial.
 
 The test for substance is a lot like it is for links. Does your comment teach us anything? There are two ways to do that: by pointing out some consideration that hadn't previously been mentioned, and by giving more information about the topic, perhaps from personal experience.  Whereas comments like \"LOL!\" or worse still, \"That's retarded!\" teach us nothing.
 
 Empty comments can be ok if they're positive.  There's nothing wrong with submitting a comment saying just \"Thanks.\" What we especially discourage are comments that are empty and negative—comments that are mere name-calling.
 
-Which brings us to the most important principle on @(do site-abbrev*): civility. Since long before the web, the anonymity of online conversation has lured people into being much ruder than they'd be in person. So the principle here is: don't say anything you wouldn't say face to face.  This doesn't mean you can't disagree. But disagree without calling names. If you're right, your argument will be more convincing without them.
+Which brings us to the most important principle on @{site-abbrev*}: civility. Since long before the web, the anonymity of online conversation has lured people into being much ruder than they'd be in person. So the principle here is: don't say anything you wouldn't say face to face.  This doesn't mean you can't disagree. But disagree without calling names. If you're right, your argument will be more convincing without them.
 " nil t))
 
 (newsop welcome.html ()
@@ -3500,7 +3500,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                (if (metastory i)
                                     "@i!title"
                                    (is i!type 'pollopt)
-                                    "[@(do i!text)]"
+                                    "[@{i!text}]"
                                    "> @(ellipsize i!text)")))]
                      (sort (compare > car:cadr) (apply + (map tablist (vals votes*)))))
           (whenlet (age id dir score who by title) x
