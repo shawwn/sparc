@@ -753,11 +753,11 @@ function vote(node) {
     (toplink "comments" "/newcomments" label)
     (when discord-url*
       (toplink "discord"  discord-url* label))
-    (hook 'toprow label)
     (link "tags" "/l")
     (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
     (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
     (toplink "place" "/l/place" (if (is label "/l/place") "place" label))
+    (hook 'toprow label)
     (link "submit" "/submit")
     (unless (mem label toplabels*)
       (fontcolor white (pr:eschtml label)))))
