@@ -2545,7 +2545,7 @@ function suggestTitle() {
 (def comment-form (parent whence (o text))
   (urform (get-user) req
           (process-comment parent arg!text whence)
-    (textarea "text" 6 60
+    (textarea "text" 8 80
       (aif text (prn (unmarkdown it))))
     (when (and noob-comment-msg* (noob))
       (br2)
