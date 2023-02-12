@@ -292,10 +292,10 @@
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
-      (inputs (acct  username 20 arg!acct 'plain)
+      (inputs (acct  username 20 arg!acct  'plain)
               (pw    password 20 arg!pw)
               (email email?   20 arg!email 'plain))
-      (inputs (acct  username 20 arg!acct 'plain 'autofocus)
+      (inputs (acct  username 20 arg!acct  'plain 'autofocus)
               (pw    password 20 arg!pw)))
   (br)
   (submit label))
