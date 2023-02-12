@@ -353,7 +353,7 @@
 
 (mac inputs args
   `(tag (table border 0)
-     ,@(map (fn ((name label len text plain autofocus))
+     ,@(map (fn ((name label len text (o plain) (o autofocus)))
               (w/uniq (gl gt)
                 `(let ,gl ,len
                    (tr (td (pr ',label ":"))
