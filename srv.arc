@@ -709,7 +709,7 @@ Strict-Transport-Security: max-age=31556900
 
 ; Background Threads
 
-(or= bgthreads* (table) pending-bgthreads* nil bgthreads-noisy* (readenv "DEV" nil))
+(or= bgthreads* (table) pending-bgthreads* nil bgthreads-noisy* nil)
 
 (mac bgthread (name f sec)
   `(let ,name (fn ()
