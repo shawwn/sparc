@@ -221,14 +221,13 @@
         (+ "-" abrep)
         abrep)))
         
-(def leftpad (s (o digits 0) (o c "0"))
-  (if (isa s 'string)
-      (let n (len s)
-        (if (<= digits n) s
-          (tostring
-            (repeat (- digits n) (pr c))
-            (pr s))))
-    (leftpad (string s) digits c)))
+(def pad (seq total (o c 0) :right)
+  (if (isa!sym seq)    (sym:pad (string seq) total (str c) :right)
+      (isa!string seq) (str:pad (chars seq) total (str c) :right)
+      (let n (- total (len seq))
+        (if right
+            (+ seq (n-of n c))
+            (+ (n-of n c) seq)))))
 
 (def partition (pat seq (o start 0))
   (whenlet i (findsubseq pat seq start)
