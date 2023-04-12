@@ -1015,11 +1015,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 #'(require racket/random)
 
-(withs (n 1024 s (#'crypto-random-bytes n) bytes-ref #'bytes-ref)
+(def rand-bytes (n)
+  (#'bytes->list (#'crypto-random-bytes n)))
+
+(withs (n 1024
+        s (rand-bytes n))
   (def randb ()
     (atomic
-      (if (<= n 0) (= n 1024 s (#'crypto-random-bytes 1024)))
-      (bytes-ref s (-- n)))))
+      (when (<= n 0)
+        (= n 1024
+           s (rand-bytes 1024)))
+      (s (-- n)))))
 
 ; rejects bytes >= 248 lest digits be overrepresented
 
