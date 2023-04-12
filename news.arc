@@ -3560,11 +3560,6 @@ RNBQKBNR
       (" " "&nbsp;"))
     (string x)))
 
-(def chars (x)
-  (accum a
-    (each c x
-      (a c))))
-
 (def chess ((o board chess-board*))
   (accum a
     (each y (lines chess-board*)

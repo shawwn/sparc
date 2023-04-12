@@ -7,8 +7,9 @@
 ;> (get-output-string ss)
 ;"\u0085"
 
-(def concat (seq (o c ""))
-  (str (intersperse c seq)))
+(def chars (x)
+  (each c x
+    (out c)))
 
 (def seq (s)
   (coerce s 'cons))
