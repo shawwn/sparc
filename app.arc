@@ -966,7 +966,7 @@
 (def moment ((o ms (msec)))
   (withs (secs (msec->sec ms)
           msecs (imod ms 1000))
-    (strftime (ero:+ "+%Y-%m-%dT%H:%M:%S." (pad (str msecs) 3 "0") "Z") secs)))
+    (strftime (+ "+%Y-%m-%dT%H:%M:%S." (pad (str msecs) 3 "0") "Z") secs)))
 
 (defmemo moment-secs (secs)
   (moment (sec->msec secs)))
