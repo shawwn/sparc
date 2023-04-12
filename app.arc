@@ -957,18 +957,24 @@
               ; unknown
               (do (out #\% (fmt i)))))))))
 
-(defmemo moment (ms)
-  (moment-ms ms))
+(def idiv (i n) (trunc (/ i n)))
+(def imod (i n) (mod (trunc i) n))
 
-(defmemo moment-ms ((o ms (msec)))
-  (withs (secs (trunc (/ ms 1000))
-          msecs (mod (trunc ms) 1000))
-    (strftime (+ "+%Y-%m-%dT%H:%M:%S." (leftpad msecs 3 "0") "Z") secs)))
+(def sec->msec (ts) (* ts 1000))
+(def msec->sec (ms)  (idiv ms 1000))
 
-(def moment-secs ((o secs (seconds)))
-  (moment (* 1000 secs)))
+(def moment ((o ms (msec)))
+  (withs (secs (msec->sec ms)
+          msecs (imod ms 1000))
+    (strftime (ero:+ "+%Y-%m-%dT%H:%M:%S." (pad (str msecs) 3 "0") "Z") secs)))
 
-(def rss-date ((o secs (seconds)))
+(defmemo moment-secs (secs)
+  (moment (sec->msec secs)))
+
+(defmemo moment-ms (ms)
+  (moment ms))
+
+(defmemo rss-date (secs)
   (strftime "+%a, %d %b %Y %H:%M:%S GMT" secs))
 
 (def send-email (from to subject message)
