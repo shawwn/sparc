@@ -1349,6 +1349,8 @@
                       ((sym)     (string->symbol (apply string-append (map ar-tostr x))))
                       ((keyword) (string->keyword (apply string-append (map ar-tostr x))))
                       ((bool)    #t)
+                      ((bytes)   (if (car? x byte?) x
+                                   (err "Can't coerce" x type)))
                       (else      (err "Can't coerce" x type))))
     ((ar-nil? x)    (case type
                       ((bytes)   ar-nil)
