@@ -274,7 +274,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (reclist   [if (f:car _) (car _)] seq)
         (recstring [if (f:seq _) (seq _)] seq))))
 
-(def isa (x y) (is (type x) y))
+(def isa (x (o y))
+  (if y
+      (is (type x) y)
+      [is (type _) x]))
 
 ; Possible to write map without map1, but makes News 3x slower.
 
