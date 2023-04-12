@@ -8,8 +8,17 @@
 ;"\u0085"
 
 (def chars (x)
-  (each c x
+  (each c (str x)
     (out c)))
+
+(def concat (seq (o sep))
+  (aand (if sep (intersperse sep seq) seq)
+        (apply + it)))
+
+(def mapcat (f seq . args)
+  (if (isa!fn f)
+      (concat (apply map f seq args))
+      (concat seq f)))
 
 (def seq (s)
   (coerce s 'cons))

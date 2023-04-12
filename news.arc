@@ -1159,7 +1159,7 @@ function vote(node) {
 
 (def stats-day ((o ymd (date)))
   (let (y m d) ymd
-    (let file (libpath (string "arc/logs/srv-" y "-" (leftpad m 2) "-" (leftpad d 2)))
+    (let file (libpath (string "arc/logs/srv-" y "-" (pad m 2) "-" (pad d 2)))
       (stats-from-log file))))
 
 (def stats-hour (H (o ymd (date)) (o day (stats-day ymd)))
