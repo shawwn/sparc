@@ -302,10 +302,9 @@
 (mac each-loaded-item (var . body)
   (w/uniq g
     `(let ,g nil
-       (accum out
-         (loop (= ,g maxid*) (> ,g 0) (-- ,g)
-           (whenlet ,var (items* ,g)
-             ,@body))))))
+       (loop (= ,g maxid*) (> ,g 0) (-- ,g)
+         (whenlet ,var (items* ,g)
+           ,@body)))))
 
 (def loaded-items (test)
   (each-loaded-item i (test&out i)))

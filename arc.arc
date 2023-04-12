@@ -522,12 +522,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
-    `(point break
-       ,start
-       ((rfn ,gfn (,gparm) 
-          (if ,gparm
-              (do ,@body ,update (,gfn ,test))))
-        ,test))))
+    `(accum out
+       (point break
+         ,start
+         ((rfn ,gfn (,gparm) 
+            (if ,gparm
+                (do ,@body ,update (,gfn ,test))))
+          ,test)))))
 
 (mac for (v init max . body)
   (w/uniq (gi gm)
