@@ -305,7 +305,11 @@
 
 (define (symbol->chars x) (string->list (symbol->string x)))
 
-(define (chars->value chars) (read-from-string (list->string chars)))
+(define (chars->value chars)
+  (let ((s (list->string chars)))
+    (if (string-contains? s " ")
+        (string->symbol s)
+        (read-from-string s))))
 
 (define (tokens test source token acc keepsep?)
   (cond ((null? source)
