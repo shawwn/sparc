@@ -745,9 +745,10 @@ Strict-Transport-Security: max-age=31556900
   (defhook respond (str op args cooks ips . rest)
     (noisy-reload)
     (hook 'reload-admins)
-    (let (op args) (parseop op args)
-      (when (srvops* op)
-        (ero op)))
+    (when srv-noisy*
+      (let (op args) (parseop op args)
+        (when (srvops* op)
+          (ero op))))
     nil))
 
 ; pull from github periodically
