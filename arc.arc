@@ -1794,11 +1794,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac fromdisk (var file init load save)
   (w/uniq (gf gv)
-    `(unless (and (bound ',var) ,var)
-       (do1 (= ,var (iflet ,gf (file-exists ,file)
-                               (,load ,gf)
-                               ,init))
-            (= (savers* ',var) (fn (,gv) (,save ,gv ,file)))))))
+    `(do1 (or (and (bound ',var) ,var)
+              (= ,var (iflet ,gf (file-exists ,file)
+                             (,load ,gf)
+                             ,init)))
+          (= (savers* ',var) (fn (,gv) (,save ,gv ,file))))))
 
 (mac diskfile (var file (o init nil))
   `(fromdisk ,var ,file ,init filechars savefile))
