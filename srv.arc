@@ -8,16 +8,21 @@
 
 (or= quitsrv* nil breaksrv* nil killreq* (no (readenv "DEV" nil)))
 
-(def serve ((o port 8080))
+(def serve ((o port 8080) repl: (o repl? (readenv "DEV")))
   (wipe quitsrv*)
   (ensure-srvdirs)
   (map [apply new-bgthread _] pending-bgthreads*)
   (w/socket s port
     (setuid 2) ; XXX switch from root to pg
-    (ero "ready to serve port" port)
+    (ero "ready to serve http://localhost:@port")
     (= currsock* s)
-    (until quitsrv*
-      (handle-request s breaksrv*)))
+    (def serving ()
+      (until quitsrv*
+        (handle-request s breaksrv*)))
+    (if repl?
+        (do (thread:serving)
+            (interact))
+        (serving)))
   (prn "quit server"))
 
 (def serve1 ((o port 8080))
