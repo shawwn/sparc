@@ -786,16 +786,16 @@
       (unless (is code 0)
         (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
 
-(def shell (cmd :async . args)
+(def shell (cmd :async :bytes . args)
   (if async
       (thread:shellrun cmd args)
-      (tostring:shellrun cmd args)))
+      (tostring (shellrun cmd args) :bytes)))
 
-(def shellsafe (cmd :async . args)
-  (errsafe (apply shell cmd :async args)))
+(def shellsafe (cmd :async :bytes . args)
+  (errsafe (apply shell cmd :async :bytes args)))
 
-(def GET (url)
-  (shell "curl" "-fsSL" (clean-url url)))
+(def GET (url :bytes)
+  (shell "curl" "-fsSL" (clean-url url) :bytes))
 
 (def fetch-title (url)
   (let s (GET url)

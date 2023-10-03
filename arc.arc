@@ -920,20 +920,21 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/stdin (str . body)
   `(call-w/stdin ,str (fn () ,@body)))
 
-(mac tostring body
+(mac tostring (:bytes . body)
   (w/uniq gv
    `(w/outstring ,gv
       (w/stdout ,gv ,gv ,@body)
-      (inside ,gv))))
+      (inside ,gv bytes: ,bytes))))
 
-(mac tostrings body
+(mac tostrings (:bytes . body)
   (w/uniq (ge go)
    `(w/outstring ,ge
       (w/outstring ,go
         (w/stderr ,ge
           (w/stdout ,go
             ,@body))
-        (list (inside ,go) (inside ,ge))))))
+        (list (inside ,go bytes: ,bytes)
+              (inside ,ge bytes: ,bytes))))))
 
 (mac fromstring (str . body)
   (w/uniq gv

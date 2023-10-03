@@ -1217,7 +1217,12 @@
 
 ; use as general fn for looking inside things
 
-(xdef inside get-output-string)
+(define (ar-inside port #:bytes (bytes #f))
+  (if (ar-false? bytes)
+      (get-output-string port)
+      (bytes->list (get-output-bytes port))))
+
+(xdef inside ar-inside)
 
 (xdef stdout current-output-port)  ; should be a vars
 (xdef stdin  current-input-port)
