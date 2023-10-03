@@ -469,7 +469,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                        (if (<= (len place) 1)
                            (snoc place 'fn)
                            place)))
-    (if (#'lex? g) (uniq g) g)))
+    (if (lex g) (uniq g) g)))
 
 (def expand= (place val)
   (if (and (isa place 'sym) (~ssyntax place))
@@ -488,7 +488,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac or= args
   (def getter (var)
-    (if (or (alist var) (#'lex? var)) var `(bound ',var)))
+    (if (or (alist var) (lex var)) var `(bound ',var)))
   `(do ,@(hug (map1 ssexpand args)
               (fn (var val)
                 `(atomic (or ,(getter var) (= ,var ,val)))))))

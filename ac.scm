@@ -154,7 +154,7 @@
 (define (ac-unflag x)
   (let* ((n (ac-flag? x))
          (k (and n (symbol->keyword n)))
-         (v (and n (if (lex? n) n 't))))
+         (v (and n (if (ac-lex? n) n 't))))
     (if n `(,k ,v) `(,x))))
 
 (define (ac-unflag-args args)
@@ -339,7 +339,7 @@
 
 (define (ac-var-ref s)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
-        ((lex? s)           s)
+        ((ac-lex? s)        s)
         (#t                 (ac-global-name s))))
 
 (define (ac-tonumber s (base 10))
@@ -650,7 +650,7 @@
                      ((eqv? a 'true) (err "Can't rebind true"))
                      ((eqv? a 'false) (err "Can't rebind false"))
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
-                     ((lex? a) `(set! ,a ,n))
+                     ((ac-lex? a) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
                                                          ,n
                                                          #t)))
@@ -745,7 +745,7 @@
   (let ((args (ac-unflag-args args)))
     (cond ((car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
-          ((and direct-calls (symbol? fn) (not (lex? fn)) (bound? fn)
+          ((and direct-calls (symbol? fn) (not (ac-lex? fn)) (bound? fn)
                 (procedure? (bound? fn)))
            (ac-global-call fn args))
           ((memf keywordp args)
@@ -828,7 +828,7 @@
   compile partition
 ))
 
-(define (lex? v (env (env*)))
+(define (ac-lex? v (env (env*)))
   (memq v env))
 
 ; The next two are optimizations, except work for macros.
@@ -882,6 +882,8 @@
   (namespace-set-variable-value! (ac-global-name a) b)
   (hash-set! fn-signatures a (list parms))
   b)
+
+(xdef lex ac-lex?)
 
 (xdef eof eof)
 
