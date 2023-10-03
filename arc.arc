@@ -36,7 +36,9 @@
                     (if (#'ac-lexname)
                         `(do (#'define ,(#'ac-env! var) ,val)
                              ,var)
-                        `(do (warnset ',var)
+                        `(do ,(if (lex var)
+                                  `(do)
+                                  `(warnset ',var))
                              (assign ,var ,val))))))
 
 (assign def (annotate 'mac
