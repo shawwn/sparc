@@ -1725,6 +1725,7 @@
                             (hash-remove! com ind)
                             (hash-set! com ind val)))
           ((string? com) (string-set! com ind val))
+          ((bytes? com)  (bytes-set! com ind val))
           ((pair? com)   (nth-set! com ind val))
           (#t (err "Can't set reference " com ind val)))
     val))
