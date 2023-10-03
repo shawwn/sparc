@@ -750,12 +750,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; the rep of these.  That would also require hacking the reader.  
 
 (def pr (:file :flush :sep :end . args)
-  (or= file (stdout) sep "")
-  (let c ""
-    (map1 [do (disp c file) (disp _ file) (= c sep)]
-          args)
-    (if end (disp end file))
-    (if flush (flushout file)))
+  (or= file (stdout))
+  (let c nil
+    (each x args
+      (if c (disp c file))
+      (= c sep)
+      (disp x file)))
+  (if end (disp end file))
+  (if flush (flushout file))
   (car args))
 
 (def prt (:file :flush :sep :end . args)
