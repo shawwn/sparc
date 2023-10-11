@@ -33,20 +33,18 @@
 
 (assign safeset (annotate 'mac
                   (fn (var val)
-                    (if (#'ac-lexname)
-                        `(do (#'define ,(#'ac-env! var) ,val)
-                             ,var)
-                        `(do ,(if (lex var)
-                                  `(do)
-                                  `(warnset ',var))
-                             (assign ,var ,val))))))
+                    (assign val `(assign ,var ,val))
+                    (if (lex var) val
+                        (lexname) `(do (#'define ,(#'ac-env! var) nil) ,val)
+                                  `(do (warnset ',var) ,val)))))
 
 (assign def (annotate 'mac
                (fn (:tag name parms . body)
-                 (if body
-                     `(def tag: ,tag ,name (do (sref sig ',parms ',name)
-                                               (fn ,parms ,@body)))
-                     `(safeset ,name ,(if tag `(annotate ',tag ,parms) parms))))))
+                 (assign body (if body `(fn ,parms ,@body) parms))
+                 (if (lex name) nil
+                     (lexname) nil
+                     (assign body `(do (sref sig ',parms ',name) ,body)))
+                 `(safeset ,name ,(if tag `(annotate ',tag ,body) body)))))
 
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
@@ -1344,7 +1342,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; otherwise sorts the args.
 
 (mac onsort body
-  (let self (#'ac-lexname)
+  (let self (lexname)
     `(withs (f (if key (compare f key) f)
              xs (listify xs) ys (listify ys) zs (map listify zs))
        (aif (if sorted zs (map [sort f _] zs))

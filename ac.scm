@@ -93,7 +93,6 @@
         ((symbol? s) (ac-var-ref s))
         ((car? s '%do) (ac-do (cdr s)))
         ((car? s 'lexenv) (ac-lexenv))
-        ((car? s 'lexname) (list 'quote (ac-lexname)))
         ((car? s 'syntax) (cadr s))
         ((caar? s 'syntax) (map ac s))
         ((car? s ssyntax?) (ac (cons (expand-ssyntax (car s)) (cdr s))))
@@ -884,6 +883,8 @@
   b)
 
 (xdef lex ac-lex?)
+
+(xdef lexname ac-lexname)
 
 (xdef eof eof)
 
