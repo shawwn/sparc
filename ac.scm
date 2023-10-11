@@ -154,7 +154,7 @@
 (define (ac-unflag x)
   (let* ((n (ac-flag? x))
          (k (and n (symbol->keyword n)))
-         (v (and n (if (ac-lex? n) n 't))))
+         (v (and n (if (ac-lex? n) n ar-t))))
     (if n `(,k ,v) `(,x))))
 
 (define (ac-unflag-args args)
