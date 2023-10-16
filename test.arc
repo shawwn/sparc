@@ -14,7 +14,7 @@
   (tostring (write x)))
 
 (def equal? (a b)
-  (if (atom a) (is a b)
+  (if (atom a) (id a b)
     (is (writes a) (writes b))))
 
 (mac test? (a b)
@@ -55,7 +55,7 @@
     (test? '-0X (read "-0X"))
     (test? '-0Xg (read "-0Xg"))
     (test? t (read "t"))
-    (test? (no t) (read "nil"))
+    (test? (no t) (read "false"))
     (test? 'hi (read "hi"))
     (test? '"hi" (read "\"hi\""))
     (test? 'hi (read "|hi|"))
@@ -236,7 +236,8 @@
 (define-test quote
   (test? 7 (quote 7))
   (test? true (quote t))
-  (test? false (quote nil))
+  (test? false (quote false))
+  (test? nil (quote nil))
   (test? (quote a) 'a)
   (test? (quote (quote a)) ''a)
   (test? "a" '"a")
