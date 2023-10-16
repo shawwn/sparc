@@ -590,7 +590,8 @@
 
 (def paras (s (o i 0))
   (if (atend i s)
-      nil
+      (aand (cut s i)
+            (if (~blank it) (list it)))
       (iflet (endthis startnext) (next-parabreak s i)
              (cons (cut s i endthis)
                    (paras s startnext))
