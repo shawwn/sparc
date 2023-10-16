@@ -764,11 +764,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (apply pr (keep idfn args) :file :flush :sep :end)
   (car args))
 
-(def prn (:file :flush :sep . args)
-  (apply pr args :file :flush :sep end: #\newline))
+(def prn (:file :flush :sep (o :end #\newline) . args)
+  (apply pr args :file :flush :sep :end))
 
-(def prs (:file :flush :end . args)
-  (apply pr args :file :flush :end sep: #\space))
+(def prs (:file :flush (o :sep #\space) :end . args)
+  (apply pr args :file :flush :sep :end))
 
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
