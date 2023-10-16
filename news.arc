@@ -2037,10 +2037,12 @@ function suggestTitle() {
                    "eurekster" "blogsome" "edogo" "blog" "com"
                    "ycombinator"))
 
+(def create-item (type . args)
+  (apply inst 'item 'type type 'id (new-item-id) args))
+
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
   (newslog 'create sub url (list title))
-  (let s (inst 'item 'type 'story 'id (new-item-id)
-                     'url url 'title title 'text text 'by user 'ip ip)
+  (let s (create-item 'story 'url url 'title title 'text text 'by user 'ip ip)
     (when sub
       (each x (rev (tokens sub [or (whitec _) (in _ #\,)]))
         (pushnew (clean-sub x) s!keys)))
@@ -2188,8 +2190,7 @@ function suggestTitle() {
 
 (def create-poll (title text opts (o user (get-user)) (o ip (get-ip)))
   (newslog 'create-poll title)
-  (with p (inst 'item 'type 'poll 'id (new-item-id)
-                      'title title 'text text 'by user 'ip ip)
+  (with p (create-item 'poll 'title title 'text text 'by user 'ip ip)
     (= (items* p!id) p)
     (= p!parts (map !id (map [create-pollopt p nil nil _ user ip]
                              (paras opts))))
@@ -2197,9 +2198,8 @@ function suggestTitle() {
     (push p stories*)))
 
 (def create-pollopt (p url title text (o user (get-user)) (o ip (get-ip)))
-  (with o (inst 'item 'type 'pollopt 'id (new-item-id)
-                      'url url 'title title 'text text 'parent p!id
-                      'by user 'ip ip)
+  (with o (create-item 'pollopt 'url url 'title title 'text text 'parent p!id
+                       'by user 'ip ip)
     (save-item o)
     (= (items* o!id) o)))
 
@@ -2596,8 +2596,7 @@ function suggestTitle() {
 
 (def create-comment (parent text (o user (get-user)) (o ip (get-ip)))
   (newslog 'comment parent!id)
-  (let c (inst 'item 'type 'comment 'id (new-item-id)
-                     'text text 'parent parent!id 'by user 'ip ip)
+  (let c (create-item 'comment 'text text 'parent parent!id 'by user 'ip ip)
     (save-item c)
     (= (items* c!id) c)
     (push c!id parent!kids)
