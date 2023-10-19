@@ -670,12 +670,8 @@
 
 (define (ac-lexname (env (env*)))
   (and (ac-dbname env)
-       (string->symbol
-         (string-trim
-           (apply string-append
-                  (map (lambda (x) (string-append (symbol->string x) "--"))
-                       (apply append (reverse (keep pair? env)))))
-           "--"))))
+       (let ((names (apply append (reverse (keep pair? env)))))
+         (apply ar-+ (add-between names "--")))))
 
 (define (ac-lexenv (env (env*)))
   `(list (list '*name ',(ac-lexname env))
