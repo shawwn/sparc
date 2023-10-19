@@ -204,7 +204,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Could take n args, but have never once needed that.
 
 (def iso (x y)
-  (or (is x y)
+  (or (id x y)
       (and (acons x) 
            (acons y) 
            (iso (car x) (car y)) 
