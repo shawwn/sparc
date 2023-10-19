@@ -1059,8 +1059,8 @@
 (define (ar-to type)
   (lambda (x) (ar-coerce x type)))
 
-(define ar-tostr (ar-to 'string))
-(define ar-tosym (ar-to 'sym))
+(define (ar-cat . args)
+  (apply string-append (map (ar-to 'string) args)))
 
 (define (ar-list? x)
   (or (null? x) (pair? x)))
@@ -1068,8 +1068,7 @@
 (define (ar-+ . args)
   (cond ((null? args) 0)
         ((char-or-string? (car args))
-         (apply string-append
-                (map ar-tostr args)))
+         (apply ar-cat args))
         ((ar-list? (car args))
          (apply append args))
         ((evt? (car args))
@@ -1077,9 +1076,7 @@
         ((path? (car args))
          (apply build-path args))
         ((symbol? (car args))
-         (string->symbol
-           (apply string-append
-                  (map ar-tostr args))))
+         (string->symbol (apply ar-cat args)))
         (#t (apply + args))))
 
 (xdef + ar-+)
@@ -1088,7 +1085,7 @@
 
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
-         (string-append (ar-tostr x) (ar-tostr y)))
+         (ar-cat x y))
         ((ar-list? x)
          (append x y))
         ((evt? x)
@@ -1096,8 +1093,7 @@
         ((path? x)
          (build-path x y))
         ((symbol? x)
-         (string->symbol
-           (string-append (ar-tostr x) (ar-tostr y))))
+         (string->symbol (ar-cat x y)))
         (#t (+ x y))))
 
 (xdef - -)
@@ -1139,8 +1135,8 @@
              (cond ((ar-list? x) (length x))
                    ((ar-seq? x) (sequence-length x))
                    ((hash? x) (hash-count x))
-                   ((symbol? x) (string-length (ar-tostr x)))
-                   ((keyword? x) (string-length (ar-tostr x)))
+                   ((symbol? x) (string-length (symbol->string x)))
+                   ((keyword? x) (string-length (keyword->string x)))
                    (#t (err "Can't get len of" x)))))
 
 (define (ar-tag type rep)
@@ -1357,9 +1353,9 @@
                                      (if (null? args)
                                          (bytes->string/latin-1 (list->bytes x))
                                          (bytes->string/utf-8 (list->bytes x)))
-                                     (apply string-append (map ar-tostr x))))
-                      ((sym)     (string->symbol (apply string-append (map ar-tostr x))))
-                      ((keyword) (string->keyword (apply string-append (map ar-tostr x))))
+                                     (apply ar-cat x)))
+                      ((sym)     (string->symbol (apply ar-cat x)))
+                      ((keyword) (string->keyword (apply ar-cat x)))
                       ((bool)    #t)
                       ((bytes)   (if (car? x byte?) x
                                    (err "Can't coerce" x type)))
