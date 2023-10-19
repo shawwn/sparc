@@ -581,11 +581,6 @@
   (let ((val (ac expr)))
     (list (list (ac-env! var) `(if (pair? ,ra) (car ,ra) ,val)))))
 
-; extract list of variables from list of two-element lists.
-
-(define (ac-complex-getargs a)
-  (map (lambda (x) (car x)) a))
-
 ; (a b . c) -> (a b c)
 ; a -> (a)
 ; ((o a)) -> (a)
