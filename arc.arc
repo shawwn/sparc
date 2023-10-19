@@ -49,6 +49,22 @@
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
 
+(mac %brackets
+  (#'make-keyword-procedure
+    (fn (ks vs . body)
+      `(fn (_) ,(apply + body (map list ks vs))))
+    (fn body
+      `(fn (_) ,body))))
+
+(mac %braces body
+"The function invoked on curly-bracket calls.
+For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
+  `(obj ,@body))
+
+(def list args args)
+
+(def idfn (x) x)
+
 (def caar (xs) (car (car xs)))
 (def cadr (xs) (car (cdr xs)))
 (def cddr (xs) (cdr (cdr xs)))
@@ -56,11 +72,29 @@
 (def no (x) (is x nil))
 (def yes (x) (no (no x)))
 
+(def isa (x (o y))
+  (if y
+      (is (type x) y)
+      [is (type _) x]))
+
+(def isnt (x y) (no (is x y)))
+
 (def acons (x) (is (type x) 'cons))
 
 (def atom (x) (no (acons x)))
 
-(def list args args)
+; Maybe later make this internal.  Useful to let xs be a fn?
+
+(def map1 (f xs)
+  (if (no xs) 
+      nil
+      (cons (f (car xs)) (map1 f (cdr xs)))))
+
+(def hug (xs (o f list))
+  (if (no xs)       nil
+      (no (cdr xs)) (cons (f (car xs)) nil)
+                    (cons (f (car xs) (cadr xs))
+                          (hug (cddr xs) f))))
 
 (def reduce (f xs)
   (if (no (cdr xs))
@@ -78,36 +112,6 @@
 
 (mac snoc! (var . args)
   `(atomic (= ,var (snoc ,var ,@args))))
-
-(def idfn (x) x)
-
-; Maybe later make this internal.  Useful to let xs be a fn?
-
-(def map1 (f xs)
-  (if (no xs) 
-      nil
-      (cons (f (car xs)) (map1 f (cdr xs)))))
-
-(def hug (xs (o f list))
-  (if (no xs)       nil
-      (no (cdr xs)) (cons (f (car xs)) nil)
-                    (cons (f (car xs) (cadr xs))
-                          (hug (cddr xs) f))))
-
-(mac dbg ((o expr 'nil))
-  `(debugger (lexenv) ',expr))
-
-(mac %brackets
-  (#'make-keyword-procedure
-    (fn (ks vs . body)
-      `(fn (_) ,(apply + body (map list ks vs))))
-    (fn body
-      `(fn (_) ,body))))
-
-(mac %braces body
-"The function invoked on curly-bracket calls.
-For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
-  `(obj ,@body))
 
 (mac and args
   (if args
@@ -178,8 +182,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          acc
          (self (cdr xs) (cons (car xs) acc))))
    xs nil))
-
-(def isnt (x y) (no (is x y)))
 
 (mac w/uniq (names . body)
   (if (acons names)
@@ -272,11 +274,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (if (alist seq)
         (reclist   [if (f:car _) (car _)] seq)
         (recstring [if (f:seq _) (seq _)] seq))))
-
-(def isa (x (o y))
-  (if y
-      (is (type x) y)
-      [is (type _) x]))
 
 ; Possible to write map without map1, but makes News 3x slower.
 

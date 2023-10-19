@@ -205,4 +205,6 @@
                              (dbg-prn lenv retexpr)))
                        (self)))))))))))))
 
+(mac dbg ((o expr 'nil))
+  `(debugger (lexenv) ',expr))
 
