@@ -813,7 +813,7 @@
   true false t nil
   car cdr caar cadr cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr
   lib require provide module load eof read write eval
-  length empty last keep set max min fill-table abs round count
+  length empty last keep set max min abs round count
   eq eqv equal eq? eqv? equal?
   cons list member assoc compose all map string thread
   tag link only any nor private public
@@ -1448,17 +1448,6 @@
               (let ((h (make-hash)))
                 (when (pair? args) ((car args) h))
                 h)))
-
-;(xdef table (lambda args
-;               (fill-table (make-hash)
-;                           (if (pair? args) (car args) ar-nil))))
-
-(define (fill-table h pairs)
-  (if (ar-nil? pairs)
-      h
-      (let ((pair (car pairs)))
-        (begin (hash-set! h (car pair) (cadr pair))
-               (fill-table h (cdr pairs))))))
 
 (xdef maptable (lambda (fn table)               ; arg is (fn (key value) ...)
                   (hash-for-each table fn)
