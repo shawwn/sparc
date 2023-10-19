@@ -1225,60 +1225,37 @@
 
 (xdef call-w/param
       (lambda (var val thunk)
-        (parameterize ((var val)) (thunk))))
+        (parameterize ((var val))
+          (thunk))))
 
-(xdef call-w/stdout
-      (lambda (port thunk)
-        (parameterize ((current-output-port port)) (thunk))))
-
-(xdef call-w/stderr
-      (lambda (port thunk)
-        (parameterize ((current-error-port port)) (thunk))))
-
-(xdef call-w/stdin
-      (lambda (port thunk)
-        (parameterize ((current-input-port port)) (thunk))))
-
-(xdef readc (lambda str
-              (let ((c (read-char (if (pair? str)
-                                      (car str)
-                                      (current-input-port)))))
-                (if (eof-object? c) ar-nil c))))
+(xdef readc (lambda ((i (current-input-port)) (fail #f))
+              (let ((c (read-char i)))
+                (if (eof-object? c) fail c))))
 
 
-(xdef readb (lambda str
-              (let ((c (read-byte (if (pair? str)
-                                      (car str)
-                                      (current-input-port)))))
-                (if (eof-object? c) ar-nil c))))
+(xdef readb (lambda ((i (current-input-port)) (fail #f))
+              (let ((c (read-byte i)))
+                (if (eof-object? c) fail c))))
 
 (define (ready? check peek i fail)
   (atomic-invoke
     (lambda ()
       (if (check i) (peek i) fail))))
 
-(xdef peekc (lambda str
-              (let* ((i (if (pair? str) (car str) (current-input-port)))
-                     (c (ready? char-ready? peek-char i eof)))
-                (if (eof-object? c) ar-nil c))))
+(xdef peekc (lambda ((i (current-input-port)) (fail #f))
+              (let ((c (ready? char-ready? peek-char i eof)))
+                (if (eof-object? c) fail c))))
 
-(xdef peekb (lambda str
-              (let* ((i (if (pair? str) (car str) (current-input-port)))
-                     (c (ready? byte-ready? peek-byte i eof)))
-                (if (eof-object? c) ar-nil c))))
+(xdef peekb (lambda ((i (current-input-port)) (fail #f))
+              (let ((c (ready? byte-ready? peek-byte i eof)))
+                (if (eof-object? c) fail c))))
 
-(xdef writec (lambda (c . args)
-                (write-char c
-                            (if (pair? args)
-                                (car args)
-                                (current-output-port)))
+(xdef writec (lambda (c (p (current-output-port)))
+                (write-char c p)
                 c))
 
-(xdef writeb (lambda (b . args)
-                (write-byte b
-                            (if (pair? args)
-                                (car args)
-                                (current-output-port)))
+(xdef writeb (lambda (b (p (current-output-port)))
+                (write-byte b p)
                 b))
 
 (define explicit-flush #f)

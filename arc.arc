@@ -910,13 +910,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; rename this simply "to"?  - prob not; rarely use
 
 (mac w/stdout (str . body)
-  `(call-w/stdout ,str (fn () ,@body)))
+  `(w/param stdout ,str ,@body))
 
 (mac w/stderr (str . body)
-  `(call-w/stderr ,str (fn () ,@body)))
+  `(w/param stderr ,str ,@body))
 
 (mac w/stdin (str . body)
-  `(call-w/stdin ,str (fn () ,@body)))
+  `(w/param stdin ,str ,@body))
 
 (mac tostring (:bytes . body)
   (w/uniq gv
