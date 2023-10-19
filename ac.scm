@@ -1052,11 +1052,16 @@
 ; Generic +: strings, lists, numbers.
 ; Return val has same type as first argument.
 
-(define (ar-to type)
-  (lambda (x) (ar-coerce x type)))
+(define (ar-to type . args)
+  (lambda (x) (apply ar-coerce x type args)))
 
 (define (ar-cat . args)
-  (apply string-append (map (ar-to 'string) args)))
+  (if (bytes? (ar-xcar args))
+      (apply bytes-append (map (ar-to 'bytes 'utf8) args))
+      (apply string-append (map (ar-to 'string) args))))
+
+(define (char-or-string? x)
+  (or (char? x) (string? x) (bytes? x)))
 
 (define (ar-list? x)
   (or (null? x) (pair? x)))
@@ -1078,8 +1083,6 @@
         (#t (apply + args))))
 
 (xdef + ar-+)
-
-(define (char-or-string? x) (or (string? x) (char? x)))
 
 (define (ar-+2 x y)
   (cond ((char-or-string? x)
@@ -1110,6 +1113,7 @@
         ((and (string? x) (string? y)) (string>? x y))
         ((and (symbol? x) (symbol? y)) (string>? (symbol->string x) (symbol->string y)))
         ((and (keyword? x) (keyword? y)) (string>? (keyword->string x) (keyword->string y)))
+        ((and (bytes? x) (bytes? y)) (bytes>? x y))
         ((and (char? x) (char? y)) (char>? x y))
         (#t (> x y))))
 
@@ -1120,6 +1124,7 @@
         ((and (string? x) (string? y)) (string<? x y))
         ((and (symbol? x) (symbol? y)) (string<? (symbol->string x) (symbol->string y)))
         ((and (keyword? x) (keyword? y)) (string<? (keyword->string x) (keyword->string y)))
+        ((and (bytes? x) (bytes? y)) (bytes<? x y))
         ((and (char? x) (char? y)) (char<? x y))
         (#t (< x y))))
 
@@ -1158,6 +1163,7 @@
         ((procedure? x)     'fn)
         ((char? x)          'char)
         ((string? x)        'string)
+        ((bytes? x)         'bytes)
         ((exint? x)         'int)
         ((number? x)        'num)     ; unsure about this
         ((hash? x)          'table)
@@ -1173,8 +1179,8 @@
         (#t                 (typeof x))))
 
 (define (typeof x)
-  (let ((tag (vector-ref (struct->vector x) 0)))
-    (string->symbol (substring (symbol->string tag) (string-length "struct:")))))
+  (let ((tag (symbol->string (vector-ref (struct->vector x) 0))))
+    (string->symbol (substring tag (string-length "struct:")))))
 
 (xdef type ar-type)
 
@@ -1215,7 +1221,7 @@
 (define (ar-inside port #:bytes (bytes #f))
   (if (ar-false? bytes)
       (get-output-string port)
-      (bytes->list (get-output-bytes port))))
+      (get-output-bytes port)))
 
 (xdef inside ar-inside)
 
@@ -1286,26 +1292,31 @@
 (define (iround x) (inexact->exact (round x)))
 
 (define (ar-coerce x type . args)
+  (define (retry x)
+    (apply ar-coerce x type args))
   (cond
     ((ar-tagged? x) (err "Can't coerce annotated object"))
     ((eqv? type (ar-type x)) x)
     ((char? x)      (case type
                       ((int)     (char->ascii x))
                       ((string)  (string x))
-                      ((bytes)   (apply ar-coerce (string x) type args))
+                      ((bytes)   (retry (string x)))
                       ((sym)     (string->symbol (string x)))
+                      ((keyword) (string->keyword (string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((exint? x)     (case type
                       ((num)     x)
                       ((char)    (ascii->char x))
                       ((string)  (apply number->string x args))
+                      ((bytes)   (retry (number->string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((number? x)    (case type
                       ((int)     (iround x))
                       ((char)    (ascii->char (iround x)))
                       ((string)  (apply number->string x args))
+                      ((bytes)   (retry (number->string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((string? x)    (case type
@@ -1313,8 +1324,8 @@
                       ((cons)    (string->list x))
                       ((keyword) (string->keyword x))
                       ((bytes)   (if (null? args)
-                                     (bytes->list (string->bytes/latin-1 x))
-                                     (bytes->list (string->bytes/utf-8 x))))
+                                     (string->bytes/latin-1 x)
+                                     (string->bytes/utf-8 x)))
                       ((num)     (or (apply string->number x args)
                                      (err "Can't coerce" x type)))
                       ((int)     (let ((n (apply string->number x args)))
@@ -1323,20 +1334,27 @@
                                        (err "Can't coerce" x type))))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
+    ((bytes? x)     (case type
+                      ((cons)    (bytes->list x))
+                      ((string)  (if (null? args)
+                                     (bytes->string/latin-1 x)
+                                     (bytes->string/utf-8 x)))
+                      ((bool)    #t)
+                      (else      (err "Can't coerce" x type))))
     ((pair? x)      (case type
+                      ((bytes)   (list->bytes x))
                       ((string)  (if (car? x byte?)
-                                     (if (null? args)
-                                         (bytes->string/latin-1 (list->bytes x))
-                                         (bytes->string/utf-8 (list->bytes x)))
+                                     (retry (list->bytes x))
                                      (apply ar-cat x)))
                       ((sym)     (string->symbol (apply ar-cat x)))
                       ((keyword) (string->keyword (apply ar-cat x)))
                       ((bool)    #t)
-                      ((bytes)   (if (car? x byte?) x
-                                   (err "Can't coerce" x type)))
+                      ((bytes)   (if (car? x byte?)
+                                     (list->bytes x)
+                                     (err "Can't coerce" x type)))
                       (else      (err "Can't coerce" x type))))
     ((ar-nil? x)    (case type
-                      ((bytes)   ar-nil)
+                      ((bytes)   #"")
                       ((string)  "")
                       ((bool)    #f)
                       ((keyword) (string->keyword ""))
@@ -1345,6 +1363,7 @@
                       ((string)  (keyword->string x))
                       ((sym)     (keyword->symbol x))
                       ((cons)    (string->list (keyword->string x)))
+                      ((bytes)   (retry (keyword->string x)))
                       ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((symbol? x)    (case type
@@ -1352,9 +1371,11 @@
                       ((keyword) (symbol->keyword x))
                       ((cons)    (string->list (symbol->string x)))
                       ((bool)    #t)
+                      ((bytes)   (retry (symbol->string x)))
                       (else      (err "Can't coerce" x type))))
     ((boolean? x)   (case type
-                      ((string)  (if x "t" "false"))
+                      ((string)  (if x  "t"  "false"))
+                      ((bytes)   (if x #"t" #"false"))
                       (else      (err "Can't coerce" x type))))
     (#t             (err "Can't coerce" x type))))
 
