@@ -1388,15 +1388,13 @@
 
 (xdef socket-accept (lambda (s)
                       (parameterize ((current-custodian (make-custodian)))
-                        (call-with-values
-                         (lambda () (tcp-accept s))
-                         (lambda (in out)
-                           (let ((in1 (make-limited-input-port in 100000 #t)))
-                             (associate-custodian (current-custodian) in1 out)
-                             (list in1
-                                   out
-                                   (let-values (((us them) (tcp-addresses out)))
-                                               them))))))))
+                        (let-values (((in out) (tcp-accept s)))
+                          (let ((in1 (make-limited-input-port in 100000 #t)))
+                            (associate-custodian (current-custodian) in1 out)
+                            (list in1
+                                  out
+                                  (let-values (((us them) (tcp-addresses out)))
+                                              them)))))))
 
 ; allow Arc to give up root privileges after it
 ; calls open-socket. thanks, Eli!
