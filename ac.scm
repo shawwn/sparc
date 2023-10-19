@@ -494,12 +494,14 @@
                  (,var ,expr) ,@(ac-fn-args (cdr a)))
                `((,var ,expr) ,@(ac-fn-args (cdr a))))))
         ((car? a keywordp)
-         (cons (keywordp (car a))
-               (ac-fn-args (cdr a))))
+         (let* ((key (keywordp (car a)))
+                (var (cadr a))
+                (var (if (symbol? var) `(o ,var) var))) ; ensure all kwargs are optional
+           (cons key (ac-fn-args `(,var ,@(cddr a))))))
         ((car? a ac-flag?)
-         (let* ((n (ac-flag? (car a)))
-                (k (symbol->keyword n)))
-           (ac-fn-args `(,k (o ,n) ,@(cdr a)))))
+         (let* ((var (ac-flag? (car a)))
+                (key (symbol->keyword var)))
+           (ac-fn-args `(,key (o ,var) ,@(cdr a)))))
         (#t
          (cons (ac-env! (car a)) (ac-fn-args (cdr a))))))
 
