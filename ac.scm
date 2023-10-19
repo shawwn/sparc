@@ -1073,6 +1073,8 @@
          (apply build-path args))
         ((symbol? (car args))
          (string->symbol (apply ar-cat args)))
+        ((keyword? (car args))
+         (string->keyword (apply ar-cat args)))
         (#t (apply + args))))
 
 (xdef + ar-+)
@@ -1090,6 +1092,8 @@
          (build-path x y))
         ((symbol? x)
          (string->symbol (ar-cat x y)))
+        ((keyword? x)
+         (string->keyword (ar-cat x y)))
         (#t (+ x y))))
 
 (xdef - -)
@@ -1104,8 +1108,8 @@
 (define (ar->2 x y)
   (cond ((and (number? x) (number? y)) (> x y))
         ((and (string? x) (string? y)) (string>? x y))
-        ((and (symbol? x) (symbol? y)) (string>? (symbol->string x)
-                                                 (symbol->string y)))
+        ((and (symbol? x) (symbol? y)) (symbol>? x y))
+        ((and (keyword? x) (keyword? y)) (keyword>? x y))
         ((and (char? x) (char? y)) (char>? x y))
         (#t (> x y))))
 
@@ -1114,8 +1118,8 @@
 (define (ar-<2 x y)
   (cond ((and (number? x) (number? y)) (< x y))
         ((and (string? x) (string? y)) (string<? x y))
-        ((and (symbol? x) (symbol? y)) (string<? (symbol->string x)
-                                                 (symbol->string y)))
+        ((and (symbol? x) (symbol? y)) (symbol<? x y))
+        ((and (keyword? x) (keyword? y)) (keyword<? x y))
         ((and (char? x) (char? y)) (char<? x y))
         (#t (< x y))))
 
