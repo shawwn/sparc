@@ -1275,8 +1275,19 @@
     (unless explicit-flush (flush-output port)))
   ar-nil)
 
+(define (ar-display? x)
+  (or (string? x)
+      (symbol? x)
+      (char? x)
+      (bytes? x)))
+
+(define (ar-display x port)
+  (if (ar-display? x)
+      (display x port)
+      (write x port)))
+
 (xdef write (lambda args (printwith write   args)))
-(xdef disp  (lambda args (printwith display args)))
+(xdef disp  (lambda args (printwith ar-display args)))
 
 (xdef sdata sdata)
 (xdef sread sread)
