@@ -1129,7 +1129,8 @@
   (and (sequence? x)
        (not (number? x))
        (not (null? x))
-       (not (hash? x))))
+       (not (hash? x))
+       (not (port? x))))
 
 (xdef len (lambda (x)
              (cond ((ar-list? x) (length x))
