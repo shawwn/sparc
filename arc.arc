@@ -54,7 +54,7 @@
 (def cddr (xs) (cdr (cdr xs)))
 
 (def no (x) (is x nil))
-(def yes (x) (if x true false))
+(def yes (x) (no (no x)))
 
 (def acons (x) (is (type x) 'cons))
 
