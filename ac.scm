@@ -1164,13 +1164,10 @@
         ((input-port? x)    'input)
         ((tcp-listener? x)  'socket)
         ((exn? x)           'exception)
-        ((thread? x)        'thread)
         ((channel? x)       'channel)
         ((async-channel? x) 'channel)
         ((evt? x)           'event)
-        ((keyword? x)       'keyword)
         ((boolean? x)       'bool)
-        ((syntax? x)        'syntax)
         ((eof-object? x)    'eof)
         (#t                 (typeof x))))
 
