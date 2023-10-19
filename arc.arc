@@ -147,8 +147,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
      (assign ,name (fn ,parms ,@body))))
 
 (mac afn (parms . body)
-  `(let self nil
-     (assign self (fn ,parms ,@body))))
+  `(rfn self ,parms ,@body))
 
 ; Ac expands x:y:z into (compose x y z), ~x into (complement x)
 
