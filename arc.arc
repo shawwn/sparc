@@ -965,11 +965,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (readall src n nil))
 
 (def allbytes ((o str (stdin)))
-  (drain (readb str)))
+  (#'port->bytes str))
 
 (def allchars ((o str (stdin)))
-  (tostring (whiler c (readc str nil) no
-              (writec c))))
+  (#'port->string str))
 
 (def filebytes (name)
   (w/infile s name (allbytes s)))
