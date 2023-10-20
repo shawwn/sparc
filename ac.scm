@@ -177,26 +177,26 @@
         ((string? x) (ac-string x))
         (#t (ac-quoted x))))
 
+(define (ac-identifier x)
+  (string->symbol (string-append " " (symbol->string x))))
+
+(define (ac-identifier? x)
+  (and (symbol? x) (string-prefix? (symbol->string x) " ")))
+
 (define (ssyntax? x)
   (and (symbol? x)
-       (not (or (eqv? x '+) (eqv? x '++) (eqv? x '_)))
-       (let ((name (symbol->string x)))
-         (has-ssyntax-char? name (- (string-length name) 2)))))
+       (not (eqv? x '_))
+       (not (ac-identifier? x))
+       (has-ssyntax-char? (symbol->string x))))
 
-(define (has-ssyntax-char? string i)
+(define (has-ssyntax-char? string (i (- (string-length string) 2)))
   (and (>= i 0)
-       (or (let ((c (string-ref string i)))
-             (or (eqv? c #\:) (eqv? c #\~)
-                 (eqv? c #\&)
-                 ;(eqv? c #\_)
-                 (eqv? c #\.)  (eqv? c #\!)))
-           (has-ssyntax-char? string (- i 1)))))
-
-(define (read-from-string str)
-  (let ((port (open-input-string str)))
-    (let ((val (read port)))
-      (close-input-port port)
-      val)))
+       (let ((c (string-ref string i)))
+         (or (eqv? c #\:) (eqv? c #\~)
+             (eqv? c #\&)
+             ;(eqv? c #\_)
+             (eqv? c #\.)  (eqv? c #\!)
+             (has-ssyntax-char? string (- i 1))))))
 
 ; Though graphically the right choice, can't use _ for currying
 ; because then _!foo becomes a function.  Maybe use <>.  For now
@@ -309,6 +309,12 @@
     (if (string-contains? s " ")
         (string->symbol s)
         (read-from-string s))))
+
+(define (read-from-string str)
+  (let ((port (open-input-string str)))
+    (let ((val (read port)))
+      (close-input-port port)
+      val)))
 
 (define (tokens test source token acc keepsep?)
   (cond ((null? source)
@@ -465,9 +471,7 @@
   (env*))
 
 (define (ac-dbname (env (env*)))
-  (cond ((null? env) #f)
-        ((pair? (car env)) (caar env))
-        (#t (ac-dbname (cdr env)))))
+  (reverse (map car (keep pair? env))))
 
 (define (ac-env! x)
   (cond ((symbol? x)
@@ -629,7 +633,7 @@
 
 (define (ac-nameit v (name (ac-lexname)))
   (if (symbol? name)
-      (let ((n (string->symbol (string-append " " (symbol->string name)))))
+      (let ((n (ac-identifier name)))
         (list 'let `((,n ,v)) n))
       v))
 
@@ -639,7 +643,7 @@
 
 (define (ac-set1 a b1)
   (if (symbol? a)
-      (let ((n (string->symbol (string-append " " (symbol->string a))))
+      (let ((n (ac-identifier a))
             (b (parameterize ((env* (env*)))
                  (ac-dbname! a)
                  (ac b1))))
@@ -668,19 +672,20 @@
             (ac-args (if (pair? names) (cdr names) '())
                      (cdr exprs)))))
 
-(define (ac-lexname (env (env*)))
-  (and (ac-dbname env)
-       (let ((names (apply append (reverse (keep pair? env)))))
-         (apply ar-+ (add-between names "--")))))
+(define (ac-lexname (names (ac-dbname)))
+  (ar-concat (keep ar-true? names) "--"))
+
+(define (ac-lexvars (env (env*)))
+  (remove-duplicates (keep symbol? env)))
 
 (define (ac-lexenv (env (env*)))
-  `(list (list '*name ',(ac-lexname env))
-         ,@(imap (lambda (var)
-                   (let ((val (ar-gensym 'x)))
-                     `(list ',var
-                            (lambda ,val ,var)
-                            (lambda (,val) (set! ,var ,val)))))
-                 (filter (lambda (x) (not (or (ar-false? x) (pair? x)))) env))))
+  `(list ,@(map ac-lexframe (ac-lexvars env))))
+
+(define (ac-lexframe var)
+  (let ((val (ar-gensym 'val)))
+    `(list ',var
+           (lambda () ,var)
+           (lambda (,val) (set! ,var ,val)))))
 
 (define boxed* (make-parameter '() #f 'boxed*))
 
@@ -1066,6 +1071,10 @@
 (define (ar-list? x)
   (or (null? x) (pair? x)))
 
+(define (ar-concat xs (sep ""))
+  (and (pair? xs)
+       (apply ar-+ (add-between xs sep))))
+
 (define (ar-+ . args)
   (cond ((null? args) 0)
         ((char-or-string? (car args))
@@ -1191,12 +1200,8 @@
 
 (xdef rep ar-rep)
 
-(define (ar-gensym (x 'x))
-  (if (or (and (symbol? x)
-               (not (ssyntax? x)))
-          (string? x))
-      (gensym x)
-      (gensym 'cons)))
+(define (ar-gensym . names)
+  (ac-identifier (gensym (or (ac-lexname names) 'x))))
 
 (xdef uniq ar-gensym)
 

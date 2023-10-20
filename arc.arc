@@ -155,6 +155,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(let ,(car parms) ,(cadr parms) 
          (withs ,(cddr parms) ,@body))))
 
+(mac w/uniq (names . body)
+  (if names
+      (let (var . names) (listify names)
+        `(let ,var (uniq ',(lexname) ',var)
+           (w/uniq ,names ,@body)))
+      `(do ,@body)))
+
 ; Need rfn for use in macro expansions.
 
 (mac rfn (name parms . body)
@@ -190,13 +197,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          acc
          (self (cdr xs) (cons (car xs) acc))))
    xs nil))
-
-(mac w/uniq (names . body)
-  (if (acons names)
-      `(withs ,(apply + nil (map1 (fn (n) (list n `(uniq ',n)))
-                              names))
-         ,@body)
-      `(let ,names (uniq ',names) ,@body)))
 
 (mac or args
   (and args
