@@ -119,16 +119,16 @@
   (test? true (yes (obj)))
   (test? true (yes 0)))
 
-;(define-test boolean
-;  (test? true (or true false))
-;  (test? false (or false false))
-;  (test? true (or false false true))
-;  (test? true (not false))
-;  (test? true (not (and false true)))
-;  (test? false (not (or false true)))
-;  (test? true (and true true))
-;  (test? false (and true false))
-;  (test? false (and true true false)))
+(define-test boolean
+  (test? true (or true false))
+  (test? false (or false false))
+  (test? true (or false false true))
+  (test? true (no false))
+  (test? true (no (and false true)))
+  (test? false (no (or false true)))
+  (test? true (and true true))
+  (test? false (and true false))
+  (test? false (and true true false)))
 
 ;(define-test short
 ;  (test? true (or true (error 'bad)))

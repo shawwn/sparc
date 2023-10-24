@@ -121,22 +121,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac snoc! (var . args)
   `(atomic (= ,var (snoc ,var ,@args))))
 
-(mac and args
-  (if args
-      (if (cdr args)
-          `(if ,(car args) (and ,@(cdr args)))
-          (car args))
-      't))
-
-(def assoc (key al)
-  (if (atom al)
-       nil
-      (and (acons (car al)) (is (caar al) key))
-       (car al)
-      (assoc key (cdr al))))
-
-(def alref (al key) (cadr (assoc key al)))
-
 (mac let (var val . body)
   `((fn (,var) ,@body)
     ,val))
@@ -158,6 +142,29 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         `(let ,var (uniq ',(lexname) ',var)
            (w/uniq ,names ,@body)))
       `(do ,@body)))
+
+(mac and ((o x 'true) . args)
+  (if args
+      (w/uniq g
+        `(let ,g ,x
+           (if ,g (and ,@args) ,g)))
+      x))
+
+(mac or ((o x 'false) . args)
+  (if args
+      (w/uniq g
+        `(let ,g ,x
+           (if ,g ,g (or ,@args))))
+      x))
+
+(def assoc (key al)
+  (if (atom al)
+       nil
+      (and (acons (car al)) (is (caar al) key))
+       (car al)
+      (assoc key (cdr al))))
+
+(def alref (al key) (cadr (assoc key al)))
 
 ; Need rfn for use in macro expansions.
 
@@ -195,12 +202,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          acc
          (self (cdr xs) (cons (car xs) acc))))
    xs nil))
-
-(mac or args
-  (and args
-       (w/uniq g
-         `(let ,g ,(car args)
-            (if ,g ,g (or ,@(cdr args)))))))
 
 (mac in (x . choices)
   (w/uniq g
