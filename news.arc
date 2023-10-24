@@ -23,10 +23,10 @@
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t
-   site-img*     (obj url    "https://user-images.githubusercontent.com/59632/213842621-78c527ed-c657-4126-b27d-2670f35fb053.png"
-                      type   "image/png"
-                      width  512
-                      height 512))
+   site-img*     (obj url:    "https://user-images.githubusercontent.com/59632/213842621-78c527ed-c657-4126-b27d-2670f35fb053.png"
+                      type:   "image/png"
+                      width:  512
+                      height: 512))
 
 ; Structures
 
@@ -902,22 +902,22 @@ function vote(node) {
 
 (newsop auth.json ()
   (aif (get-auth)
-       (write-json (obj auth it))
+       (write-json (obj auth: it))
        (pr "null")))
 
 (= (static-header* 'apple-app-site-association) "application/json")
 
 (defop apple-app-site-association req
-  (write-json (obj webcredentials
-                   (obj apps (list ;"B9452FEMTF.com.emilykolar.LaarcIOS"
-                                   )))))
+  (write-json (obj webcredentials:
+                   (obj apps: (list ;"B9452FEMTF.com.emilykolar.LaarcIOS"
+                                    )))))
 
 (def user>json (u)
-  (obj id        u!id
-       created   u!created
-       karma     u!karma
-       about     u!about
-       submitted u!submitted))
+  (obj id:        u!id
+       created:   u!created
+       karma:     u!karma
+       about:     u!about
+       submitted: u!submitted))
 
 (defhook save-prof (u)
   (firebase-set "v0/user/@u!id" (user>json u)))
@@ -2287,65 +2287,65 @@ function suggestTitle() {
 
 (def item>json (i)
   (if (or i!deleted (private i))
-      (obj id      i!id
-           deleted (tnil i!deleted)
-           dead    (tnil i!dead)
-           private (tnil (private i))
-           type    (string i!type)
-           time    i!time
-           parent  i!parent)
-      (obj id      i!id
-           dead    (tnil i!dead)
-           type    (string i!type)
-           kids    i!kids
-           by      i!by
-           time    i!time
-           title   i!title
-           url     i!url
-           text    i!text
-           parent  i!parent
-           score   i!score
-           descendants (story-comment-count i))))
+      (obj id:      i!id
+           deleted: (tnil i!deleted)
+           dead:    (tnil i!dead)
+           private: (tnil (private i))
+           type:    (string i!type)
+           time:    i!time
+           parent:  i!parent)
+      (obj id:      i!id
+           dead:    (tnil i!dead)
+           type:    (string i!type)
+           kids:    i!kids
+           by:      i!by
+           time:    i!time
+           title:   i!title
+           url:     i!url
+           text:    i!text
+           parent:  i!parent
+           score:   i!score
+           descendants: (story-comment-count i))))
 
 (def item>search (i)
   (if (or i!dead i!deleted (private i))
-      (obj objectID       (string i!id)
-           parent_id      (tnull i!parent)
-           created_at_i   i!time
-           created_at     (moment-secs i!time)
-           deleted        (tnil i!deleted)
-           dead           (tnil i!dead)
-           private        (tnil (private i))
-           title          'null
-           url            'null
-           author         'null
-           points         'null
-           comment_text   'null
-           num_comments   'null
-           story_id       'null
-           story_text     'null
-           story_title    'null
-           story_url      'null)
+      (obj objectID:       (string i!id)
+           parent_id:      (tnull i!parent)
+           created_at_i:   i!time
+           created_at:     (moment-secs i!time)
+           deleted:        (tnil i!deleted)
+           dead:           (tnil i!dead)
+           private:        (tnil (private i))
+           title:          'null
+           url:            'null
+           author:         'null
+           points:         'null
+           comment_text:   'null
+           num_comments:   'null
+           story_id:       'null
+           story_text:     'null
+           story_title:    'null
+           story_url:      'null)
     (whenlet s (superparent i)
       (let r (and (no s!deleted) (no s!dead) (isnt s i))
-        (obj objectID       (string i!id)
-             parent_id      (tnull i!parent)
-             created_at_i   i!time
-             created_at     (moment-secs i!time)
-             deleted        (tnil i!deleted)
-             dead           (tnil i!dead)
-             private        (tnil (private i))
-             title          (tnull i!title)
-             url            (tnull i!url)
-             author         (tnull i!by)
-             points         (tnull i!score)
-             comment_text   (tnull:if (acomment i) (tnull i!text))
-             num_comments   (tnull:if (metastory i) (story-comment-count i))
-             story_id       (tnull:if (isnt s i) s!id)
-             story_text     (tnull:if r s!text)
-             story_title    (tnull:if r s!title)
-             story_url      (tnull:if r s!url)
-             _tags          (list (string i!type) "author_@i!by" "story_@s!id"))))))
+        (obj objectID:     (string i!id)
+             parent_id:    (tnull i!parent)
+             created_at_i: i!time
+             created_at:   (moment-secs i!time)
+             deleted:      (tnil i!deleted)
+             dead:         (tnil i!dead)
+             private:      (tnil (private i))
+             title:        (tnull i!title)
+             url:          (tnull i!url)
+             author:       (tnull i!by)
+             points:       (tnull i!score)
+             comment_text: (tnull:if (acomment i) (tnull i!text))
+             num_comments: (tnull:if (metastory i) (story-comment-count i))
+             story_id:     (tnull:if (isnt s i) s!id)
+             story_text:   (tnull:if r s!text)
+             story_title:  (tnull:if r s!title)
+             story_url:    (tnull:if r s!url)
+             _tags:        (list (string i!type) "author_@i!by" "story_@s!id"))))))
 
 (defhook save-item (i)
   (firebase-set "v0/item/@i!id" (item>json i))
@@ -3747,9 +3747,9 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (def place-update (x y (o board place-board*))
   (place-event! "put"
-    (obj path (string x "," y)
-         data (obj style (obj backgroundColor
-                              "#@(hexrep (place-encode (board (place-at x y board))))")))))
+    (obj path: (string x "," y)
+         data: (obj style: (obj backgroundColor:
+                                "#@(hexrep (place-encode (board (place-at x y board))))")))))
 
 (def place-reset ()
   (= place-events* (queue)))
@@ -3784,14 +3784,14 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (defcache place-json 5
   (tostring:write-json
-    (obj board
+    (obj board:
          (map [map str (chars _)]
               (lines place-board*))
-         colors
+         colors:
          (listtab
            (each (c col) place-colors*
              (out (sym:string c)
-                  (obj r col!r g col!g b col!b hex "#@(hexrep col)")))))))
+                  (obj r: col!r g: col!g b: col!b hex: "#@(hexrep col)")))))))
 
 (= (static-header* 'place.events) "text/event-stream;
 Access-Control-Allow-Origin: *

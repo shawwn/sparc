@@ -354,17 +354,18 @@
     ;       (macex '``(,x)))))
     ))
 
-;(define-test calls
-;  (let (f (fn () 42)
-;        l (list f)
-;        t (obj f: f))
-;    (f)
-;    ((fn ()
-;      (test? 42 (f))))
-;    (test? 42 ((at l 0)))
-;    (test? 42 ((get t 'f)))
-;    (test? nil ((fn () (return))))
-;    (test? 10 ((fn (x) (- x 2)) 12))))
+(define-test calls
+  (withs (f (fn () 42)
+          l (list f)
+          t (obj f: f))
+    (f)
+    ((fn ()
+      (test? 42 (f))))
+    (test? 42 ((l 0)))
+    (test? 42 ((t 'f)))
+    (test? 42 (t!f))
+    (test? nil ((fn ())))
+    (test? 10 ((fn (x) (- x 2)) 12))))
 
 ;(define-test id
 ;  (let (a 10

@@ -7,39 +7,39 @@
 
 
 (= term*
-   (obj colors (obj
-                 black       0
-                 red         1
-                 green       2
-                 yellow      3
-                 blue        4
-                 magenta     5
-                 cyan        6
-                 white       7)
-        attrs  (obj
-                 off         0 
-                 reset       0
-                 rst         0
-                 bold        1  nobold      22
-                 bld         1  nobld       22
-                 ul          4  noul        24
-                 underline   4  nounderline 24
-                 blink       5  noblink     25
-                 black      30  fgblack     30 bgblack    40
-                 blk        30  fgblk       30 bgblk      40
-                 red        31  fgred       31 bgred      41
-                 green      32  fggreen     32 bggreen    42
-                 grn        32  fggrn       32 bggrn      42
-                 yellow     33  fgyellow    33 bgyellow   43
-                 ylw        33  fgylw       33 bgylw      43
-                 blue       34  fgblue      34 bgblue     44
-                 blu        34  fgblu       34 bgblu      44
-                 magenta    35  fgmagenta   35 bgmagenta  45
-                 mag        35  fgmag       35 bgmag      45
-                 cyan       36  fgcyan      36 bgcyan     46
-                 cyn        36  fgcyn       36 bgcyn      46
-                 white      37  fgwhite     37 bgwhite    47
-                 wht        37  fgwht       37 bgwht      47)))
+   (obj colors: (obj
+                  black:       0
+                  red:         1
+                  green:       2
+                  yellow:      3
+                  blue:        4
+                  magenta:     5
+                  cyan:        6
+                  white:       7)
+        attrs:   (obj
+                   off:        0 
+                   reset:      0
+                   rst:        0
+                   bold:       1  nobold:      22
+                   bld:        1  nobld:       22
+                   ul:         4  noul:        24
+                   underline:  4  nounderline: 24
+                   blink:      5  noblink:     25
+                   black:     30  fgblack:     30 bgblack:    40
+                   blk:       30  fgblk:       30 bgblk:      40
+                   red:       31  fgred:       31 bgred:      41
+                   green:     32  fggreen:     32 bggreen:    42
+                   grn:       32  fggrn:       32 bggrn:      42
+                   yellow:    33  fgyellow:    33 bgyellow:   43
+                   ylw:       33  fgylw:       33 bgylw:      43
+                   blue:      34  fgblue:      34 bgblue:     44
+                   blu:       34  fgblu:       34 bgblu:      44
+                   magenta:   35  fgmagenta:   35 bgmagenta:  45
+                   mag:       35  fgmag:       35 bgmag:      45
+                   cyan:      36  fgcyan:      36 bgcyan:     46
+                   cyn:       36  fgcyn:       36 bgcyn:      46
+                   white:     37  fgwhite:     37 bgwhite:    47
+                   wht:       37  fgwht:       37 bgwht:      47)))
 
 (def denil (xs)
   (keep ~no xs))

@@ -1188,7 +1188,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac obj (:kwargs . args)
   `(listtab (list ,@(each (k v) (hug args)
-                      (out `(list ',k ,v)))
+                      (out `(list ,k ,v)))
                   ,@(each (k v) (hug kwargs)
                       (out `(list ',(sym k) ,v))))))
 
