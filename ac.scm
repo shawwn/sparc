@@ -375,7 +375,7 @@
 
 (define (ac-quoted x)
   (cond ((pair? x)
-         (imap ac-quoted (ac-unflag-args x)))
+         (imap ac-quoted x))
         ((eqv? x 'nil)
          ar-nil)
         ((eqv? x 't)
@@ -795,7 +795,7 @@
         (#t (ar-unstash (cdr l) (cons (car l) vals) keys))))
 
 (define (ar-kwapply f args)
-  (let* ((it (ar-unstash args))
+  (let* ((it (ar-unstash (ac-unflag-args args)))
          (args (car it))
          (kwargs (cadr it)))
     (keyword-apply f (map car kwargs) (map cadr kwargs) args)))

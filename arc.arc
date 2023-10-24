@@ -1186,10 +1186,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (map (fn ((k v)) (= (h k) v))
          al)))
 
-(mac obj args
-  `(listtab (list ,@(map (fn ((k v))
-                           `(list ',k ,v))
-                         (hug args)))))
+(mac obj (:kwargs . args)
+  `(listtab (list ,@(each (k v) (hug args)
+                      (out `(list ',k ,v)))
+                  ,@(each (k v) (hug kwargs)
+                      (out `(list ',(sym k) ,v))))))
 
 (def load-table (file (o eof))
   (w/infile i file (read-table i eof)))
@@ -1582,7 +1583,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 )
 
 (or= loaded-files*      nil
-     loaded-file-times* (obj))
+     loaded-file-times* (table))
 
 (def loaded-files () (rev loaded-files*))
 
