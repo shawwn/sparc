@@ -157,7 +157,7 @@
     (if n `(,k ,v) `(,x))))
 
 (define (ac-unflag-args args)
-  (apply append (map ac-unflag args)))
+  (apply append (imap ac-unflag args)))
 
 (define (literal? x)
   (or (boolean? x)
@@ -375,7 +375,7 @@
 
 (define (ac-quoted x)
   (cond ((pair? x)
-         (imap ac-quoted x))
+         (imap ac-quoted (ac-unflag-args x)))
         ((eqv? x 'nil)
          ar-nil)
         ((eqv? x 't)
@@ -517,11 +517,29 @@
 
 (define (ac-fn args body)
   (parameterize ((env* (env*)))
-    (ac-nameit
-      (if (ac-complex-args? args)
-          (ac-complex-fn args body)
-          `(lambda ,(ac-fn-args args)
-             ,@(ac-body* body))))))
+    (if (ac-complex-args? args)
+        (ac-complex-fn args body)
+        (ac-simple-fn args body))))
+
+(define (ac-simple-fn args body)
+  (let* ((a (ac-fn-args args))
+         (f (ac-nameit `(lambda ,a ,@(ac-body* body)))))
+    (if (ac-kwargs? a)
+        `(ar-kwproc ,f)
+        f)))
+
+(define (ac-kwargs? args)
+  (if (pair? args)
+      (or (ac-kwargs? (car args))
+          (ac-kwargs? (cdr args)))
+      (eq? args '#:kwargs)))
+
+(define (ar-kwproc f)
+  (make-keyword-procedure
+    (lambda (ks vs . args)
+      (let ((kwargs (apply append (map list ks vs))))
+        (apply f args #:kwargs kwargs)))
+    f))
 
 ; does an fn arg list use optional parameters or destructuring?
 ; a rest parameter is not complex
@@ -545,9 +563,10 @@
 (define (ac-complex-fn args body)
   (let* ((ra (ar-gensym))
          (z (ac-complex-args args ra #t)))
-    `(lambda ,ra
-       (let* ,z
-         ,@(ac-body* body)))))
+    (ac-nameit
+      `(lambda ,ra
+         (let* ,z
+           ,@(ac-body* body))))))
 
 ; returns a list of two-element lists, first is variable name,
 ; second is (compiled) expression. to be used in a let.
@@ -764,22 +783,22 @@
            `(ar-apply ,(ac fn)
                       (list ,@(map ac args)))))))
 
-(define (unzip-list l (vals '()) (keys '()))
+(define (ar-unstash l (vals '()) (keys '()))
   (cond ((null? l) (list (reverse vals)
                          (sort (reverse keys)
                                keyword<? #:key car)))
         ((keywordp (car l))
          (if (or (null? (cdr l))
                  (keywordp (cadr l)))
-             (unzip-list (cdr l) vals (cons (list (keywordp (car l)) #t) keys))
-             (unzip-list (cddr l) vals (cons (list (keywordp (car l)) (cadr l)) keys))))
-        (#t (unzip-list (cdr l) (cons (car l) vals) keys))))
+             (ar-unstash (cdr l) vals (cons (list (keywordp (car l)) #t) keys))
+             (ar-unstash (cddr l) vals (cons (list (keywordp (car l)) (cadr l)) keys))))
+        (#t (ar-unstash (cdr l) (cons (car l) vals) keys))))
 
-(define (ac-mac-call m args)
-  (let* ((it (unzip-list (ac-unflag-args args)))
+(define (ar-kwapply f args)
+  (let* ((it (ar-unstash args))
          (args (car it))
          (kwargs (cadr it)))
-    (keyword-apply m (map car kwargs) (map cadr kwargs) args)))
+    (keyword-apply f (map car kwargs) (map cadr kwargs) args)))
 
 ; returns #f or the macro function
 
@@ -799,7 +818,7 @@
   (if (pair? e)
       (let ((m (ac-macro? (car e))))
         (if m
-            (let ((expansion (ac-mac-call m (cdr e))))
+            (let ((expansion (ar-kwapply m (cdr e))))
               (if (car? expansion '%expansion)
                   (cadr expansion)
                   (if once expansion (ac-macex expansion))))
@@ -883,6 +902,8 @@
   (hash-set! fn-signatures a (list parms))
   b)
 
+(xdef unstash ar-unstash)
+
 (xdef lex ac-lex?)
 
 (xdef lexname ac-lexname)
@@ -954,9 +975,11 @@
 (xdef apply
       (make-keyword-procedure
         (lambda (keys vals fn . args)
-          (keyword-apply fn keys vals (ar-apply-args args)))
+          (let ((args (apply append (ar-apply-args args)
+                                    (map list keys vals))))
+            (ar-kwapply fn args)))
         (lambda (fn . args)
-          (ar-apply fn (ar-apply-args args)))))
+          (ar-kwapply fn (ar-apply-args args)))))
 
 ; special cases of ar-apply for speed and to avoid consing arg lists
 

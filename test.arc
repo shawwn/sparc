@@ -270,10 +270,13 @@
   ;(test? true (get (list :foo) 'foo))
   ;(test? true (get '(:foo) 'foo))
   ;(test? true (get (hd '((:foo))) 'foo))
-  ;(test? '(:a) (list :a))
-  ;(test? '(b: false) (list b: false))
-  ;(test? '(c: 0) (list c: 0))
-  )
+  (test? '(:a) (list :a))
+  (test? '(b: false) (list b: false))
+  (test? '(c: 0) (list c: 0))
+  (test? '(d: t) '(:d))
+  (let e 42
+    (test? '(e: e) '(:e))
+    (test? `(e: ,e) (list :e))))
 
 (define-test quasiquote
   (test? (quote a) (quasiquote a))

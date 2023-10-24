@@ -49,19 +49,16 @@
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
 
-(mac %brackets
-  (#'make-keyword-procedure
-    (fn (ks vs . body)
-      `(fn (_) ,(apply + body (map list ks vs))))
-    (fn body
-      `(fn (_) ,body))))
+(mac %brackets (:kwargs . args)
+  `(fn (_) ,(+ args kwargs)))
 
-(mac %braces body
+(mac %braces (:kwargs . args)
 "The function invoked on curly-bracket calls.
 For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
-  `(obj ,@body))
+  `(obj ,@(+ args kwargs)))
 
-(def list args args)
+(def list (:kwargs . args)
+  (+ args kwargs))
 
 (def idfn (x) x)
 
@@ -177,19 +174,20 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Composes in functional position are transformed away by ac.
 
 (mac compose args
-  (let g (uniq 'compose)
-    `(fn ,g
+  (w/uniq (gk ga)
+    `(fn (kwargs: ,gk . ,ga)
        ,((afn (fs)
            (if (cdr fs)
                (list (car fs) (self (cdr fs)))
-               `(apply ,(if (car fs) (car fs) 'idfn) ,g)))
+               `(apply ,(if (car fs) (car fs) 'idfn) (+ ,ga ,gk))))
          args))))
 
 ; Ditto: complement in functional position optimized by ac.
 
 (mac complement (f)
-  (let g (uniq 'complement)
-    `(fn ,g (no (apply ,f ,g)))))
+  (w/uniq (gk ga)
+    `(fn (kwargs: ,gk . ,ga)
+       (no (apply ,f (+ ,ga ,gk))))))
 
 (def rev (xs) 
   ((afn (xs acc)
