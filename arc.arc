@@ -1186,11 +1186,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (map (fn ((k v)) (= (h k) v))
          al)))
 
-(mac obj (:kwargs . args)
-  `(listtab (list ,@(each (k v) (hug args)
-                      (out `(list ,k ,v)))
-                  ,@(each (k v) (hug kwargs)
-                      (out `(list ',(sym k) ,v))))))
+(def obj (:kwargs . args)
+  (with h (listtab:hug args)
+    (each (k v) (hug kwargs)
+      (= (h (sym k)) v))))
 
 (def load-table (file (o eof))
   (w/infile i file (read-table i eof)))
