@@ -472,9 +472,8 @@
 (mac fontcolor (c . body)
   (w/uniq g
     `(let ,g ,c
-       (if ,g
-           (tag (font color ,g) ,@body)
-           (do ,@body)))))
+       (tag-if color (font color ,g)
+         ,@body))))
 
 (def script (js (o type "text/javascript"))
   (tag (script type type) (pr js)))
