@@ -340,7 +340,9 @@
                  keepsep?))))
 
 (define (ac-global-name s)
-  (string->symbol (string-append (if (member s scm-reserved) "arc--" "") (symbol->string s))))
+  (if (memq s scm-reserved)
+      (string->symbol (string-append "arc--" (symbol->string s)))
+      s))
 
 (define (ac-var-ref s)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
