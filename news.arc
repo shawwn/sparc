@@ -1557,8 +1557,8 @@ function vote(node) {
   (pr " @(tostring (itemlink i (text-age:item-age i))) "))
 
 
-(def itemlink (i (o label) (o title))
-  (link (or label "link") (item-url i!id) nil nil (item-timestamp i)))
+(def itemlink (i (o label))
+  (link (or label "link") (item-url i!id) title: (item-timestamp i)))
 
 (def sublinks (i)
   (each p (item-paths i)
@@ -1873,7 +1873,7 @@ function vote(node) {
 
 (def url-input (url)
   (row "url" (input "u" url 50 "ln-url-input"))
-  (row "" (underlink "suggest title" nil "suggestTitle();")))
+  (row "" (underlink "suggest title" nil onclick: "suggestTitle();")))
 
 (= submitjs* "
 function tlen(el) { var n = el.value.length - 80; el.nextSibling.innerText = n > 0 ? n + ' too long' : ''; }
