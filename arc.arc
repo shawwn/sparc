@@ -1201,8 +1201,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def load-tables (file)
   (w/infile i file
-    (w/uniq eof
-      (drain (read-table i eof) eof))))
+    (drain (read-table i eof) eof)))
 
 (def save-table (h file)
   (writefile (unquoted (tablist h)) file))
