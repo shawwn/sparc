@@ -237,7 +237,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (w/uniq (gf gp)
     `(point break
        ((rfn ,gf (,gp)
-          (when ,gp ,@body (,gf ,test)))
+          (when ,gp ((fn () ,@body)) (,gf ,test)))
         ,test))))
 
 (def empty (seq) 
