@@ -962,6 +962,18 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def allcode (src (o n))
   (readall src n nil))
 
+(def peekbytes (n (o i (stdin)))
+  (#'peek-bytes n 0 i))
+
+(def peekchars (n (o i (stdin)))
+  (#'peek-string n 0 i))
+
+(def readbytes (n (o i (stdin)))
+  (#'read-bytes n i))
+
+(def readchars (n (o i (stdin)))
+  (#'read-string n i))
+
 (def allbytes ((o str (stdin)))
   (#'port->bytes str))
 
