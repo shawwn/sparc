@@ -1864,13 +1864,13 @@
 (xdef <- (lambda (c . args)
            (if (null? args)
                ((chan-fn c 'get) c)
-               (begin ((chan-fn c 'put) c args)
+               (begin ((chan-fn c 'put) c (cons c args))
                       args))))
 
 (xdef <-? (lambda (c . args)
             (if (null? args)
                 ((chan-fn c 'try-get) c)
-                (let* ((evt ((chan-fn c 'put-evt) c args))
+                (let* ((evt ((chan-fn c 'put-evt) c (cons c args)))
                        (ret (sync/timeout 0 evt)))
                   (if (eq? ret #f) ar-nil args)))))
 
