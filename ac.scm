@@ -878,7 +878,7 @@
         (#t (list (car fns) (decompose (cdr fns) args)))))
 
 (define (ac-andf s)
-  (ac (let ((gs (map (lambda (x) (ar-gensym 'andf)) (cdr s))))
+  (ac (let ((gs (map (lambda (x) (or (keywordp x) (ar-gensym 'andf))) (cdr s))))
                `((fn ,gs
                    (and ,@(map (lambda (f) `(,f ,@gs))
                                (cdar s))))
