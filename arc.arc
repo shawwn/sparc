@@ -1489,18 +1489,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (and xp (or (no yp) (< xp yp)))))
 
 (def orf fns
-  (fn args
+  (fn (:kwargs . args)
     ((afn (fs)
-       (and fs (or (apply (car fs) args) (self (cdr fs)))))
+       (and fs (or (apply (car fs) (+ args kwargs)) (self (cdr fs)))))
      fns)))
 
 (def andf fns
-  (fn args
-    ((afn (fs)
-       (if (no fs)       t
-           (no (cdr fs)) (apply (car fs) args)
-                         (and (apply (car fs) args) (self (cdr fs)))))
-     fns)))
+  (fn (:kwargs . args)
+    (with r false
+      (each f fns
+        (= r (apply f (+ args kwargs)))
+        (unless r (break))))))
 
 (def atend (i s)
   (> i (- (len s) 2)))
