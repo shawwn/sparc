@@ -974,6 +974,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def readchars (n (o i (stdin)))
   (#'read-string n i))
 
+(def writebytes (x (o p (stdout)))
+  (#'write-bytes x p))
+
+(def writechars (x (o p (stdout)))
+  (#'write-string x p))
+
 (def allbytes ((o str (stdin)))
   (#'port->bytes str))
 
