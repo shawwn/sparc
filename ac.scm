@@ -1261,7 +1261,9 @@
                                                 'append
                                                 'truncate))))
 
-(xdef instring  open-input-string)
+(xdef instring  (lambda (x) (if (bytes? x)
+                                (open-input-bytes x)
+                                (open-input-string x))))
 (xdef outstring open-output-string)
 
 ; use as general fn for looking inside things
