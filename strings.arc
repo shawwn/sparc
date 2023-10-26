@@ -140,7 +140,7 @@
   (unless (len> pat (- (len seq) start))
     (headmatch pat seq start)))
 
-(def subst (new old seq)
+(def subst (old new seq)
   (let boundary (+ (- (len seq) (len old)) 1)
     (tostring 
       (forlen i seq
