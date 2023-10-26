@@ -980,17 +980,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (mvfile tmpfile file))
   val)
 
-(def savebytes (val file)
-  (savefile val file writebytes))
-
 (def writefile (val file (o writer write))
   (savefile val file write))
-
-(def writebytes (val (o port (stdout)))
-  (if (isa port 'string)
-      (savebytes val port)
-      (each b val
-        (writeb b port))))
 
 (def sym (x) (coerce x 'sym))
 (def str (x) (coerce x 'string))
