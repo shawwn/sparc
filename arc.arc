@@ -985,6 +985,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def sym (x) (coerce x 'sym))
 (def str (x) (coerce x 'string))
+(def seq (x) (coerce x 'cons))
 
 (def int (x (o b 10)) (coerce x 'int b))
 

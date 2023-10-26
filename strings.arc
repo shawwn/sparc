@@ -20,9 +20,6 @@
       (concat (apply map f seq args))
       (concat seq f)))
 
-(def seq (s)
-  (coerce s 'cons))
-
 (def tokens (s (o sep whitec))
   (let test (testify sep)
     (let rec (afn (cs toks tok)
