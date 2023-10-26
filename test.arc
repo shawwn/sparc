@@ -1069,7 +1069,8 @@
   ;  (test? 17 (apply (fn a (get a 'foo)) t)))
   ;(test? 42 (apply (fn (:foo) foo) (list foo: 42)))
   ;(test? 42 (apply (fn ((:foo)) foo) (list (list foo: 42))))
-  (test? 116 (apply + 1 5 '(100 10))))
+  (test? 116 (apply + 1 5 '(100 10)))
+  (test? #\f (apply "foo" '(0))))
 
 (define-test eval
   (test? 4 (eval '(+ 2 2)))

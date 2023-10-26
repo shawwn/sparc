@@ -816,7 +816,9 @@
   (let* ((it (ar-unstash (ac-unflag-args args)))
          (args (car it))
          (kwargs (cadr it)))
-    (keyword-apply f (map car kwargs) (map cadr kwargs) args)))
+    (if (null? kwargs)
+        (ar-apply f args)
+        (keyword-apply f (map car kwargs) (map cadr kwargs) args))))
 
 ; returns #f or the macro function
 
