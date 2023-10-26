@@ -916,6 +916,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/stdin (str . body)
   `(w/param stdin ,str ,@body))
 
+(mac tobytes body
+  `(tostring :bytes ,@body))
+
 (mac tostring (:bytes . body)
   (w/uniq gv
    `(w/outstring ,gv
