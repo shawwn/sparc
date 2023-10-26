@@ -1178,5 +1178,11 @@
   (test? '(2 3 4) (map [f _ 1      ] '(1 2 3)))
   (test? '(0 1 2) (map [f _ 1 op: -] '(1 2 3))))
 
+(define-test andf
+  (let 1st (fn (:kwargs . args) (car args))
+    (test? "" (tostring (1st&pr nil 'a 'b sep: " ")))
+    (test? "a b" (tostring (1st&pr 'a 'b sep: " ")))
+    (test? "a b" (tostring ((do 1st&pr) 'a 'b sep: " ")))))
+
 run-tests
 
