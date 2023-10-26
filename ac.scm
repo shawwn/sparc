@@ -577,34 +577,50 @@
 ; is-params indicates that args are function arguments
 ;   (not destructuring), so they must be passed or be optional.
 
-(define (ac-complex-args args ra is-params)
+(define (ac-complex-args args ra is-params (is-kw #f))
   (cond ((null? args) '())
         ((symbol? args)
          (list (list (ac-env! args) ra)))
+        ((car? args ac-flag?)
+         (let ((var (ac-flag? (car args))))
+           (ac-complex-args `(,(symbol->keyword var) (o ,var) ,@(cdr args)) ra is-params)))
+        ((car? args keywordp)
+         (ac-complex-args (cdr args) ra #f (keyword->symbol (keywordp (car args)))))
+        ((and (caar? args 'o)
+              (ac-flag? (cadar args)))
+         (let ((var (ac-flag? (cadar args)))
+               (val (cddar args)))
+           (ac-complex-args
+             `(,(symbol->keyword var) (o ,var ,@val) ,@(cdr args)) ra is-params #f)))
         ((pair? args)
          (let* ((x (if (caar? args 'o)
-                       (ac-complex-opt (cadar args)
-                                       (if (pair? (cddar args))
+                       (let ((var (cadar args))
+                             (val (if (pair? (cddar args))
                                            (caddar args)
-                                           ar-nil)
-                                       ra)
+                                           ar-nil)))
+                         (ac-complex-opt var val ra is-kw))
                        (ac-complex-args
                         (car args)
-                        (if is-params
-                            `(car ,ra)
-                            `(ar-xcar ,ra))
+                        (cond (is-kw     `(ar-funcall2 ,ra ',is-kw ar-nil))
+                              (is-params `(car ,ra))
+                              (#t        `(ar-xcar ,ra)))
                         #f))))
            (append x (ac-complex-args (cdr args)
-                                      `(ar-xcdr ,ra)
+                                      (if is-kw ra `(ar-xcdr ,ra))
                                       is-params))))
         (#t (err "Can't understand fn arg list" args))))
 
 ; (car ra) is the argument
 ; so it's not present if ra is nil or '()
 
-(define (ac-complex-opt var expr ra)
-  (let ((val (ac expr)))
-    (list (list (ac-env! var) `(if (pair? ,ra) (car ,ra) ,val)))))
+(define (ac-complex-opt var expr ra is-kw)
+  (let* ((val (ac expr)))
+    (list (list (ac-env! var)
+                (if is-kw
+                    `(if (unset? (ar-funcall2 ,ra ',is-kw unset))
+                         ,val
+                         (ar-funcall1 ,ra ',is-kw))
+                    `(if (pair? ,ra) (car ,ra) ,val))))))
 
 ; (a b . c) -> (a b c)
 ; a -> (a)
