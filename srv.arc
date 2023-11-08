@@ -82,7 +82,7 @@
 
 (def abusive-ip (ip)
   (and dos-protection*
-       (only.> (requests/ip* ip) 250)
+       (only&> (requests/ip* ip) 250)
        (let now (seconds)
          (do1 (if (req-times* ip)
                   (and (>= (qlen (req-times* ip)) 

@@ -1524,10 +1524,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ;(def compare (comparer scorer)
 ;  (fn args (apply comparer map scorer args)))
 
-; (def only (f g . args) (aif (apply g args) (f it)))
-
-(def only (f) 
-  (fn args (if (car args) (apply f args))))
+(def only (:kwargs . args)
+  (car args))
 
 (mac conswhen (f x y)
   (w/uniq (gf gx)

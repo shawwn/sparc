@@ -887,14 +887,14 @@ function vote(node) {
 ; Users
 
 (newsop user (id)
-  (if (only.profile id)
+  (if (only&profile id)
       (user-page id)
       (pr "No such user.")))
 
 (= (static-header* 'user.json) "application/json")
 
 (newsop user.json (id)
-  (aif (only.profile id)
+  (aif (only&profile id)
        (write-json (user>json it))
        (pr "null")))
 
@@ -1303,7 +1303,7 @@ function vote(node) {
 (def upvoted-url (user) (+ "/upvoted?id=" user))
 
 (newsop upvoted (id)
-  (if (only.profile id)
+  (if (only&profile id)
       (upvotedpage id)
       (pr "No such user.")))
 
@@ -1595,7 +1595,7 @@ function vote(node) {
      (sum [visible-family:item _] i!kids)))
 
 (def threadavg (i)
-  (only.avg (map [or (uvar _ avg) 1]
+  (only&avg (map [or (uvar _ avg) 1]
                  (rem admin (dedup (map !by (keep live (family i))))))))
 
 (= user-changetime* 120 editor-changetime* 1440)
@@ -1897,8 +1897,8 @@ function suggestTitle() {
                 (when showtext
                   (spacerow 20)
                   ;(row "" "<b>or</b>")
-                  (row "text" (textarea "x" 4 50 (only.pr text)))))
-            (do (row "text" (textarea "x" 4 50 (only.pr text)))
+                  (row "text" (textarea "x" 4 50 (only&pr text)))))
+            (do (row "text" (textarea "x" 4 50 (only&pr text)))
                 (row "" "<b>or</b>")
                 (url-input url)))
         (row "" (submit))
@@ -2157,9 +2157,9 @@ function suggestTitle() {
                           (striptags arg!o))
       (tab
         (row "title"   (input "t" title 50))
-        (row "text"    (textarea "x" 4 50 (only.pr text)))
+        (row "text"    (textarea "x" 4 50 (only&pr text)))
         (row ""        "Use blank lines to separate choices:")
-        (row "choices" (textarea "o" 7 50 (only.pr opts)))
+        (row "choices" (textarea "o" 7 50 (only&pr opts)))
         (row ""        (submit))))))
 
 (= fewopts* "A poll must have at least two options.")
@@ -2719,8 +2719,8 @@ function suggestTitle() {
 
 (newsop reply (id whence)
   (withs (i      (safe-item id)
-          whence (or (only.urldecode whence) "news"))
-    (if (only.comments-active i)
+          whence (or (only&urldecode whence) "news"))
+    (if (only&comments-active i)
         (if user
             (addcomment-page i whence)
             (login-page 'both "You have to be logged in to comment."
@@ -2929,7 +2929,7 @@ function suggestTitle() {
               (td (userlink u nil))
               (tdr:pr (karma u))
               (when (admin)
-                (tdr:prt (only.num (uvar u avg) 2 t t))))
+                (tdr:prt (only&num (uvar u avg) 2 t t))))
           (if (is i 10) (spacerow 30)))))))
 
 (= leader-threshold* 0)  ; redefined later
@@ -2947,7 +2947,7 @@ function suggestTitle() {
 
 (defbg update-avg 45
   (unless (or (empty profs*) (no stories*))
-    (update-avg (rand-user [and (only.> (car (uvar _ submitted))
+    (update-avg (rand-user [and (only&> (car (uvar _ submitted))
                                         (- maxid* initload*))
                                 (len> (uvar _ submitted)
                                       update-avg-threshold*)]))))
@@ -3466,9 +3466,9 @@ Which brings us to the most important principle on @{site-abbrev*}: civility. Si
     (spacerow 10)
     (each name (sort < newsop-names*)
       (tr (td name)
-          (let ms (only.avg (qlist (optimes* name)))
-            (tdr:prt (only.round ms))
-            (tdr:prt (only.med (qlist (optimes* name))))
+          (let ms (only&avg (qlist (optimes* name)))
+            (tdr:prt (only&round ms))
+            (tdr:prt (only&med (qlist (optimes* name))))
             (let n (opcounts* name)
               (tdr:prt n)
               (tdr:prt (and n (round (/ (* n ms) 1000))))))))))
