@@ -178,7 +178,11 @@
 (def ensure-news-user ((o u (get-user)))
   (if (profile u) u (init-user u)))
 
-(defhook login name: news (user)
+(mac newshook (name args . body)
+  `(defhook name: news ,name ,args
+     ,@body))
+
+(newshook login (user)
   (ensure-news-user user))
 
 (def save-votes ((o u (get-user))) (save-table (votes* u) (+ votedir* u)))
@@ -374,7 +378,7 @@
     (writefile ids (+ newsdir* "topstories"))
     (hook 'save-topstories ids)))
 
-(defhook save-topstories ((o ids (ranked-stories)))
+(newshook save-topstories ((o ids (ranked-stories)))
   (firebase-set "v0/topstories" ids))
 
 (def rank-stories (n consider scorefn)
@@ -919,7 +923,7 @@ function vote(node) {
        about:     u!about
        submitted: u!submitted))
 
-(defhook save-prof (u)
+(newshook save-prof (u)
   (firebase-set "v0/user/@u!id" (user>json u)))
 
 (def user-page (subject)
@@ -1107,7 +1111,7 @@ function vote(node) {
 (def newstories (n)
   (retrieve n cansee stories*))
 
-(defhook create-story (s)
+(newshook create-story (s)
   (let ids (w/param the-req* (table) ; TODO: turn this into a w/user macro
              (map !id (newstories 500)))
     (firebase-set "v0/newstories" ids)))
@@ -2262,7 +2266,7 @@ function suggestTitle() {
 (defop maxitem.json ()
   (write-json maxid*))
 
-(defhook maxid (n)
+(newshook maxid (n)
   (firebase-set "v0/maxitem" maxid*))
 
 (def descendants (i)
@@ -2337,7 +2341,7 @@ function suggestTitle() {
              story_url:    (tnull:if r s!url)
              _tags:        (list (string i!type) "author_@i!by" "story_@s!id"))))))
 
-(defhook save-item (i)
+(newshook save-item (i)
   (firebase-set "v0/item/@i!id" (item>json i))
   (whenlet s (superparent i)
     (algolia-set "Item_production" (item>search i))
@@ -3131,7 +3135,7 @@ first asterisk isn't whitespace.
 (def forgot-url ((o subject arg!acct))
   (if subject (+ "/forgot?acct=" (eschtml subject)) "/forgot"))
 
-(defhook login-form args
+(newshook login-form args
   (link "Forgot your password?" (forgot-url)))
 
 ; Scrubrules
