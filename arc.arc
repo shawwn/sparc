@@ -528,7 +528,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          ,start
          ((rfn ,gfn (,gparm) 
             (if ,gparm
-                (do ,@body ,update (,gfn ,test))))
+                (do ((fn () ,@body)) ,update (,gfn ,test))))
           ,test)))))
 
 (mac for (v init max . body)
