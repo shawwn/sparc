@@ -171,6 +171,7 @@
 (def nonblank (s) (unless (blank s) s))
 
 (def trim (s (o where 'both) (o test whitec))
+  (assert (in where 'both 'front 'end))
   (withs (f   (testify test)
            p1 (pos ~f s))
     (if p1
