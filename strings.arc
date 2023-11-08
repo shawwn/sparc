@@ -145,7 +145,7 @@
     (tostring 
       (forlen i seq
         (if (and (< i boundary) (headmatch old seq i))
-            (do (++ i (- (len old) 1))
+            (do (++ i (edge old))
                 (pr new))
             (pr (seq i)))))))
 
@@ -153,7 +153,7 @@
   (tostring 
     (forlen i seq
       (iflet (old new) (find [begins seq (car _) i] pairs)
-        (do (++ i (- (len old) 1))
+        (do (++ i (edge old))
             (pr new))
         (pr (seq i))))))
 
@@ -178,7 +178,7 @@
         (cut s 
              (if (in where 'front 'both) p1 0)
              (when (in where 'end 'both)
-               (let i (- (len s) 1)
+               (let i (edge s)
                  (while (and (> i p1) (f (s i)))
                    (-- i))
                  (+ i 1))))

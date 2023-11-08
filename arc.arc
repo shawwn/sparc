@@ -83,6 +83,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def atom (x) (no (acons x)))
 
+(def edge (x) (- (len x) 1))
+
 (def alist (x)
   (if (acons x) t
       (id x nil) t
@@ -561,7 +563,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (map1 [do (f _) unset] l)
       (isa l 'table)
        (maptable (fn args (f args)) l)
-       (for i 0 (- (len l) 1)
+       (for i 0 (edge l)
          (f (l i)))))
 
 (mac each (var expr . body)
@@ -1054,7 +1056,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   ((rand-string 1) 0))
 
 (mac forlen (var s . body)
-  `(for ,var 0 (- (len ,s) 1) ,@body))
+  `(for ,var 0 (edge ,s) ,@body))
 
 (mac on (var s . body)
   (if (is var 'index)
