@@ -203,10 +203,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (self (cdr xs) (cons (car xs) acc))))
    xs nil))
 
-(mac in (x . choices)
-  (w/uniq g
-    `(let ,g ,x
-       (or ,@(map1 (fn (c) `(is ,g ,c)) choices)))))
+(def in (x . choices)
+  (mem x choices))
 
 ; Could take n args, but have never once needed that.
 
