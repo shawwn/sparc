@@ -6,8 +6,8 @@
 
 ; bug: somehow (+ votedir* nil) is getting evaluated.
 
-(load (libpath "firebase.arc"))
-(load (libpath "algolia.arc"))
+(load :once (libpath "firebase.arc"))
+(load :once (libpath "algolia.arc"))
 
 (= site-name*    "Tensorfork Labs"
    site-abbrev*  "TL"
