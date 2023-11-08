@@ -502,8 +502,6 @@
    down-url* (static-src "graydown.gif")
    logo-url* (static-src "ln.png"))
 
-; redefined later
-
 (def rss-url ((o label))
   (if (is label "comments") "/rsscomments" "/rss"))
 
@@ -745,8 +743,6 @@ function vote(node) {
 
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
                     "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "*"))
-
-; redefined later
 
 (def toprow (label)
   (w/bars
