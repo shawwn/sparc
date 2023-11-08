@@ -240,7 +240,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def empty (seq) 
   (or (no seq) 
-      (and (or (is (type seq) 'string) (is (type seq) 'table))
+      (and (in (type seq) 'string 'bytes 'table)
            (is (len seq) 0))))
 
 (def reclist (f xs)
