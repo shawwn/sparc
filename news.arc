@@ -816,13 +816,13 @@ function vote(node) {
 
 (or= newsop-names* nil)
 
-(mac newsop args
-  `(do (pushnew ',(car args) newsop-names*)
-       (opexpand defop ,@args)))
+(mac newsop (name parms . body)
+  `(do (pushnew ',name newsop-names*)
+       (opexpand defop ,name ,parms ,@body)))
 
-(mac newsopr args
-  `(do (pushnew ',(car args) newsop-names*)
-       (opexpand defopr ,@args)))
+(mac newsopr (name parms . body)
+  `(do (pushnew ',name newsop-names*)
+       (opexpand defopr ,name ,parms ,@body)))
 
 (mac adop (name parms . body)
   (w/uniq g
