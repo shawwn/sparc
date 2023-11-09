@@ -801,19 +801,20 @@
            `(ar-apply ,(ac fn)
                       (list ,@(map ac args)))))))
 
-(define (ar-unstash l (vals '()) (keys '()))
-  (cond ((null? l) (list (reverse vals)
+(define (ar-unstash l (kwargs #f) (vals '()) (keys '()))
+  (cond (kwargs (list l (cadr (ar-unstash kwargs #f vals keys))))
+        ((null? l) (list (reverse vals)
                          (sort (reverse keys)
                                keyword<? #:key car)))
         ((keywordp (car l))
          (if (or (null? (cdr l))
                  (keywordp (cadr l)))
-             (ar-unstash (cdr l) vals (cons (list (keywordp (car l)) #t) keys))
-             (ar-unstash (cddr l) vals (cons (list (keywordp (car l)) (cadr l)) keys))))
-        (#t (ar-unstash (cdr l) (cons (car l) vals) keys))))
+             (ar-unstash (cdr l) kwargs vals (cons (list (keywordp (car l)) #t) keys))
+             (ar-unstash (cddr l) kwargs vals (cons (list (keywordp (car l)) (cadr l)) keys))))
+        (#t (ar-unstash (cdr l) kwargs (cons (car l) vals) keys))))
 
-(define (ar-kwapply f args)
-  (let* ((it (ar-unstash (ac-unflag-args args)))
+(define (ar-kwapply f args (kwargs #f))
+  (let* ((it (ar-unstash args kwargs))
          (args (car it))
          (kwargs (cadr it)))
     (if (null? kwargs)
@@ -838,7 +839,7 @@
   (if (pair? e)
       (let ((m (ac-macro? (car e))))
         (if m
-            (let ((expansion (ar-kwapply m (cdr e))))
+            (let ((expansion (ar-kwapply m (ac-unflag-args (cdr e)))))
               (if (car? expansion '%expansion)
                   (cadr expansion)
                   (if once expansion (ac-macex expansion))))
@@ -996,11 +997,11 @@
 (xdef apply
       (make-keyword-procedure
         (lambda (keys vals fn . args)
-          (let ((args (apply append (ar-apply-args args)
-                                    (map list keys vals))))
-            (ar-kwapply fn args)))
+          (keyword-apply fn keys vals (ar-apply-args args)))
         (lambda (fn . args)
           (ar-kwapply fn (ar-apply-args args)))))
+
+(xdef kwapply ar-kwapply)
 
 ; special cases of ar-apply for speed and to avoid consing arg lists
 

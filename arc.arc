@@ -188,7 +188,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,((afn (fs)
            (if (cdr fs)
                (list (car fs) (self (cdr fs)))
-               `(apply ,(if (car fs) (car fs) 'idfn) (+ ,ga ,gk))))
+               `(kwapply ,(if (car fs) (car fs) 'idfn) ,ga ,gk)))
          args))))
 
 ; Ditto: complement in functional position optimized by ac.
@@ -196,7 +196,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac complement (f)
   (w/uniq (gk ga)
     `(fn (kwargs: ,gk . ,ga)
-       (no (apply ,f (+ ,ga ,gk))))))
+       (no (kwapply ,f ,ga ,gk)))))
 
 (def rev (xs) 
   ((afn (xs acc)
@@ -1491,14 +1491,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def orf fns
   (fn (:kwargs . args)
     ((afn (fs)
-       (and fs (or (apply (car fs) (+ args kwargs)) (self (cdr fs)))))
+       (and fs (or (kwapply (car fs) args kwargs) (self (cdr fs)))))
      fns)))
 
 (def andf fns
   (fn (:kwargs . args)
     (with r false
       (each f fns
-        (= r (apply f (+ args kwargs)))
+        (= r (kwapply f args kwargs))
         (unless r (break))))))
 
 (def atend (i s)
