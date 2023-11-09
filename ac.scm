@@ -865,6 +865,7 @@
   date tokens
   place place* place/context place-kill
   compile partition
+  apply
 ))
 
 (define (ac-lex? v (env (env*)))
