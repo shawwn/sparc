@@ -891,23 +891,17 @@ function vote(node) {
       (user-page id)
       (pr "No such user.")))
 
-(= (static-header* 'user.json) "application/json")
-
-(newsop user.json (id)
+(newsop user.json (id) header: "application/json"
   (aif (only&profile id)
        (write-json (user>json it))
        (pr "null")))
 
-(= (static-header* 'auth.json) "application/json")
-
-(newsop auth.json ()
+(newsop auth.json () header: "application/json"
   (aif (get-auth)
        (write-json (obj auth: it))
        (pr "null")))
 
-(= (static-header* 'apple-app-site-association) "application/json")
-
-(defop apple-app-site-association req
+(defop apple-app-site-association req header: "application/json"
   (write-json (obj webcredentials:
                    (obj apps: (list ;"B9452FEMTF.com.emilykolar.LaarcIOS"
                                     )))))
@@ -2248,18 +2242,14 @@ function suggestTitle() {
         (do (note-baditem)
             (pr "No such item.")))))
 
-(= (static-header* 'item.json) "application/json")
-
-(newsop item.json (id)
+(newsop item.json (id) header: "application/json"
   (let s (safe-item id)
     (if (news-type s)
         (write-json (item>json s))
         (do (note-baditem)
             (pr "null")))))
 
-(= (static-header* 'maxitem.json) "application/json")
-
-(defop maxitem.json ()
+(defop maxitem.json () header: "application/json"
   (write-json maxid*))
 
 (newshook maxid (n)
@@ -2836,9 +2826,8 @@ function suggestTitle() {
 
 ; RSS
 
-(= static-header*!rss "application/rss+xml; charset=utf-8")
-
-(newsop rss () (rsspage nil))
+(newsop rss () header: "application/rss+xml; charset=utf-8"
+  (rsspage nil))
 
 (newscache rsspage user 90
   (rss-stories (retrieve (len ranked-stories*) ~private&live ranked-stories*)))
@@ -2861,9 +2850,8 @@ function suggestTitle() {
 
 ; RSS comments
 
-(= static-header*!rsscomments "application/rss+xml; charset=utf-8")
-
-(newsop rsscomments () (rsscpage nil))
+(newsop rsscomments () header: "application/rss+xml; charset=utf-8"
+  (rsscpage nil))
 
 (newscache rsscpage user 90
   (rss-comments (retrieve (len comments*) ~private&live comments*)))
@@ -3762,15 +3750,11 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
       (wipe (lncache* "place")))
     (if (is from to) "/place" (string "/place?from=" (if (is y 0) to from)))))
 
-(= (static-header* 'place.txt) "text/plain")
-
-(defop place.txt req
+(defop place.txt req header: "text/plain"
   (pr place-board*)
   (flushout))
 
-(= (static-header* 'place.json) "application/json")
-
-(defop place.json req (pr:place-json))
+(defop place.json req header: "application/json" (pr:place-json))
 
 (defcache place-json 5
   (tostring:write-json
@@ -3783,12 +3767,11 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
              (out (sym:string c)
                   (obj r: col!r g: col!g b: col!b hex: "#@(hexrep col)")))))))
 
-(= (static-header* 'place.events) "text/event-stream;
-Access-Control-Allow-Origin: *
-Cache-Control: no-cache;
-X-Accel-Buffering: no")
-
-(defop place.events ()
+(defop place.events () header: (trim:tostring
+                                 (prn "text/event-stream;")
+                                 (prn "Access-Control-Allow-Origin: *")
+                                 (prn "Cache-Control: no-cache;")
+                                 (prn "X-Accel-Buffering: no"))
   (withs (seen (obj) ts (now))
     (while (< (since ts) place-event-lasts*)
       (each x (qlist place-events*)

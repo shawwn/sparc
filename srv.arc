@@ -214,9 +214,10 @@ Strict-Transport-Security: max-age=31556900
   `(= (redirector* ',name) t
       (srvops* ',name)     (fn ,parms ,@body)))
 
-(mac defop (name parm . body)
+(mac defop (name parm :header . body)
   (w/uniq gs
-    `(do (wipe (redirector* ',name))
+    `(do ,(if header `(= (static-header* ',name) ,header))
+         (wipe (redirector* ',name))
          (defop-raw ,name (,gs ,parm) 
            (w/stdout ,gs (prn) ,@body)))))
 
