@@ -2,10 +2,10 @@
 
 
 (def color (r g b)
-  (withs (c (table)
-          f (fn (x) (if (< x 0) 0 (> x 255) 255 x)))
-    (= (c 'r) (f r) (c 'g) (f g) (c 'b) (f b))
-    c))
+  (zap clamp r 0 255)
+  (zap clamp g 0 255)
+  (zap clamp b 0 255)
+  (obj :r :g :b))
 
 (def dehex (str) (errsafe (coerce str 'int 16)))
 
