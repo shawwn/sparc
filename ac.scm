@@ -824,14 +824,9 @@
 ; returns #f or the macro function
 
 (define (ac-macro? fn (kind 'mac))
-  (if (symbol? fn)
-      (let ((v (bound? fn)))
-        (if (and v
-                 (ar-tagged? v)
-                 (eq? (ar-type v) kind))
-            (ar-rep v)
-            #f))
-      #f))
+  (define v (and (symbol? fn) (bound? fn)))
+  (and (eq? (ar-type v) kind)
+       (ar-rep v)))
 
 ; macroexpand the outer call of a form as much as possible
 
