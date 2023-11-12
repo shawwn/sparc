@@ -871,15 +871,21 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(protect (fn () ,x) (fn () ,@ys)))
 
 (let expander 
-     (fn (f var name body)
-       `(let ,var (,f ,name)
+     (fn (f var name body (o kwargs))
+       `(let ,var (,f ,name ,@kwargs)
           (after (do ,@body) (close ,var))))
 
-  (mac w/infile (var name . body)
-    (expander 'infile var name body))
+  (mac w/infile (var name :kwargs . body)
+    (expander 'infile var name body kwargs))
 
-  (mac w/outfile (var name . body)
-    (expander 'outfile var name body))
+  (mac w/outfile (var name :kwargs . body)
+    (expander 'outfile var name body kwargs))
+
+  ; what happens to a file opened for append if arc is killed in
+  ; the middle of a write?
+
+  (mac w/appendfile (var name :kwargs . body)
+    `(w/outfile ,var ,name :append ,@kwargs ,@body))
 
   (mac w/instring (var str . body)
     (expander 'instring var str body))
@@ -890,13 +896,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac w/outstring (var . body)
   `(let ,var (outstring) ,@body))
-
-; what happens to a file opened for append if arc is killed in
-; the middle of a write?
-
-(mac w/appendfile (var name . body)
-  `(let ,var (outfile ,name 'append)
-     (after (do ,@body) (close ,var))))
 
 (mac w/param (var val . body)
   `(call-w/param ,var ,val (fn () ,@body)))
@@ -987,17 +986,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (#'port->bytes str))
 
 (def allchars ((o str (stdin)))
-  (#'port->string str))
+  (coerce (allbytes str) 'string 'utf8))
 
 (def filebytes (name)
-  (w/infile s name (allbytes s)))
+  (w/infile s name (allbytes s) :binary))
 
 (def filechars (name)
   (w/infile s name (allchars s)))
 
-(def savefile (val file (o writer disp))
+(def savefile (val file (o writer disp) (o :binary (isa!bytes val)))
   (let tmpfile (+ file ".tmp")
-    (w/outfile o tmpfile (writer val o))
+    (w/outfile o tmpfile (writer val o) :binary)
     (mvfile tmpfile file))
   val)
 
