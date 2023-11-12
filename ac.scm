@@ -340,7 +340,7 @@
                  keepsep?))))
 
 (define (ac-global-name s)
-  (if (memq s scm-reserved)
+  (if (and (symbol? s) (memq s scm-reserved))
       (string->symbol (string-append "arc--" (symbol->string s)))
       s))
 
