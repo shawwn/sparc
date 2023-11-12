@@ -910,7 +910,11 @@
          (display " (was " (current-error-port))
          (write a (current-error-port))
          (display ")\n" (current-error-port)))
-       (namespace-set-variable-value! nm a #t)))))
+       (namespace-set-variable-value! nm a #t)))
+    ((xxdef name parms body ...)
+     (begin
+       (hash-set! fn-signatures 'name 'parms)
+       (xdef name (lambda parms body ...))))))
 
 (define fn-signatures (make-hash))
 
@@ -1039,19 +1043,19 @@
 
 
 
-(xdef join (lambda ((x ar-nil) (y ar-nil))
-             (if (unset? x) y (cons x y))))
+(xdef join ((x ar-nil) (y ar-nil))
+  (if (unset? x) y (cons x y)))
 
 
-(xdef car (lambda (x)
-             (cond ((pair? x)     (car x))
-                   ((null? x)     x)
-                   (#t            (err "Can't take car of" x)))))
+(xdef car (x)
+  (cond ((pair? x)     (car x))
+        ((null? x)     x)
+        (#t            (err "Can't take car of" x))))
 
-(xdef cdr (lambda (x)
-             (cond ((pair? x)     (cdr x))
-                   ((null? x)     x)
-                   (#t            (err "Can't take cdr of" x)))))
+(xdef cdr (x)
+  (cond ((pair? x)     (cdr x))
+        ((null? x)     x)
+        (#t            (err "Can't take cdr of" x))))
 
 ; (pairwise pred '(a b c d)) =>
 ;   (and (pred a b) (pred b c) (pred c d))
@@ -1075,7 +1079,7 @@
       (and (string? a) (string? b) (string=? a b))
       (and (bytes? a) (bytes? b) (bytes=? a b))))
 
-(xdef id (lambda args (pairwise ar-id args)))
+(xdef id args (pairwise ar-id args))
 
 (define (ar-is2 a b)
   (or (ar-id a b)
@@ -1083,7 +1087,7 @@
 
 ; for all other uses of is
 
-(xdef is (lambda args (pairwise ar-is2 args)))
+(xdef is args (pairwise ar-is2 args))
 
 (xdef raise raise)
 (xdef err err)
@@ -1168,7 +1172,7 @@
         ((and (char? x) (char? y)) (char>? x y))
         (#t (> x y))))
 
-(xdef > (lambda args (pairwise ar->2 args)))
+(xdef > args (pairwise ar->2 args))
 
 (define (ar-<2 x y)
   (cond ((and (number? x) (number? y)) (< x y))
@@ -1179,7 +1183,7 @@
         ((and (char? x) (char? y)) (char<? x y))
         (#t (< x y))))
 
-(xdef < (lambda args (pairwise ar-<2 args)))
+(xdef < args (pairwise ar-<2 args))
 
 (define (ar-seq? x)
   (and (sequence? x)
@@ -1188,13 +1192,13 @@
        (not (hash? x))
        (not (port? x))))
 
-(xdef len (lambda (x)
-             (cond ((ar-list? x) (length x))
-                   ((ar-seq? x) (sequence-length x))
-                   ((hash? x) (hash-count x))
-                   ((symbol? x) (string-length (symbol->string x)))
-                   ((keyword? x) (string-length (keyword->string x)))
-                   (#t (err "Can't get len of" x)))))
+(xdef len (x)
+  (cond ((ar-list? x) (length x))
+        ((ar-seq? x) (sequence-length x))
+        ((hash? x) (hash-count x))
+        ((symbol? x) (string-length (symbol->string x)))
+        ((keyword? x) (string-length (keyword->string x)))
+        (#t (err "Can't get len of" x))))
 
 (define (ar-tag type rep)
   (cond ((eqv? (ar-type rep) type) rep)
@@ -1253,16 +1257,18 @@
 
 (xdef infile  open-input-file)
 
-(xdef outfile (lambda (f . args)
-                 (open-output-file f
-                                   #:mode 'text
-                                   #:exists (if (equal? args '(append))
-                                                'append
-                                                'truncate))))
+(xdef outfile (f (spec #f))
+  (open-output-file f
+                    #:mode 'text
+                    #:exists (if (eq? spec 'append)
+                                 'append
+                                 'truncate)))
 
-(xdef instring  (lambda (x) (if (bytes? x)
-                                (open-input-bytes x)
-                                (open-input-string x))))
+(xdef instring (x)
+  (if (bytes? x)
+      (open-input-bytes x)
+      (open-input-string x)))
+
 (xdef outstring open-output-string)
 
 ; use as general fn for looking inside things
@@ -1278,40 +1284,39 @@
 (xdef stdin  current-input-port)
 (xdef stderr current-error-port)
 
-(xdef call-w/param
-      (lambda (var val thunk)
-        (parameterize ((var val))
-          (thunk))))
+(xdef call-w/param (var val thunk)
+  (parameterize ((var val))
+    (thunk)))
 
-(xdef readc (lambda ((i (current-input-port)) (fail #f))
-              (let ((c (read-char i)))
-                (if (eof-object? c) fail c))))
+(xdef readc ((i (current-input-port)) (fail #f))
+  (let ((c (read-char i)))
+    (if (eof-object? c) fail c)))
 
 
-(xdef readb (lambda ((i (current-input-port)) (fail #f))
-              (let ((c (read-byte i)))
-                (if (eof-object? c) fail c))))
+(xdef readb ((i (current-input-port)) (fail #f))
+  (let ((c (read-byte i)))
+    (if (eof-object? c) fail c)))
 
 (define (ready? check peek i fail)
   (atomic-invoke
     (lambda ()
       (if (check i) (peek i) fail))))
 
-(xdef peekc (lambda ((i (current-input-port)) (fail #f))
-              (let ((c (ready? char-ready? peek-char i eof)))
-                (if (eof-object? c) fail c))))
+(xdef peekc ((i (current-input-port)) (fail #f))
+  (let ((c (ready? char-ready? peek-char i eof)))
+    (if (eof-object? c) fail c)))
 
-(xdef peekb (lambda ((i (current-input-port)) (fail #f))
-              (let ((c (ready? byte-ready? peek-byte i eof)))
-                (if (eof-object? c) fail c))))
+(xdef peekb ((i (current-input-port)) (fail #f))
+  (let ((c (ready? byte-ready? peek-byte i eof)))
+    (if (eof-object? c) fail c)))
 
-(xdef writec (lambda (c (p (current-output-port)))
-                (write-char c p)
-                c))
+(xdef writec (c (p (current-output-port)))
+  (write-char c p)
+  c)
 
-(xdef writeb (lambda (b (p (current-output-port)))
-                (write-byte b p)
-                b))
+(xdef writeb (b (p (current-output-port)))
+  (write-byte b p)
+  b)
 
 (define explicit-flush #f)
 
@@ -1335,8 +1340,8 @@
       (display x port)
       (write x port)))
 
-(xdef write (lambda args (printwith write   args)))
-(xdef disp  (lambda args (printwith ar-display args)))
+(xdef write args (printwith write   args))
+(xdef disp  args (printwith ar-display args))
 
 (xdef sdata sdata)
 (xdef sread sread)
@@ -1441,20 +1446,20 @@
 
 (xdef coerce ar-coerce)
 
-(xdef open-socket  (lambda (num) (tcp-listen num 50 #t)))
+(xdef open-socket  (num) (tcp-listen num 50 #t))
 
 ; the 2050 means http requests currently capped at 2 meg
 ; http://list.cs.brown.edu/pipermail/plt-scheme/2005-August/009414.html
 
-(xdef socket-accept (lambda (s)
-                      (parameterize ((current-custodian (make-custodian)))
-                        (let-values (((in out) (tcp-accept s)))
-                          (let ((in1 (make-limited-input-port in 100000 #t)))
-                            (associate-custodian (current-custodian) in1 out)
-                            (list in1
-                                  out
-                                  (let-values (((us them) (tcp-addresses out)))
-                                              them)))))))
+(xdef socket-accept (s)
+  (parameterize ((current-custodian (make-custodian)))
+    (let-values (((in out) (tcp-accept s)))
+      (let ((in1 (make-limited-input-port in 100000 #t)))
+        (associate-custodian (current-custodian) in1 out)
+        (list in1
+              out
+              (let-values (((us them) (tcp-addresses out)))
+                          them))))))
 
 ; allow Arc to give up root privileges after it
 ; calls open-socket. thanks, Eli!
@@ -1462,7 +1467,7 @@
 ;                  ; dummy version for Windows: http://arclanguage.org/item?id=10625.
 ;                  (lambda () (lambda (x) ar-nil))))
 ; (xdef setuid setuid)
-(xdef setuid (lambda args ar-nil))
+(xdef setuid args ar-nil)
 
 (define getuid (get-ffi-obj 'getuid #f (_fun -> _int)))
 (xdef getuid getuid)
@@ -1471,11 +1476,11 @@
 (xdef kill-thread kill-thread)
 (xdef break-thread break-thread)
 (xdef current-thread current-thread)
-(xdef wait (lambda (thd)
-             (when (thread? thd)
-               (unless (eqv? thd (current-thread))
-                 (thread-wait thd)))
-             ar-t))
+(xdef wait (thd)
+  (when (thread? thd)
+    (unless (eqv? thd (current-thread))
+      (thread-wait thd)))
+  ar-t)
 
 (define (wrapnil f) (lambda args (apply f args) ar-nil))
 
@@ -1493,14 +1498,14 @@
 ; PLT scheme provides only eq? and equal? hash tables,
 ; we need the latter for strings.
 
-(xdef table (lambda args
-              (let ((h (make-hash)))
-                (when (pair? args) ((car args) h))
-                h)))
+(xdef table args
+  (let ((h (make-hash)))
+    (when (pair? args) ((car args) h))
+    h))
 
-(xdef maptable (lambda (fn table)               ; arg is (fn (key value) ...)
-                  (hash-for-each table fn)
-                  table))
+(xdef maptable (fn table)               ; arg is (fn (key value) ...)
+  (hash-for-each table fn)
+  table)
 
 (define (protect during after)
   (dynamic-wind (lambda () #t) during after))
@@ -1511,24 +1516,24 @@
 
 (xdef rand random)
 
-(xdef dir (lambda (name)
-            (map path->string (directory-list name))))
+(xdef dir (name)
+  (map path->string (directory-list name)))
 
 ; Would def mkdir in terms of make-directory and call that instead
 ; of system in ensure-dir, but make-directory is too weak: it doesn't
 ; create intermediate directories like mkdir -p.
 
-(xdef file-exists (lambda (name)
-                    (if (file-exists? name) name #f)))
+(xdef file-exists (name)
+  (if (file-exists? name) name #f))
 
-(xdef dir-exists (lambda (name)
-                   (if (directory-exists? name) name #f)))
+(xdef dir-exists (name)
+  (if (directory-exists? name) name #f))
 
 (xdef rmfile (wrapnil delete-file))
 
-(xdef mvfile (lambda (old new)
-                (rename-file-or-directory old new #t)
-                ar-nil))
+(xdef mvfile (old new)
+  (rename-file-or-directory old new #t)
+  ar-nil)
 
 (define (ar-expand-path name (directory (current-directory)))
   (let ((directory (path->complete-path (expand-user-path directory))))
@@ -1686,9 +1691,9 @@
             (display #\newline op)
             (acompile1 ip op)))))))
 
-(xdef macex (lambda (e) (ac-macex e)))
+(xdef macex (e) (ac-macex e))
 
-(xdef macex1 (lambda (e) (ac-macex e 'once)))
+(xdef macex1 (e) (ac-macex e 'once))
 
 (xdef eval arc-eval)
 
@@ -1715,20 +1720,20 @@
     (close-output-port o)
     (get-output-string o)))
 
-(xdef details (lambda (c)
-                 (disp-to-string (exn-message c))))
+(xdef details (c)
+  (disp-to-string (exn-message c)))
 
-(xdef scar (lambda (x val)
-              (if (string? x)
-                  (string-set! x 0 val)
-                  (x-set-car! x val))
-              val))
+(xdef scar (x val)
+  (if (string? x)
+      (string-set! x 0 val)
+      (x-set-car! x val))
+  val)
 
-(xdef scdr (lambda (x val)
-              (if (string? x)
-                  (err "Can't set cdr of a string" x)
-                  (x-set-cdr! x val))
-              val))
+(xdef scdr (x val)
+  (if (string? x)
+      (err "Can't set cdr of a string" x)
+      (x-set-cdr! x val))
+  val)
 
 ; waterhouse's code to modify Racket's immutable pairs.
 ; http://arclanguage.org/item?id=13616
@@ -1787,12 +1792,12 @@
                                       (lambda () undefined))))
     (if (eq? it undefined) fail it)))
 
-(xdef bound (lambda (x (fail ar-nil))
-              (bound? x fail)))
+(xdef bound (x (fail ar-nil))
+  (bound? x fail))
 
 (xdef newstring make-string)
 
-(xdef trunc (lambda (x) (inexact->exact (truncate x))))
+(xdef trunc (x) (inexact->exact (truncate x)))
 
 ; bad name
 
@@ -1802,13 +1807,13 @@
 (xdef mnow                         current-inexact-milliseconds)
 
 (xdef seconds current-seconds)
-(xdef now (lambda () (/ (current-inexact-milliseconds) 1000)))
+(xdef now () (/ (current-inexact-milliseconds) 1000))
 
 (print-hash-table #t)
 
-(xdef client-ip (lambda (port)
-                   (let-values (((x y) (tcp-addresses port)))
-                     y)))
+(xdef client-ip (port)
+  (let-values (((x y) (tcp-addresses port)))
+    y))
 
 ; make sure only one thread at a time executes anything
 ; inside an atomic-invoke. atomic-invoke is allowed to
@@ -1835,13 +1840,13 @@
 
 (xdef dead thread-dead?)
 
-(xdef chan (lambda args
-             (cond
-               ((null? args)           (make-channel))
-               ((ar-false? (car args)) (make-async-channel #f))
-               ((positive? (car args)) (make-async-channel (car args)))
-               ((zero? (car args))     (make-channel))
-               (#t (err "Channel limit must be > 0 or nil: " (car args))))))
+(xdef chan args
+  (cond
+    ((null? args)           (make-channel))
+    ((ar-false? (car args)) (make-async-channel #f))
+    ((positive? (car args)) (make-async-channel (car args)))
+    ((zero? (car args))     (make-channel))
+    (#t (err "Channel limit must be > 0 or nil: " (car args)))))
 
 (define (sync? . args)
   (apply sync/timeout 0 args))
@@ -1863,30 +1868,30 @@
          sync?)
         (#t (err "chan-fn: invalid channel: " c))))
 
-(xdef <- (lambda (c . args)
-           (if (null? args)
-               ((chan-fn c 'get) c)
-               (begin ((chan-fn c 'put) c (cons c args))
-                      args))))
+(xdef <- (c . args)
+  (if (null? args)
+      ((chan-fn c 'get) c)
+      (begin ((chan-fn c 'put) c (cons c args))
+             args)))
 
-(xdef <-? (lambda (c . args)
-            (if (null? args)
-                ((chan-fn c 'try-get) c)
-                (let* ((evt ((chan-fn c 'put-evt) c (cons c args)))
-                       (ret (sync/timeout 0 evt)))
-                  (if (eq? ret #f) ar-nil args)))))
+(xdef <-? (c . args)
+  (if (null? args)
+      ((chan-fn c 'try-get) c)
+      (let* ((evt ((chan-fn c 'put-evt) c (cons c args)))
+             (ret (sync/timeout 0 evt)))
+        (if (eq? ret #f) ar-nil args))))
 
 ; Added because Mzscheme buffers output.  Not a permanent part of Arc.
 ; Only need to use when declare explicit-flush optimization.
 
-(xdef flushout (lambda ((port (current-output-port)))
-                 (flush-output port)
-                 ar-t))
+(xdef flushout ((port (current-output-port)))
+  (flush-output port)
+  ar-t)
 
 (xdef ssyntax ssyntax?)
 
-(xdef ssexpand (lambda (x)
-                  (if (ssyntax? x) (expand-ssyntax x) x)))
+(xdef ssexpand (x)
+  (if (ssyntax? x) (expand-ssyntax x) x))
 
 (xdef quit exit)
 
@@ -1930,22 +1935,22 @@
 
 (xdef close ar-close)
 
-(xdef force-close (lambda args
-                       (map (lambda (p)
-                              (unless (try-custodian p)
-                                  (ar-close p)))
-                            args)
-                       ar-nil))
+(xdef force-close args
+  (map (lambda (p)
+         (unless (try-custodian p)
+           (ar-close p)))
+       args)
+  ar-nil)
 
 (xdef memory current-memory-use)
 
-(xdef declare (lambda (key val)
-                (let ((flag (not (ar-false? val))))
-                  (case key
-                    ((atstrings)      (set! atstrings      flag))
-                    ((direct-calls)   (set! direct-calls   flag))
-                    ((explicit-flush) (set! explicit-flush flag)))
-                  val)))
+(xdef declare (key val)
+  (let ((flag (not (ar-false? val))))
+    (case key
+      ((atstrings)      (set! atstrings      flag))
+      ((direct-calls)   (set! direct-calls   flag))
+      ((explicit-flush) (set! explicit-flush flag)))
+    val))
 
 (xdef get-environment-variable getenv)
 (xdef set-environment-variable putenv)
