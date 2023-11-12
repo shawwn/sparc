@@ -785,25 +785,25 @@ function vote(node) {
 
 ; News-Specific Defop Variants
 
-(mac defopt (name parm test msg . body)
-  `(defop ,name ,parm
+(mac defopt (name parm test msg :kwargs . body)
+  `(defop ,name ,parm ,@kwargs
      (if (,test (get-user))
          (do ,@body)
          (login-page 'both (+ "Please log in" ,msg ".")
                      (list (fn () nil)
                            (string ',name (reassemble-args ,parm)))))))
 
-(mac defopg (name parm . body)
-  `(defopt ,name ,parm idfn "" ,@body))
+(mac defopg (name parm :kwargs . body)
+  `(defopt ,name ,parm idfn "" ,@kwargs ,@body))
 
-(mac defope (name parm . body)
-  `(defopt ,name ,parm editor " as an editor" ,@body))
+(mac defope (name parm :kwargs . body)
+  `(defopt ,name ,parm editor " as an editor" ,@kwargs ,@body))
 
-(mac defopa (name parm . body)
-  `(defopt ,name ,parm admin " as an administrator" ,@body))
+(mac defopa (name parm :kwargs . body)
+  `(defopt ,name ,parm admin " as an administrator" ,@kwargs ,@body))
 
-(mac opexpand (definer name parms . body)
-  `(,definer ,name ,(uniq 'req)
+(mac opexpand (definer name parms :kwargs . body)
+  `(,definer ,name ,(uniq 'req) ,@kwargs
      (withs (user (get-user) ip (get-ip))
        (withs ,(and parms (mappend [list _ `(arg ,(string _))]
                                    parms))
@@ -812,24 +812,24 @@ function vote(node) {
 
 (or= newsop-names* nil)
 
-(mac newsop (name parms . body)
+(mac newsop (name parms :kwargs . body)
   `(do (pushnew ',name newsop-names*)
-       (opexpand defop ,name ,parms ,@body)))
+       (opexpand defop ,name ,parms ,@kwargs ,@body)))
 
-(mac newsopr (name parms . body)
+(mac newsopr (name parms :kwargs . body)
   `(do (pushnew ',name newsop-names*)
-       (opexpand defopr ,name ,parms ,@body)))
+       (opexpand defopr ,name ,parms ,@kwargs ,@body)))
 
-(mac adop (name parms . body)
+(mac adop (name parms :kwargs . body)
   (w/uniq g
-    `(opexpand defopa ,name ,parms
+    `(opexpand defopa ,name ,parms ,@kwargs
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
            ,@body)))))
 
-(mac edop (name parms . body)
+(mac edop (name parms :kwargs . body)
   (w/uniq g
-    `(opexpand defope ,name ,parms
+    `(opexpand defope ,name ,parms ,@kwargs
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
            ,@body)))))
