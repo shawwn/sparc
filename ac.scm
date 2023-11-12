@@ -782,7 +782,7 @@
   (let ((args (ac-unflag-args args)))
     (cond ((car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
-          ((and direct-calls (symbol? fn) (not (ac-lex? fn)) (bound? fn)
+          ((and direct-calls (symbol? fn) (not (ac-lex? fn))
                 (procedure? (bound? fn)))
            (ac-global-call fn args))
           ((memf keywordp args)
