@@ -119,7 +119,9 @@
 (define ar-t #t)
 
 (define (ar-nil? x)
-  (eqv? x ar-nil))
+  (or (null? x)
+      (unset? x)
+      (void? x)))
 
 (define atstrings #t)
 
@@ -392,7 +394,7 @@
 (define (ac-unquoted x)
   (cond ((pair? x)
          (imap ac-unquoted x))
-        ((ar-nil? x)
+        ((null? x)
          'nil)
         ((eqv? x ar-t)
          't)
@@ -902,7 +904,7 @@
             (a b)
             (val (namespace-variable-value nm #t (lambda () (void)))))
        (when (and (not (eqv? 'a 'b))
-                  (not (void? val)))
+                  (not (ar-nil? val)))
          (display "*** redefining " (current-error-port))
          (display 'a (current-error-port))
          (display " (was " (current-error-port))
@@ -919,6 +921,8 @@
   (namespace-set-variable-value! (ac-global-name a) b)
   (hash-set! fn-signatures a (list parms))
   b)
+
+(xdef null ar-nil?)
 
 (xdef unstash ar-unstash)
 
@@ -949,10 +953,7 @@
 ; Scheme lists (e.g. . body of a macro).
 
 (define (ar-false? x)
-  (or (ar-nil? x)
-      (eq? x #f)
-      (void? x)
-      (eq? x undefined)))
+  (or (not x) (ar-nil? x)))
 
 (define (ar-true? x)
   (not (ar-false? x)))
@@ -1612,8 +1613,7 @@
 (define (ac-prompt-print val)
   (namespace-set-variable-value! (ac-global-name 'that) val)
   (namespace-set-variable-value! (ac-global-name 'thatexpr) (ac-that-expr*))
-  (unless (or (void? val)
-              (ar-nil? val))
+  (unless (null? val)
     (pp val))
   val)
 
