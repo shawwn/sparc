@@ -27,13 +27,16 @@
 (print-hash-table #t)
 (print-syntax-width 10000)
 
-(define (car? l (k undefined) #:test (test ar-id))
+(define unset undefined)
+(define (unset? x) (eq? x unset))
+
+(define (car? l (k unset) #:test (test ar-id))
   (and (pair? l)
-       (if (eq? k undefined) (car l)
+       (if (unset? k) (car l)
          (if (procedure? k) (k (car l))
            (test (car l) k)))))
 
-(define (caar? l (k undefined) #:test (test ar-id))
+(define (caar? l (k unset) #:test (test ar-id))
   (car? (car? l) k #:test test))
 
 (define (ar-tagged type . rep)
@@ -114,8 +117,6 @@
 
 (define ar-nil '())
 (define ar-t #t)
-(define unset undefined)
-(define (unset? x) (eq? x unset))
 
 (define (ar-nil? x)
   (eqv? x ar-nil))
