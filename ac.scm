@@ -1103,7 +1103,7 @@
   (lambda (x) (apply ar-coerce x type args)))
 
 (define (ar-cat . args)
-  (if (bytes? (ar-xcar args))
+  (if (car? args bytes?)
       (apply bytes-append (map (ar-to 'bytes 'utf8) args))
       (apply string-append (map (ar-to 'string) args))))
 
