@@ -1504,9 +1504,9 @@
 ; PLT scheme provides only eq? and equal? hash tables,
 ; we need the latter for strings.
 
-(xdef table args
+(xdef table ((f #f))
   (let ((h (make-hash)))
-    (when (pair? args) ((car args) h))
+    (when f (f h))
     h))
 
 (xdef maptable (fn table)               ; arg is (fn (key value) ...)
