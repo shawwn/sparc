@@ -1625,7 +1625,7 @@ function vote(node) {
 
 ; reset later
 
-(= flag-threshold* 30 flag-kill-threshold* 1 many-flags* 0)
+(= flag-threshold* 1 flag-kill-threshold* 1 many-flags* 0)
 
 ; Un-flagging something doesn't unkill it, if it's now no longer
 ; over flag-kill-threshold.  Ok, since arbitrary threshold anyway.
