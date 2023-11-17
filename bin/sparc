@@ -12,4 +12,4 @@ cd "$(dirname "${bin}")"
 home="$(dirname "$(pwd)")"
 cd "${dir}"
 
-exec "${home}/bin/arc" "${home}/news.arc" "$@"
+exec "${home}/bin/arc" "${@:-${home}/news.arc}"
