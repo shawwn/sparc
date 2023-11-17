@@ -225,14 +225,15 @@
 (def hello-page ()
   (whitepage (prs "hello" (get-user) "at" (get-ip))))
 
-(defop login req (login-page 'both))
+(defop login req (login-page 'both nil "/"))
 
 ; switch is one of: register, login, both
 
 ; afterward is either a function on the newly created username and
 ; ip address, in which case it is called to generate the next page 
 ; after a successful login, or a pair of (function url), which means 
-; call the function, then redirect to the url.
+; call the function, then redirect to the url, or a url to redirect
+; to.
 
 ; classic example of something that should just "return" a val
 ; via a continuation rather than going to a new page.
@@ -252,7 +253,7 @@
   (br2)
   (fnform (fn (req) (handler req switch afterward))
           (fn () (pwfields (downcase label)))
-          (acons afterward)))
+          ((orf acons isa!string) afterward)))
 
 (def login-handler (req switch afterward)
   (logout-user)
@@ -276,6 +277,8 @@
       (let (f url) afterward
         (f)
         url)
+      (isa!string afterward)
+      afterward
       (do (prn)
           (afterward))))
 
