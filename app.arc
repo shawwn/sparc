@@ -546,6 +546,10 @@
                (iflet newi (parabreak s i (if (is i 0) 1 0))
                       (do (unless (is i 0) (pr "<p>"))
                           (= i (- newi 1)))
+                      (and (in (s i) #\\ #\*)
+                           (~atend i s)
+                           (is (s (+ i 1)) #\*))
+                      (writec (s (++ i)))
                       (and (is (s i) #\*)
                            (or ital 
                                (atend i s) 
@@ -680,7 +684,8 @@
            (awhen (findsubseq "</code></pre>" s (+ i 12))
              (pr (cut s (+ i 11) it))
              (= i (+ it 12)))
-          (writec (s i))))))
+          (do (if (is (s i) #\*) (writec #\\))
+              (writec (s i)))))))
 
 
 (def english-time (min)
