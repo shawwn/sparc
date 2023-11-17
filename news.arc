@@ -9,17 +9,18 @@
 (load :once (libpath "firebase.arc"))
 (load :once (libpath "algolia.arc"))
 
-(= site-name*    "Tensorfork Labs"
-   site-abbrev*  "TL"
+(= site-name*    "Lambda News"
+   site-abbrev*  "LN"
+   site-repo*    "https://github.com/shawwn/sparc"
    site-email*   "shawnpresser@@gmail.com"
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
    discord-url*  nil
-   site-url*     "https://www.tensorfork.com"
-   parent-url*   "https://www.tensorfork.com"
+   site-url*     "http://localhost:8080"
+   parent-url*   "http://localhost:8080"
    welcome-url*  "/welcome.html"
    favicon-url*  ""
-   site-desc*    "Tensorfork Labs"     ; for rss feed
+   site-desc*    "Lambda News"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t
@@ -597,9 +598,9 @@
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
       ;(link "Feature Requests" "/item?id=230")
-      (link "Source" "https://github.com/tensorfork/tlarc")
-      (link "Contact" "mailto:@site-email*")
-      (link "Twitter" "https://twitter.com/@site-twitter*")
+      (if site-repo*    (link "Source" site-repo*))
+      (if site-email*   (link "Contact" "mailto:@site-email*"))
+      (if site-twitter* (link "Twitter" "https://twitter.com/@site-twitter*"))
       (link "Lists" "/lists"))
     (br2)
     (w/bars
@@ -3196,7 +3197,7 @@ first asterisk isn't whitespace.
 (diskfile bookmarklet-page* (+ newsdir* "bookmarklet.html") "
 <p id=\"first\">
     Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\"><u>original bookmarklet</u></a>.
-    <br><br> When you click on the bookmarklet, it will submit the page you're on to Lambda News. To install, drag this link to your browser toolbar:
+    <br><br> When you click on the bookmarklet, it will submit the page you're on to @{site-name*}. To install, drag this link to your browser toolbar:
     <br><br>
 </p>
 
@@ -3204,7 +3205,7 @@ first asterisk isn't whitespace.
 
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
-<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.tensorfork.com/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'_blank','toolbar=no,width=700,height=600'));\">
   <u>post to @{site-abbrev*}</u>
 </a>
 
@@ -3212,7 +3213,7 @@ first asterisk isn't whitespace.
 <br><br> On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
 <br><br>
 
-<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.tensorfork.com/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));</textarea>
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'_blank','toolbar=no,width=700,height=600'));</textarea>
 
 <br><br> It should look like this:
 <br><br>
