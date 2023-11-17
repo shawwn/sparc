@@ -594,8 +594,9 @@
   (center
     (hook 'longfoot)
     (w/bars
-      (link "Welcome" welcome-url*)
-      (link "Guidelines" "/guidelines.html")
+      (link "Welcome"     welcome-url*)
+      (link "Guidelines"  "/newsguidelines.html")
+      (link "FAQ"         "/newsfaq.html")
       (link "Bookmarklet" "/bookmarklet.html")
       ;(link "Feature Requests" "/item?id=230")
       (if site-repo*    (link "Source" site-repo*))
@@ -3166,12 +3167,12 @@ reproduced verbatim.  (This is intended for code.)
   (minipage "Edit Pages"
     (urform (get-user) req
             (do (todisk guidelines-page* (md-from-form arg!guidelines nil t))
-                "/guidelines.html")
+                "/newsguidelines.html")
       (idtab "guidelines"
-        (row (underlink "/guidelines.html"))
+        (row (underlink "/newsguidelines.html"))
         (row (textarea "guidelines" 80 60
                (pr:esc-tags:unmarkdown guidelines-page* t)))
-        (row (submit "update /guidelines.html"))))
+        (row (submit "update /newsguidelines.html"))))
 
     (urform (get-user) req
             (do (todisk welcome-page* (md-from-form arg!welcome nil t))
@@ -3181,6 +3182,15 @@ reproduced verbatim.  (This is intended for code.)
         (row (textarea "welcome" 80 60
                (pr:esc-tags:unmarkdown welcome-page* t)))
         (row (submit "update /welcome.html"))))
+
+    (urform (get-user) req
+            (do (todisk newsfaq-page* (md-from-form arg!newsfaq nil t))
+                "/newsfaq.html")
+      (idtab "newsfaq"
+        (row (underlink "/newsfaq.html"))
+        (row (textarea "newsfaq" 80 60
+               (pr:esc-tags:unmarkdown newsfaq-page* t)))
+        (row (submit "update /newsfaq.html"))))
 
     (urform (get-user) req
             (do (todisk bookmarklet-page* arg!bookmarklet)
@@ -3242,7 +3252,7 @@ replace its url with the following text:
 
 ; Guidelines
 
-(diskfile guidelines-page* (+ newsdir* "guidelines.html") (md-from-form "
+(diskfile guidelines-page* (+ newsdir* "newsguidelines.html") (md-from-form "
 _What to Submit_
 
 On-Topic: STEM. Humanities. Humor. Anything intellectually engaging
@@ -3274,8 +3284,8 @@ Please limit your use of uppercase; it looks like shouting and is hard
 to read.
 " nil t))
 
-(newsop guidelines.html ()
-  (msgpage guidelines-page* "Guidelines" (pages-url "guidelines")))
+(newsop newsguidelines.html ()
+  (msgpage guidelines-page* "Guidelines" (pages-url "newsguidelines")))
 
 ; Welcome
 
@@ -3284,7 +3294,7 @@ _Welcome to @{site-name*}_
 
 <a href=\"/\"><u>@{site-name*}</u></a> is a bit different from other
 community sites, and we'd appreciate it if you'd take a minute to read
-the following as well as the <a href=\"/guidelines.html\"><u>official
+the following as well as the <a href=\"/newsguidelines.html\"><u>official
 guidelines</u></a>.
 
 @site-abbrev* is an experiment. As a rule, a community site that
@@ -3337,6 +3347,152 @@ convincing without them.
 
 (newsop welcome.html ()
   (msgpage welcome-page* "Welcome" (pages-url "welcome")))
+
+; FAQ
+
+(diskfile newsfaq-page* (+ newsdir* "newsfaq.html") (md-from-form "
+_@site-name* FAQ_
+
+Are there rules about submissions and comments?
+<a href=\"/newsguidelines.html\"><u>@{site-url*}/newsguidelines.html</u></a>
+
+_How are stories ranked?_
+
+The basic algorithm divides points by a power of the time since a
+story was submitted. Comments in threads are ranked the same way.
+
+Other factors affecting rank include user flags, anti-abuse software,
+software which demotes overheated discussions, account or site
+weighting, and moderator action.
+
+_How is a user's karma calculated?_
+
+Roughly, the number of upvotes on their posts minus the number of
+downvotes. These don't match up exactly. Some votes are dropped by
+anti-abuse software.
+
+_Do posts by users with more karma rank higher?_
+
+No.
+
+_Why don't I see down arrows?_
+
+There are no down arrows on stories. They appear on comments after
+users reach a certain karma threshold, but never on direct replies.
+
+_What kind of formatting can you use in comments?_
+
+<a href=\"/formatdoc\"><u>@{site-url*}/formatdoc</u></a>
+
+_How do I submit a question?_
+
+Use the submit link in the top bar, and leave the url field blank.
+
+_How do I submit a poll?_
+
+<a href=\"/newpoll\"><u>@{site-url*}/newpoll</u></a>
+
+_What are Ask @{site-abbrev*} and Show @{site-abbrev*}?_
+
+<a href=\"/l/ask\"><u>Ask @{site-abbrev*}</u></a> lists questions and
+other text submissions.
+<a href=\"/l/show\"><u>Show @{site-abbrev*}</u></a> is for sharing
+your personal work and has special <a href=\"/showhn.html\">rules</a>.
+
+_What do green usernames mean?_
+
+Green indicates a new account.
+
+_Why are some comments faded?_
+
+Faded text means that a comment has been downvoted. You can read the
+comment in normal text by clicking on its timestamp to go to its page.
+
+_What does [flagged] mean?_
+
+Users flagged the post as breaking the
+<a href=\"/newsguidelines.html\"><u>guidelines</u></a> or otherwise not
+belonging on @{site-abbrev*}.
+
+Moderators sometimes also add [flagged] (though not usually on submissions), and
+sometimes turn flags off when they are unfair.
+
+_How do I flag a comment?_
+
+Click on its timestamp to go to its page, then click the 'flag' link
+at the top. There's a small karma threshold before flag links appear.
+
+<a name=dead>
+_What does [dead] mean?_
+</a>
+
+The post was killed by software, user flags, or moderators.
+
+Dead posts aren't displayed by default, but you can see them all by
+turning on 'showdead' in your profile.
+
+_What does [deleted] mean?_
+
+The author deleted the post outright, or asked us to. Unlike
+<a href=\"#dead\"><u>dead</u></a> posts, these remain deleted even when
+showdead is turned on.
+
+_Are reposts ok?_
+
+If a story has not had significant attention in the last year or so, a
+small number of reposts is ok. Otherwise we bury reposts as
+duplicates.
+
+Please don't delete and repost the same story. Deletion is for things
+that shouldn't have been submitted in the first place.
+
+_Can I ask people to upvote my submission?_
+
+No. Users should vote for a story because they personally find it
+intellectually interesting, not because someone has content to
+promote. We penalize or ban submissions, accounts, and sites that
+break this rule, so please don't.
+
+_Can I ask people to comment on my submission?_
+
+No, for the same reason. It's also not in your interest: @{site-abbrev*} readers
+are sensitive to this and will detect it, flag it, and use unkind
+words like 'spam'.
+
+_Why can't I post a comment to a thread?_
+
+Threads are closed to new comments after two weeks, or if the
+submission has been killed by software, moderators, or user flags.
+
+Why is A ranked below B even though A has more points and is newer?
+
+You can't derive rank from votes and time alone. See \"How are stories
+ranked?\" above.
+
+_In my profile, what is delay?_
+
+It gives you time to edit your comments before they appear to others.
+Set it to the number of minutes you'd like. The maximum is 10.
+
+_In my profile, what is noprocrast?_
+
+It's a way to help you prevent yourself from spending too much time on
+@{site-abbrev*}. If you turn it on you'll only be allowed to visit the
+site for maxvisit minutes at a time, with gaps of minaway minutes in
+between.  The defaults are 20 and 180, which would let you view the
+site for 20 minutes at a time, and then not allow you back in for 3
+hours.
+
+_How do I reset my password?_
+
+If you have an email address in your profile, you can do that
+<a href=\"/forgot?id=\"><u>here</u></a>. If you haven't, email @{site-email*}
+for help.
+
+" nil t))
+
+(newsop newsfaq.html ()
+  (msgpage newsfaq-page* "@site-name* FAQ" (pages-url "newsfaq")))
 
 (def tags-list ((o by arg!sort)
                 (o rev? (or arg!rev (no arg!sort))))
