@@ -2029,24 +2029,27 @@ function suggestTitle() {
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
   (newslog 'create sub url (list title))
   (let s (create-item 'story 'url url 'title title 'text text 'by user 'ip ip)
-    (when sub
-      (each x (rev (tokens sub [or (whitec _) (in _ #\,)]))
-        (pushnew (clean-sub x) s!keys)))
-    (unless (mem (clean-sub "private") s!keys)
-      (let title (downcase title)
-        (if (headmatch "show tl" title)
-            (do (pull (clean-sub "news") s!keys)
-                (pushnew (clean-sub "show") s!keys))
-            (or (blank url)
-                (headmatch "ask tl" title))
-            (do (pull (clean-sub "news") s!keys)
-                (pushnew (clean-sub "ask") s!keys)))))
+    (update-subs s sub url title)
     (save-item s)
     (= (items* s!id) s)
     (unless (blank url) (register-url s url))
     (push s stories*)
     (hook 'create-story s)
     s))
+
+(def update-subs (s (o sub) (o url) (o title))
+  (when sub
+    (each x (rev (tokens sub [or (whitec _) (in _ #\,)]))
+      (pushnew (clean-sub x) s!keys)))
+  (unless (mem (clean-sub "private") s!keys)
+    (let title (downcase title)
+      (if (headmatch (downcase "Show @site-abbrev*") title)
+          (do (pull (clean-sub "news") s!keys)
+              (pushnew (clean-sub "show") s!keys))
+          (or (blank url)
+              (headmatch (downcase "Ask @site-abbrev*") title))
+          (do (pull (clean-sub "news") s!keys)
+              (pushnew (clean-sub "ask") s!keys))))))
 
 
 ; Bans
@@ -2177,6 +2180,7 @@ function suggestTitle() {
 (def create-poll (title text opts (o user (get-user)) (o ip (get-ip)))
   (newslog 'create-poll title)
   (with p (create-item 'poll 'title title 'text text 'by user 'ip ip)
+    (update-subs p)
     (= (items* p!id) p)
     (= p!parts (map !id (map [create-pollopt p nil nil _ user ip]
                              (paras opts))))
