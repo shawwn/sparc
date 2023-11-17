@@ -1960,15 +1960,14 @@
 
 (define (gmt-date sec) (seconds->date sec))
 
-(xdef timedate
-  (lambda args
-    (let ((d (gmt-date (if (pair? args) (car args) (current-seconds)))))
-      (list (date-second d)
-            (date-minute d)
-            (date-hour d)
-            (date-day d)
-            (date-month d)
-            (date-year d)))))
+(xdef timedate ((s (current-seconds)))
+  (let ((d (gmt-date s)))
+    (list (date-second d)
+          (date-minute d)
+          (date-hour d)
+          (date-day d)
+          (date-month d)
+          (date-year d))))
 
 (xdef sin sin)
 (xdef cos cos)
