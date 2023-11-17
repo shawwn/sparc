@@ -991,7 +991,8 @@
   (strftime "+%a, %d %b %Y %H:%M:%S GMT" secs))
 
 (def send-email (from to subject message)
-  (tostring:shellsafe "python2" (libpath "../sendmail.py") from to subject message))
+  (when (file-exists (libpath "../sendmail.py"))
+    (tostring:shellsafe "python" (libpath "../sendmail.py") from to subject message)))
 
 ; (let ts (seconds)
 ;   (each c "%aAbBcCdDeFgGhHIjklmMnNpPqrRsStTuUVwWxXyYzZ"
