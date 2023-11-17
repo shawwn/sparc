@@ -28,6 +28,16 @@
   (= admins* (map string (errsafe (readfile adminfile*))))
   nil)
 
+(defhook create-acct (user) name: first-acct-becomes-admin
+  (atomic
+    ; is this the only account?
+    (when (is (len dc-usernames*) 1)
+      (unless (file-exists adminfile*)
+        ; make them an admin
+        (savefile (tostring:prn user) adminfile*)
+        (hook 'reload-admins))))
+  nil)
+
 ; idea: a bidirectional table, so don't need two vars (and sets)
 
 (or= cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
@@ -178,7 +188,8 @@
 (def create-acct (user pw (o email))
   (set (dc-usernames* (downcase user)))
   (set-pw pw user)
-  (= (user->email* user) email))
+  (= (user->email* user) email)
+  (hook 'create-acct user))
 
 (def disable-acct (user)
   (set-pw (rand-string 20) user)
