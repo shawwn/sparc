@@ -1,23 +1,14 @@
-# To run tlarc
+# To run sparc
 
 ```
-git clone http://github.com/tensorfork/tlarc
-cd tlarc
-make
-mkdir arc
-echo "myname" > arc/admins
-NOISY=1 DEV=1 rlwrap bin/arc # rlwrap is optional
-```
-
-at the arc prompt:
-
-```
-((load "news.arc"))
+git clone http://github.com/shawwn/sparc
+cd sparc
+rlwrap bin/arc news.arc # rlwrap is optional
 ```
 
 go to http://localhost:8080
 
-click on login, and create an account called myname
+click on login, and create an account
 
 you should now be logged in as an admin
 
@@ -54,5 +45,5 @@ sudo pkg install python # then install pip
 sudo pip install --upgrade google-api-python-client oauth2client
 
 # PULL=10 means `git pull` every 10 seconds
-PULL=10 FLUSH=nil bin/tlarc
+PULL=10 FLUSH=nil bin/sparc
 ```
