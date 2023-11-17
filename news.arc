@@ -1908,10 +1908,10 @@ function suggestTitle() {
 ; http://news.domain.com/submitlink?l=news&u=http://foo.com&t=Foo
 ; Added a confirm step to avoid xss hacks.
 
-(newsop submitlink (l u t)
+(newsop submitlink (l u t x)
   (if user
-      (submit-page l u t t)
-      (submit-login-warning l u t)))
+      (submit-page l u t 't x)
+      (submit-login-warning l u t 't x)))
 
 (= title-limit* 80
    retry*       "Please try again."
@@ -3205,7 +3205,7 @@ first asterisk isn't whitespace.
 
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
-<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'_blank','toolbar=no,width=700,height=600'));\">
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p)+'&x='+encodeURIComponent(d),'_blank','toolbar=no,width=700,height=600'));\">
   <u>post to @{site-abbrev*}</u>
 </a>
 
@@ -3213,7 +3213,7 @@ first asterisk isn't whitespace.
 <br><br> On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
 <br><br>
 
-<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'_blank','toolbar=no,width=700,height=600'));</textarea>
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p)+'&x='+encodeURIComponent(d),'_blank','toolbar=no,width=700,height=600'));</textarea>
 
 <br><br> It should look like this:
 <br><br>
