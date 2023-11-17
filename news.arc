@@ -3194,10 +3194,25 @@ first asterisk isn't whitespace.
 
 ; Bookmarklet
 
+(= bookmarklet-js*
+   (+ "javascript:"
+      "q=location.href;"
+      "if(document.getSelection){d=document.getSelection();}else{d='';}"
+      "p=document.title;"
+      "void(open('@{site-url*}/submitlink?l=news'"
+      "+'&u='+encodeURIComponent(q)"
+      "+'&t='+encodeURIComponent(p)"
+      "+'&x='+encodeURIComponent(d),"
+      "'_blank','toolbar=no,width=700,height=600'));"))
+
 (diskfile bookmarklet-page* (+ newsdir* "bookmarklet.html") "
 <p id=\"first\">
-    Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\"><u>original bookmarklet</u></a>.
-    <br><br> When you click on the bookmarklet, it will submit the page you're on to @{site-name*}. To install, drag this link to your browser toolbar:
+    Thanks to Phil Kast for writing the
+    <a href=\"https://news.ycombinator.com/bookmarklet.html\">
+    <u>original bookmarklet</u></a>.
+    <br><br> When you click on the bookmarklet, it will submit the
+    page you're on to @{site-name*}. To install, drag this link to
+    your browser toolbar:
     <br><br>
 </p>
 
@@ -3205,15 +3220,16 @@ first asterisk isn't whitespace.
 
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
-<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p)+'&x='+encodeURIComponent(d),'_blank','toolbar=no,width=700,height=600'));\">
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"@{bookmarklet-js*}\">
   <u>post to @{site-abbrev*}</u>
 </a>
 
 <br><br>
-<br><br> On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
+<br><br> On mobile devices, create a new bookmark, edit it, and
+replace its url with the following text:
 <br><br>
 
-<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('@{site-url*}/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p)+'&x='+encodeURIComponent(d),'_blank','toolbar=no,width=700,height=600'));</textarea>
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">@{bookmarklet-js*}</textarea>
 
 <br><br> It should look like this:
 <br><br>
