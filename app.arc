@@ -39,9 +39,7 @@
   (alref req!cooks (str key)))
 
 (def set-cookie (key val (o req (the-req*)))
-  ; TODO: alset?
-  (pull [caris _ (str key)] req!cooks)
-  (push (list (str key) val) req!cooks)
+  (alset req!cooks (str key) val)
   val)
 
 (def get-user ()

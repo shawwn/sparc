@@ -742,6 +742,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(atwiths ,(+ binds (list gop op) (mix gargs args))
          (,setter (,gop ,val ,@gargs))))))
 
+(mac alset (place key val)
+  `(atomic
+     (pull [caris _ ,key] ,place)
+     (push (list ,key ,val) ,place)))
+
 ; Can't simply mod pr to print strings represented as lists of chars,
 ; because empty string will get printed as nil.  Would need to rep strings
 ; as lists of chars annotated with 'string, and modify car and cdr to get
@@ -1791,8 +1796,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac defhook (name name: (o id 'hook) . rest)
   (let f (+ name '-- id)
     `(let ,f (fn ,@rest)
-       (pull [caris _ ',id] (hooks* ',name))
-       (push (list ',id ,f) (hooks* ',name)))))
+       (alset (hooks* ',name) ',id ,f))))
 
 ; if renamed this would be more natural for (map [_ user] pagefns*)
 
