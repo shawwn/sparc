@@ -1812,8 +1812,6 @@
 (xdef seconds current-seconds)
 (xdef now () (/ (current-inexact-milliseconds) 1000))
 
-(print-hash-table #t)
-
 (xdef client-ip (port)
   (let-values (((x y) (tcp-addresses port)))
     y))
