@@ -21,6 +21,8 @@
         (row (app-link app)
           (ulink 'run    (run-app  app))
           (ulink 'edit   (edit-app app))
+          (when (has-vim)
+            (ulink 'vim  (vim-app app) redir: "/prompt"))
           (hspace 40)
           (ulink 'delete
             (whitepage
@@ -36,20 +38,18 @@
       (tab (row "name:" (input "app") (submit "create app"))))))
 
 (def app-link (app)
-  (if (has-vim)
-      (ulink app redir: "/prompt" (vim-app app))
-      (pr app)))
+  (ulink app (view-app app)))
 
-(def app-path (app)
-  (and (get-user) app (+ appdir* (get-user) "/" app)))
+(def app-path (app (o u (get-user)))
+  (and u app (+ appdir* u "/" app)))
 
-(def app-exists (app)
-  (aand (app-path app)
+(def app-exists (app (o u (get-user)))
+  (aand (app-path app u)
         (file-exists it)))
 
 (def read-app (app)
   (aand (app-exists app)
-        (readfile it)))
+        (filechars it)))
 
 (defmemo has-vim ()
   (shellsafe 'which 'mvim))
@@ -61,7 +61,7 @@
 (def write-app (app exprs)
   (awhen (app-path app)
     (w/outfile o it 
-      (each e exprs (write e o)))))
+      (disp exprs o))))
 
 (def rem-app (app)
   (let file (app-path app)
@@ -76,30 +76,24 @@
     (br2)
     (urform (get-user) req
             (do (when (is arg!cmd "save")
-                  (write-app app (readall arg!exprs)))
+                  (write-app app arg!exprs))
                 "/prompt")
       (textarea "exprs" 10 82
-        (pprcode (read-app app)))
+        (only&pr (read-app app)))
       (br2)
       (buts 'cmd "save" "cancel"))))
-
-(def pprcode (exprs) 
-  (each e exprs
-    (ppr e) 
-    (pr "\n\n")))
 
 (def view-app (app)
   (whitepage
     (pr "user: " (get-user) " app: " app)
     (br2)
-    (tag xmp (pprcode (read-app app)))))
+    (tag pre (only&pr (read-app app)))))
 
 (def run-app (app)
-  (let exprs (read-app app)
-    (if (or exprs (app-exists app))
-        (on-err (fn (c) (pr "Error: " (details c)))
-                (fn () (map eval exprs)))
-        (prompt-page "Error: No application " app " for user " (get-user)))))
+  (aif (app-exists app)
+       (on-err (fn (c) (pr "Error: " (details c)))
+               (fn () (map eval (codefile it))))
+       (prompt-page "Error: No application " app " for user " (get-user))))
 
 (or= repl-history* nil)
 
@@ -124,7 +118,7 @@
         (write:caar repl-history*))
       (sp) 
       (submit))
-    (tag xmp
+    (tag pre
       (each (expr val err) (firstn repl-history-max* repl-history*)
         (pr "> ")
         (ppr expr)
