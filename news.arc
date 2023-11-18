@@ -3545,22 +3545,21 @@ for help.
                   (userlink u nil)
                   (pr " "))))))))
 
-(defcache killedsites 300
-  (let bads (table)
+(def killedsites ()
+  (with acc nil
+    (defs bads (table) deadcount (table))
     (each-loaded-item i
       (awhen (and i!dead (sitename i!url))
         (push i (bads it))))
-    (withs (acc nil deadcount (table))
-      (each (site items) bads
-        (let n (len items)
-          (when (> n 2)
-            (= (deadcount site) n)
-            (insort (compare > deadcount:car)
-                    (list site (rev items))
-                    acc))))
-      acc)))
+    (each (site items) bads
+      (let n (len items)
+        (when (> n 2)
+          (= (deadcount site) n)
+          (insort (compare > deadcount:car)
+                  (list site (rev items))
+                  acc))))))
 
-(defcache banned-site-items 300
+(def banned-site-items ()
   (with bads (table)
     (each-loaded-item i
       (awhen (and i!dead (check (sitename i!url) banned-sites*))
