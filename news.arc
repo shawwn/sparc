@@ -19,7 +19,6 @@
    site-url*     "http://localhost:8080"
    parent-url*   "http://localhost:8080"
    welcome-url*  "/welcome.html"
-   favicon-url*  ""
    site-desc*    "Lambda News"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
@@ -499,9 +498,7 @@
 
 ; Page Layout
 
-(= up-url* (static-src "grayarrow.gif")
-   down-url* (static-src "graydown.gif")
-   logo-url* (static-src "ln.png"))
+(= logo-url* "ln.png" favicon-url* "favicon.ico")
 
 (def rss-url ((o label))
   (if (is label "comments") "/rsscomments" "/rss"))
@@ -531,7 +528,7 @@
       (gentag link rel  'manifest                  href (static-src "site.webmanifest"))
       (gentag link rel  'stylesheet type 'text/css href (static-src "news.css"))
       (gentag link rel  'mask-icon                 href (static-src "safari-pinned-tab.svg") color teal)
-      (gentag link rel  "shortcut icon"            href "favicon.ico")
+      (gentag link rel  "shortcut icon"            href (static-src favicon-url*))
 
       (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
       (gentag link rel  'icon type 'image/png sizes '512x512 href (static-src "android-chrome-512x512.png"))
@@ -740,7 +737,7 @@ function vote(node) {
 (def gen-logo ()
   (tag (td style "width:18px;padding-right:4px")
     (tag (a href parent-url*)
-      (tag (img src logo-url* width 18 height 18
+      (tag (img src (static-src logo-url*) width 18 height 18
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
