@@ -3,17 +3,20 @@
 ; Ought to do more of this in Arc.  One of the biggest advantages
 ; of Lisp is messing with code.
 
+(def incode (file)
+  (if (isa!string file) (infile file) file))
+
 (def codelines (file)
-  (w/infile in file
-    (summing test
-      (whilet line (readline in)
-        (test (aand (find nonwhite line) (isnt it #\;)))))))
+  (zap incode file)
+  (summing test
+    (whilet line (readline file)
+      (test (aand (find nonwhite line) (isnt it #\;))))))
 
 (def codeflat (file)
-  (len (flat (readall (infile file)))))
+  (len (flat (readall (incode file)))))
 
 (def codetree (file)
-  (treewise + (fn (x) 1) (readall (infile file))))
+  (treewise + (fn (x) 1) (readall (incode file))))
 
 (def code-density (file)
   (/ (codetree file) (codelines file))) 
@@ -21,7 +24,7 @@
 (def tokcount (files)
   (with counts (table)
     (each f files
-      (each token (flat (readall (infile f)))
+      (each token (flat (readall (incode f)))
         (++ (counts token 0))))))
 
 (def common-tokens (files)
