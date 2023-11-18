@@ -1065,18 +1065,16 @@ function vote(node) {
 
 ;(newsop index.html () (newspage user))
 
-(= lncache* (table))
-(= lncache-time* 90)
+(= lncache* (table) lncache-time* 90)
 
 (newsop l (path)
   (if (empty path)
       (tags-page user)
-    ((or (lncache* path)
-         (= (lncache* path)
-            (newsfn user lncache-time* ()
-              (let sub (+ "/l/" path)
-                (listpage (topstories maxend* path)
-                          sub sub sub)))))
+    ((or= (lncache* path)
+          (newsfn user lncache-time* ()
+            (let sub (+ "/l/" path)
+              (listpage (topstories maxend* path)
+                        sub sub sub))))
      user)))
 
 (newscache newspage user 90
