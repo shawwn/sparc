@@ -159,6 +159,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            (if ,g ,g (or ,@args))))
       x))
 
+(mac either ((o x 'nil) . args)
+  (if args
+      (w/uniq g
+        `(let ,g ,x
+           (if (null ,g) (either ,@args) ,g)))
+      x))
+
 (def assoc (key al)
   (if (atom al)
        nil
@@ -166,7 +173,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (car al)
       (assoc key (cdr al))))
 
-(def alref (al key) (cadr (assoc key al)))
+(def alref (al key (o else))
+  (either (cadr (assoc key al))
+          else))
 
 ; Need rfn for use in macro expansions.
 
