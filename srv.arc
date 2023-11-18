@@ -206,9 +206,9 @@ Strict-Transport-Security: max-age=31556900
   (w/uniq t1
     `(= (srvops* ',name) 
         (fn ,parms 
-          (let ,t1 (msec)
+          (let ,t1 (con (mnow))
             (do1 (do ,@body)
-                 (save-optime ',name (- (msec) ,t1))))))))
+                 (save-optime ',name (- (mnow) (,t1)))))))))
 
 (mac defopr-raw (name parms . body)
   `(= (redirector* ',name) t
