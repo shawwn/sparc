@@ -196,7 +196,7 @@ Strict-Transport-Security: max-age=31556900
   ; this is the place to put a/b testing
   ; toggle a flag and push elapsed into one of two lists
   (++ (opcounts* name 0))
-  (unless (optimes* name) (= (optimes* name) (queue)))
+  (or= (optimes* name) (queue))
   (enq-limit elapsed (optimes* name) 1000))
 
 ; For ops that want to add their own headers.  They must thus remember 
