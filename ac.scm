@@ -1504,10 +1504,11 @@
 ; PLT scheme provides only eq? and equal? hash tables,
 ; we need the latter for strings.
 
-(xdef table ((f #f))
-  (let ((h (make-hash)))
-    (when f (f h))
-    h))
+(xdef table (#:equal (equal #t) #:kind (kind 'mutable))
+  (hash-copy-clear (if (ar-true? equal)
+                       (make-hash)
+                       (make-hasheqv))
+                   #:kind kind))
 
 (xdef maptable (fn table)               ; arg is (fn (key value) ...)
   (hash-for-each table fn)

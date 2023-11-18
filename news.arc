@@ -3550,9 +3550,10 @@ for help.
                   (pr " "))))))))
 
 (defcache killedsites 300
-  (let bads (table [each-loaded-item i
-                     (awhen (and i!dead (sitename i!url))
-                       (push i (_ it)))])
+  (let bads (table)
+    (each-loaded-item i
+      (awhen (and i!dead (sitename i!url))
+        (push i (bads it))))
     (withs (acc nil deadcount (table))
       (each (site items) bads
         (let n (len items)
@@ -3564,9 +3565,10 @@ for help.
       acc)))
 
 (defcache banned-site-items 300
-  (table [each-loaded-item i
-           (awhen (and i!dead (check (sitename i!url) banned-sites*))
-             (push i (_ it)))]))
+  (with bads (table)
+    (each-loaded-item i
+      (awhen (and i!dead (check (sitename i!url) banned-sites*))
+        (push i (bads it))))))
 
 ; Would be nice to auto unban ips whose most recent submission is > n
 ; days old, but hard to do because of lazy loading.  Would have to keep
@@ -3610,9 +3612,9 @@ for help.
 (def sorted-badips (bads goods)
   (withs (ips  (let ips (rem [len< (bads _) 2] (keys bads))
                 (+ ips (rem [mem _ ips] (keys banned-ips*))))
-          subs (table
-                 [each ip ips
-                   (= (_ ip) (dedup (map !by (+ (bads ip) (goods ip)))))]))
+          subs (with it (table)
+                 (each ip ips
+                   (= (it ip) (dedup (map !by (+ (bads ip) (goods ip))))))))
     (list subs
           (sort (compare > (memo [badness (subs _) (bads _) (goods _)]))
                 ips))))
