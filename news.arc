@@ -1287,7 +1287,8 @@ function vote(node) {
       (row (link "uptime")       "How long has racket been running?")
       (when (admin)
         (map row:link
-             '(pages optimes noobs topips flagged killed badguys badlogins goodlogins)))
+             '(optimes topips flagged killed badguys badlogins goodlogins
+                       badips badsites editors noobs pages)))
       (hook 'listspage))))
 
 
