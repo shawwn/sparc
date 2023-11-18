@@ -740,7 +740,7 @@ Strict-Transport-Security: max-age=31556900
   (let name (+ id '-bg)
     `(do (def ,name () ,@body)
          (let bg (obj name: ',name timeout: ,sec)
-           (alset pending-bgthreads* ',id bg)
+           (= (alref pending-bgthreads* ',id) bg)
            (when (bgthreads* ',id)
              (new-bgthread ',id bg))))))
 
