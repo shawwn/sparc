@@ -722,24 +722,23 @@ Strict-Transport-Security: max-age=31556900
                 (while t
                   (sleep ,sec)
                   (when bgthreads-noisy*
-                    (ero sep: "" "Running background thread " ',name " via " ,f " (every " ,sec "s)"))
+                    (ero "Running background thread" ',name "via" ,f "(every" ,sec "sec)"))
                   (,f)))
      (new-thread ,name)))
 
-(def new-bgthread (id f sec)
+(def new-bgthread (id (:name :timeout))
   (aif (bgthreads* id) (break-thread it))
-  (= (bgthreads* id) (eval `(bgthread ,id ,f ,sec))))
+  (= (bgthreads* id) (eval `(bgthread ,id ,name ,timeout))))
 
 ; should be a macro for this?
 
 (mac defbg (id sec . body)
   (let name (+ id '-bg)
     `(do (def ,name () ,@body)
-         (pull [caris _ ',id] pending-bgthreads*)
-         (push (list ',id ',name ,sec)
-               pending-bgthreads*)
-         (when (bgthreads* ',id)
-           (new-bgthread ',id ',name ,sec)))))
+         (let bg (obj name: ',name timeout: ,sec)
+           (alset pending-bgthreads* ',id bg)
+           (when (bgthreads* ',id)
+             (new-bgthread ',id bg))))))
 
 ; reload changed code each request
 
