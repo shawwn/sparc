@@ -20,8 +20,8 @@
      openids*      (safe-load-table oidfile*)
      admins*       (map string (errsafe (readfile adminfile*)))
      cookie->user* (safe-load-table cookfile*))
-  (each (k v) cookie->user*
-    (= (user->cookie* v) k))
+  (each (c u) cookie->user*
+    (= (user->cookie* u) c))
   t)
 
 (defhook reload-admins ()
@@ -45,16 +45,14 @@
 (def get-ip ((o req (the-req*)))
   (or req!ip "::1"))
 
-(def get-cookie (key (o req (the-req*)))
-  (alref req!cooks (str key)))
-
-(def set-cookie (key val (o req (the-req*)))
-  (alset req!cooks (str key) val)
-  val)
+(mac cookies ((o :req '(the-req*)) . args)
+  (iflet (key . rest) args
+         `(alref (,req 'cooks) (str ,key) ,@rest)
+         `(,req 'cooks)))
 
 (def get-user ()
-  (with u (aand get-cookie!user
-                (cookie->user* (sym it)))
+  (with u (aand cookies!user
+                (cookie->user* it))
     (when u (= (logins* u) (get-ip)))))
 
 (def is-user (u) (is (get-user) u))
@@ -137,7 +135,7 @@
                 "/admin")))
       (pwfields "create (server) account"))))
 
-(def cook-user ((o user (get-user)) (o cookie get-cookie!user) (o alt))
+(def cook-user ((o user (get-user)) (o cookie cookies!user) (o alt))
   (when user
     (with id (if (is cookie t) (new-user-cookie user) cookie)
       (unless alt
@@ -145,7 +143,7 @@
       (unless (is (cookie->user* id) user)
         (= (cookie->user* id) user)
         (save-table cookie->user* cookfile*))
-      (set-cookie 'user id))))
+      (= cookies!user id))))
 
 (def cook-user! ((o user (get-user)) (o cookie (new-user-cookie user)))
   (whenlet c (cook-user user cookie)
@@ -153,28 +151,16 @@
     (= (logins* user) (get-ip))
     c))
 
-(def ensure-user ((o user (get-user)))
-  (whenlet c (cook-user user)
-    ; upgrade old user cookies
-    (when (< (len c) 16)
-      (cook-user! user))
-    user))
-
-(defhook respond-headers (str req f redir)
-  (ensure-user)
-  nil)
-
 ; Unique-ids are only unique per server invocation.
 
 (def new-user-cookie (user)
-  (let id (sym:string user "&" (unique-id))
+  (let id (string user "&" (unique-id))
     (if (cookie->user* id) (new-user-cookie user) id)))
 
 (def user-cookies ((o user (get-user)))
-  (accum a
-    (each (c u) cookie->user*
-      (when (is u user)
-        (a c)))))
+  (each (c u) cookie->user*
+    (when (is u user)
+      (out c))))
 
 (def logout-user ((o user (get-user)))
   (when user
