@@ -402,12 +402,16 @@ Strict-Transport-Security: max-age=31556900
 
 (or= fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
 
-(def lexval (e)
+(or= lexval-types* '(string bytes sym cons int num bool char table))
+
+(def valid-lexval (x)
+  (if (isa!table x)
+      (isnt x (the-req*))
+      (mem (type x) lexval-types*)))
+
+(def lexval (e (o name))
   (each (id getx setx) e
-    (let v (if (isa getx 'fn) (getx) getx)
-      (unless (or (is v (the-req*))
-                  (isa v 'fn))
-        (out v)))))
+    (valid-lexval&out (getx))))
 
 (def lextree (x)
   (treewise cons [case (type _)
@@ -421,7 +425,7 @@ Strict-Transport-Security: max-age=31556900
 
 (mac lexkey (name . body)
   `(list ',name
-         (lexval (lexenv))
+         (lexval (lexenv) ',name)
          ',(map lexcompile body)))
 
 ; count on huge (expt 64 22) size of fnid space to avoid clashes
