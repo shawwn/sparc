@@ -3662,16 +3662,20 @@ for help.
 
 (adop optimes ()
   (sptab
-    (tr (td "op") (tdr "avg") (tdr "med") (tdr "req") (tdr "total"))
+    (tr (tdr "total") (tdr "med") (tdr "avg") (tdr "req") (td "op"))
     (spacerow 10)
     (each name (sort < newsop-names*)
-      (tr (td name)
-          (let ms (only&avg (qlist (optimes* name)))
-            (tdr:prt (only&round ms))
-            (tdr:prt (only&med (qlist (optimes* name))))
-            (let n (opcounts* name)
-              (tdr:prt n)
-              (tdr:prt (and n (round (/ (* n ms) 1000))))))))))
+      (defs ts (qlist:optimes* name)
+            ms (only&avg ts)
+            n (opcounts* name))
+      (tr (tdr:prt (and n (num (* n ms) 1)))
+          (tdr:prt (only&med (map round ts)))
+          (tdr:prt (only&num ms))
+          (tdr:prt (and n (onlink n
+                            (each s ts
+                              (prn:num s 2 t t)
+                              (br)))))
+          (td (link (string "/" name)))))))
 
 (newsop votes () (votes-page user))
 
