@@ -742,9 +742,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (,setter (,gop ,val ,@gargs))))))
 
 (mac alset (place key val)
-  `(atomic
-     (pull [caris _ ,key] ,place)
-     (push (list ,key ,val) ,place)))
+  (w/uniq v
+    `(atwith ,v ,val
+       (pull [caris _ ,key] ,place)
+       (unless (null ,v)
+         (push (list ,key ,v) ,place)))))
+
+(defset alref (l key)
+  (w/uniq k
+    (list (list k key)
+          `(alref ,l ,k)
+          `(fn (val) (alset ,l ,k val)))))
 
 ; Can't simply mod pr to print strings represented as lists of chars,
 ; because empty string will get printed as nil.  Would need to rep strings
