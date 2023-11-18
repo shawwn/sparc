@@ -713,20 +713,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                       (adjoin ,gx ,val ,@args)))))))
 
 (mac ++ (place (o i 1))
-  (if (isa place 'sym)
-      `(= ,place (+ ,place ,i))
-      (w/uniq gi
-        (let (binds val setter) (setforms place)
-          `(atwiths ,(+ binds (list gi i))
-             (,setter (+ ,val ,gi)))))))
+  `(zap + ,place ,i))
 
 (mac -- (place (o i 1))
-  (if (isa place 'sym)
-      `(= ,place (- ,place ,i))
-      (w/uniq gi
-        (let (binds val setter) (setforms place)
-          `(atwiths ,(+ binds (list gi i))
-             (,setter (- ,val ,gi)))))))
+  `(zap - ,place ,i))
 
 ; E.g. (++ x) equiv to (zap + x 1)
 
