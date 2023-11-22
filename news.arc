@@ -2020,7 +2020,7 @@ function suggestTitle() {
                    "ycombinator"))
 
 (def create-item (type :kwargs . args)
-  (kwapply inst (cons 'item 'type type 'id (new-item-id) args) kwargs))
+  (kwapply inst kwargs 'item 'type type 'id (new-item-id) args))
 
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
   (newslog 'create sub url (list title))

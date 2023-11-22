@@ -812,7 +812,7 @@
                       (list ,@(map ac args)))))))
 
 (define (ar-unstash args (kwargs #f) (vals '()) (keys '()))
-  (cond ((ar-list? kwargs)
+  (cond ((pair? kwargs)
          (list args (cadr (ar-unstash kwargs #f vals keys))))
         ((null? args)
          (list (reverse vals) (sort keys keyword<? #:key car)))
@@ -823,8 +823,9 @@
              (ar-unstash (cddr args) kwargs vals (cons (list (keywordp (car args)) (cadr args)) keys))))
         (#t (ar-unstash (cdr args) kwargs (cons (car args) vals) keys))))
 
-(define (ar-kwapply f args (kwargs #f))
-  (let* ((it (ar-unstash args kwargs))
+(define (ar-kwapply f kwargs . args)
+  (let* ((args (ar-apply-args args))
+         (it (ar-unstash args kwargs))
          (args (car it))
          (kwargs (cadr it)))
     (if (null? kwargs)
@@ -844,7 +845,7 @@
   (if (pair? e)
       (let ((m (ac-macro? (car e))))
         (if m
-            (let ((expansion (ar-kwapply m (ac-unflag-args (cdr e)))))
+            (let ((expansion (ar-kwapply m #f (ac-unflag-args (cdr e)))))
               (if (car? expansion '%expansion)
                   (cadr expansion)
                   (if once expansion (ac-macex expansion))))
@@ -1007,7 +1008,7 @@
         (lambda (keys vals fn . args)
           (keyword-apply fn keys vals (ar-apply-args args)))
         (lambda (fn . args)
-          (ar-kwapply fn (ar-apply-args args)))))
+          (apply ar-kwapply fn #f args))))
 
 (xdef kwapply ar-kwapply)
 
