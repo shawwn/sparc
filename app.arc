@@ -338,10 +338,9 @@
        (or (no max) (<= (len str) max))
        str))
 
-(defop logout req
-  (aif (logout-user)
-       (pr "Logged out.")
-       (pr "You were not logged in.")))
+(defopr logout req
+  (logout-user)
+  "/")
 
 (defop whoami req
   (aif (get-user)
