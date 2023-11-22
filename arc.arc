@@ -946,10 +946,20 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (list (inside ,go bytes: ,bytes)
               (inside ,ge bytes: ,bytes))))))
 
-(mac fromstring (str . body)
+(mac fromstring (str :kwargs . body)
   (w/uniq gv
-   `(w/instring ,gv ,str
+   `(w/instring ,gv ,str ,@kwargs
       (w/stdin ,gv ,@body))))
+
+(mac fromfile (name :kwargs . body)
+  (w/uniq gv
+    `(w/infile ,gv ,name ,@kwargs
+       (w/stdin ,gv ,@body))))
+
+(mac tofile (name :kwargs . body)
+  (w/uniq gv
+    `(w/outfile ,gv ,name ,@kwargs
+       (w/stdout ,gv ,@body))))
 
 (def readstring1 (s (o eof nil) (o data t)) (w/instring i s (read i eof data)))
 
