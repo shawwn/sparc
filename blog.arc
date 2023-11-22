@@ -74,7 +74,7 @@
            (row ""      (submit))))))
 
 (def addpost (title text)
-  (let p (inst 'post 'id (++ postid*) 'title title 'text text)
+  (let p (inst 'post id: (++ postid*) :title :text)
     (save-post p)
     (= (posts* p!id) p)))
 

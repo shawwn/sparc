@@ -2019,12 +2019,12 @@ function suggestTitle() {
                    "eurekster" "blogsome" "edogo" "blog" "com"
                    "ycombinator"))
 
-(def create-item (type . args)
-  (apply inst 'item 'type type 'id (new-item-id) args))
+(def create-item (type :kwargs . args)
+  (kwapply inst (cons 'item 'type type 'id (new-item-id) args) kwargs))
 
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
   (newslog 'create sub url (list title))
-  (let s (create-item 'story 'url url 'title title 'text text 'by user 'ip ip)
+  (let s (create-item 'story :url :title :text by: user :ip)
     (update-subs s sub url title)
     (save-item s)
     (= (items* s!id) s)
@@ -2175,7 +2175,7 @@ function suggestTitle() {
 
 (def create-poll (title text opts (o user (get-user)) (o ip (get-ip)))
   (newslog 'create-poll title)
-  (with p (create-item 'poll 'title title 'text text 'by user 'ip ip)
+  (with p (create-item 'poll :title :text by: user :ip)
     (update-subs p)
     (= (items* p!id) p)
     (= p!parts (map !id (map [create-pollopt p nil nil _ user ip]
@@ -2184,8 +2184,7 @@ function suggestTitle() {
     (push p stories*)))
 
 (def create-pollopt (p url title text (o user (get-user)) (o ip (get-ip)))
-  (with o (create-item 'pollopt 'url url 'title title 'text text 'parent p!id
-                       'by user 'ip ip)
+  (with o (create-item 'pollopt :url :title :text parent: p!id by: user :ip)
     (save-item o)
     (= (items* o!id) o)))
 
@@ -2578,7 +2577,7 @@ function suggestTitle() {
 
 (def create-comment (parent text (o user (get-user)) (o ip (get-ip)))
   (newslog 'comment parent!id)
-  (let c (create-item 'comment 'text text 'parent parent!id 'by user 'ip ip)
+  (let c (create-item 'comment :text parent: parent!id by: user :ip)
     (save-item c)
     (= (items* c!id) c)
     (push c!id parent!kids)

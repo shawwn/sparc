@@ -330,7 +330,7 @@ Strict-Transport-Security: max-age=31556900
 
 (def parsereq (xs)
   (let (type op args n cooks ip . more) xs
-    (the-req* (inst 'request 'type type 'op op 'args args 'cooks cooks 'n n 'ip ip 'more more))
+    (the-req* (inst 'request :type :op :args :cooks :n :ip :more))
     (++ requests*)
     (++ (requests/ip* ip 0))
     xs))
