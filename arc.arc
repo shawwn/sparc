@@ -1421,12 +1421,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                           (hug fields)))
              (templates* ',name))))
 
-(def inst (tem . args)
+(def inst (tem :kwargs . args)
   (with x (table)
     (each (k v) (if (acons tem) tem (templates* tem))
       (unless (no v) (= (x k) (v))))
     (each (k v) (hug args)
-      (= (x k) v))))
+      (= (x k) v))
+    (each (k v) (hug kwargs)
+      (= (x (sym k)) v))))
 
 ; To write something to be read by temread, (write (tablist x))
 
