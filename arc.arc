@@ -238,10 +238,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            (iso (cdr x) (cdr y)))))
 
 (mac when (test . body)
-  `(if ,test (do ,@body)))
+  `(if ,test ((fn () ,@body))))
 
 (mac unless (test . body)
-  `(if (no ,test) (do ,@body)))
+  `(if (no ,test) ((fn () ,@body))))
 
 (mac point (name . body)
   (w/uniq (g p)
