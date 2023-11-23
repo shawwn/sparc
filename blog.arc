@@ -1,4 +1,4 @@
-#!bin/arc
+#!/usr/bin/env arc
 ; Blog tool example.  20 Jan 08, rev 21 May 09.
 
 ; To run:
@@ -9,6 +9,8 @@
 ; go to http://localhost:8080
 ; $ echo test > arc/admins
 ; click "new post", then create a user named test
+
+(require "app.arc")
 
 (= postdir*   (libpath "arc/posts/")
    blogtitle* "A Blog")

@@ -6,6 +6,8 @@
 
 ; A user is simply a string: "pg". Use /whoami to test user cookie.
 
+(require "srv.arc")
+
 (= hpwfile*   (libpath "arc/hpw")
    oidfile*   (libpath "arc/openids")
    adminfile* (libpath "arc/admins")
@@ -778,10 +780,10 @@
                            (string ',name (reassemble-args ,parm)))))))
 
 (def shellquote (str)
-  (cat "'" (multisubst (list (list "'" "'\"'\"'")) (cat str)) "'"))
+  (string "'" (multisubst (list (list "'" "'\"'\"'")) (string str)) "'"))
 
 (def shellargs (cmd (o args))
-  (cat cmd " " (intersperse #\space (map shellquote:string (rem nil args)))))
+  (string cmd " " (intersperse #\space (map shellquote:string (rem nil args)))))
 
 (def shellrun (cmd (o args))
   (let s (shellargs cmd args)

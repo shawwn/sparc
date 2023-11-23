@@ -19,6 +19,8 @@
 ;(w/mark 'arc 'xy (fn () (w/immark 'arc (fn (x) ([prn (list x _)] (marklist 'arc))))))
 ;(do (mark 'zz 'bar (def bar (n) (if (is n 0) (foo) (bar (- n 1))))) (mark 'zz 'foo (def foo () (marks 'zz))) (bar 2))
 
+(require "colors.arc")
+
 (= *debug nil)
 
 (or= *env (obj))

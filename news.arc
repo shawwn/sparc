@@ -1,4 +1,4 @@
-#!bin/arc
+#!/usr/bin/env arc
 ; News.  2 Sep 06.
 
 ; to run news: ./news.arc or (nsv), then go to http://localhost:8080
@@ -6,8 +6,9 @@
 
 ; bug: somehow (+ votedir* nil) is getting evaluated.
 
-(load :once (libpath "firebase.arc"))
-(load :once (libpath "algolia.arc"))
+(require "app.arc")
+(require "firebase.arc")
+(require "algolia.arc")
 
 (= site-name*    "Lambda News"
    site-abbrev*  "LN"

@@ -1,4 +1,4 @@
-#!bin/arc
+#!/usr/bin/env arc
 ; Run arc expressions.  1 Jan 23.
 ;
 ; Arguments are Arc expressions:
@@ -49,12 +49,13 @@
 ;  ./run.arc  2.81s user 0.09s system 94% cpu 3.066 total
 
 (def readarg (arg)
-  (aand (readall:cat arg)
+  (aand (readall:string arg)
         (if (cdr it) it (car it))))
 
 (def run args
-  (each arg args
+  (on arg args
+    (unless (is index 0) (prn))
     (= that (eval:readarg arg))
-    (if that (prn that))))
+    (if that (pr that))))
 
 run

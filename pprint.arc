@@ -77,7 +77,6 @@
     (write (car xs))
     (each x (cdr xs) (pr " ") (write x))))
   
-(def sp ((o n 1)) (repeat n (pr " ")))
 (def lpar () (pr "("))
 (def rpar () (pr ")"))
 

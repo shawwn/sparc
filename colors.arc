@@ -1,11 +1,3 @@
-
-(def cat args
-  (apply string "" args))
-
-(def scat args
-  (sym:cat args))
-
-
 (= term*
    (obj colors: (obj
                   black:       0
@@ -46,8 +38,7 @@
 
 (def windows () nil)
 
-(def prcode (codes (o sep #\;
-                      ))
+(def prcode (codes (o sep #\;))
   (unless (windows)
     (let xs (flat:list codes)
       (pr (cat "\033[" (apply cat (intersperse sep (denil xs))) "m")))))
@@ -112,7 +103,7 @@
 
 (mac w/colors (var . body)
   `(each ,var '(blk red grn ylw blu mag cyn wht)
-     (let ,(scat 'bg var) (scat 'bg ,var)
+     (let ,(sym:cat 'bg var) (sym:cat 'bg ,var)
        ,@body)))
 
 (mac w/attrs (var . body)
@@ -135,9 +126,9 @@
 (def makeprs (colors)
   (accum a
     (each col colors
-      (a `(def ,(scat 'pr  col) (s) (prcol ',col s)))
-      (a `(def ,(scat 'prn col) (s) (prcol ',col s) (prn)))
-      (a `(def ,(scat 'mk  col) (s) (tostring:prcol ',col s))))))
+      (a `(def ,(sym:cat 'pr  col) (s) (prcol ',col s)))
+      (a `(def ,(sym:cat 'prn col) (s) (prcol ',col s) (prn)))
+      (a `(def ,(sym:cat 'mk  col) (s) (tostring:prcol ',col s))))))
 
 (mac evaldo (code)
   `(eval `(do ,@(,@code))))

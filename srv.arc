@@ -2,6 +2,8 @@
 
 ; To improve performance with static files, set static-max-age*.
 
+(require "html.arc")
+
 (= arcdir* (libpath "arc/")
    logdir* (libpath "arc/logs/")
    staticdir* (libpath "static/"))
@@ -761,6 +763,8 @@ Strict-Transport-Security: max-age=31556900
     nil))
 
 ; pull from github periodically
+
+(require "git.arc")
 
 (or= git-pull-time* (readenv "PULL" nil)
      git-pull-count* 0)

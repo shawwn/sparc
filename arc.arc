@@ -791,6 +791,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def prs (:file :flush (o :sep #\space) :end . args)
   (apply pr args :file :flush :sep :end))
 
+(def sp ((o n 1)) (repeat n (pr " ")))
+
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
 
@@ -860,6 +862,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def string args
   (apply + "" (map str args)))
+
+(def cat args
+  (apply string args))
 
 (def flat x
   ((afn (x acc)
@@ -1668,6 +1673,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                   (do1 (load-code file)
                        (hook 'load file)))
       (notetime file))))
+
+(mac require (x)
+  (if (or (isa!sym x) (caris x 'quote))
+      `(#'require ,x)
+      `(load :once ,x)))
 
 ; This file is already loaded; note it.
 (notetime "arc.arc")

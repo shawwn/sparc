@@ -1,8 +1,12 @@
+#!/usr/bin/env arc
 ; Prompt: Web-based programming application.  4 Aug 06.
+
+(require "app.arc")
 
 (= appdir* (libpath "arc/apps/"))
 
 (defop prompt req (admin-gate "/prompt" prompt-page))
+(defop ||     req (admin-gate "/prompt" prompt-page))
 
 (def prompt-page msg
   (ensure-dir appdir*)
@@ -126,3 +130,4 @@
         (prn (if err "Error: " "")
              (ellipsize (tostring (write val)) 800)))))
 
+asv

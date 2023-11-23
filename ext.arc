@@ -29,4 +29,4 @@
 
 (mac assert (test (o msg "Assertion failed") . args)
   `(or ,test
-       (err (cat ,msg ":") ',test ,@args)))
+       (err (string ,msg ":") ',test ,@args)))
