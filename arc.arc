@@ -1924,6 +1924,26 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/tmpfile (var val . body)
   `(call-w/tmpfile ,val (fn (,var) ,@body)))
 
+(def shellquote (str)
+  (string "'" (multisubst (list (list "'" "'\"'\"'")) (string str)) "'"))
+
+(def shellargs (cmd (o args))
+  (string cmd " " (intersperse #\space (map shellquote:string (rem nil args)))))
+
+(def shellrun (cmd (o args))
+  (let s (shellargs cmd args)
+    (let code (#'system/exit-code s)
+      (unless (is code 0)
+        (err (+ "Command exited with nonzero code " code ": ") (list cmd args))))))
+
+(def shell (cmd :async :bytes . args)
+  (if async
+      (thread:shellrun cmd args)
+      (tostring (shellrun cmd args) :bytes)))
+
+(def shellsafe (cmd :async :bytes . args)
+  (errsafe (apply shell cmd :async :bytes args)))
+
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
 ; idea: implicit tables of tables; setf empty field, becomes table
