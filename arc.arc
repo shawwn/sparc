@@ -186,6 +186,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac afn (parms . body)
   `(rfn self ,parms ,@body))
 
+(def flip (f)
+  (fn (:kwargs . args)
+    (kwapply f kwargs (rev args))))
+
+(def part (f :kwargs . args)
+  (fn (kwargs: kwrest . rest)
+    (kwapply f (+ kwargs kwrest) (+ args rest))))
+
+(def trap (f :kwargs . args)
+  (flip (kwapply part kwargs (flip f) (rev args))))
+
 ; Ac expands x:y:z into (compose x y z), ~x into (complement x)
 
 ; Only used when the call to compose doesn't occur in functional position.  

@@ -1192,5 +1192,8 @@
     (test? "a b" (tostring (1st&pr 'a 'b sep: " ")))
     (test? "a b" (tostring ((do 1st&pr) 'a 'b sep: " ")))))
 
+(define-test part
+  (test? "123" (tostring ((part pr sep: " ") 1 2 3 sep: ""))))
+
 run-tests
 
