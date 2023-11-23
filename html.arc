@@ -58,7 +58,7 @@
   `(aif ,val (pr ,(+ " " key "=") it)))
 
 (def opsym (key val)
-  `(pr ,(+ " " key "=") ,val))
+  `(aif ,val (pr ,(+ " " key "=") it)))
 
 (def opsel (key val)
   `(if ,val (pr " selected")))
