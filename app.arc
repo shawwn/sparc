@@ -779,9 +779,6 @@
                      (list (fn () nil)
                            (string ',name (reassemble-args ,parm)))))))
 
-(def GET (url :bytes)
-  (shell "curl" "-fsSL" (clean-url url) :bytes))
-
 (def fetch-title (url)
   (let s (GET url)
     (whenlet p1 (posmatch "<title" s)

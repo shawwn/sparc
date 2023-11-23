@@ -1945,6 +1945,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def shellsafe (cmd :async :bytes . args)
   (errsafe (apply shell cmd :async :bytes args)))
 
+(def GET (url :bytes)
+  (shell "curl" "-fsSL" (clean-url url) :bytes))
+
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
 ; idea: implicit tables of tables; setf empty field, becomes table
