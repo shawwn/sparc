@@ -1444,7 +1444,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (each (k v) (hug args)
       (= (x k) v))
     (each (k v) (hug kwargs)
-      (= (x (sym k)) v))))
+      (= (x (sym k)) v))
+    (or= (x 'type) tem)))
 
 ; To write something to be read by temread, (write (tablist x))
 
