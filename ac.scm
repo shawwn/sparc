@@ -811,26 +811,32 @@
            `(ar-apply ,(ac fn)
                       (list ,@(map ac args)))))))
 
-(define (ar-unstash args (kwargs #f) (vals '()) (keys '()))
+(define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)))
   (cond ((pair? kwargs)
-         (list args (cadr (ar-unstash kwargs #f vals keys))))
+         (list args (cadr (ar-unstash kwargs #f xs kws))))
+        ((hash? kwargs)
+         (ar-unstash args (hash->plist kwargs) xs kws))
         ((null? args)
-         (list (reverse vals) (sort keys keyword<? #:key car)))
+         (list (reverse xs) kws))
         ((keywordp (car args))
-         (if (or (null? (cdr args))
-                 (keywordp (cadr args)))
-             (ar-unstash (cdr args) kwargs vals (cons (list (keywordp (car args)) #t) keys))
-             (ar-unstash (cddr args) kwargs vals (cons (list (keywordp (car args)) (cadr args)) keys))))
-        (#t (ar-unstash (cdr args) kwargs (cons (car args) vals) keys))))
+         (ar-unstash (cddr args) kwargs xs (ar-join! kws (list (keywordp (car args)) (cadr args)))))
+        (#t (ar-unstash (cdr args) kwargs (cons (car args) xs) kws))))
 
 (define (ar-kwapply f kwargs . args)
-  (let* ((args (ar-apply-args args))
-         (it (ar-unstash args kwargs))
-         (args (car it))
-         (kwargs (cadr it)))
-    (if (null? kwargs)
-        (ar-apply f args)
-        (keyword-apply f (map car kwargs) (map cadr kwargs) args))))
+  (let* ((it (ar-unstash (ar-apply-args args) kwargs))
+         (xs (car it))
+         (kvs (cadr it)))
+    (if (hash-empty? kvs)
+        (ar-apply f xs)
+        (let ((al (hash->list kvs #t)))
+          (keyword-apply f (map car al) (map cdr al) xs)))))
+
+(define ar-kwapply
+  (make-keyword-procedure
+    (lambda (keys vals fn kws . args)
+      (let ((kws1 (apply kwappend kws (map list keys vals))))
+        (apply ar-kwapply fn kws1 args)))
+    ar-kwapply))
 
 ; returns #f or the macro function
 
@@ -936,7 +942,11 @@
 
 (xdef null ar-nil?)
 
-(xdef unstash ar-unstash)
+(xdef unstash (x)
+  (let* ((it (ar-unstash x))
+         (args (car it))
+         (kws (cadr it)))
+    (list args (hash->plist kws))))
 
 (xdef lex ac-lex?)
 
@@ -1128,6 +1138,27 @@
 (define (ar-concat xs (sep ""))
   (and (pair? xs)
        (apply ar-+ (add-between xs sep))))
+
+(define (ar-each-kv xs (f list))
+  (cond ((hash? xs) (hash-for-each xs f))
+        ((null? xs) xs)
+        (#t (f (car xs) (cadr xs))
+            (ar-each-kv (cddr xs) f))))
+
+(define (ar-join! l x . args)
+  (cond ((hash? l)
+         (ar-each-kv x (lambda (k v) (sref l v k)))
+         (if (null? args) l (apply ar-join! l args)))
+        (#t (err "Can't join" l))))
+
+(xdef join! ar-join!)
+
+(define (hash->plist h)
+  (let ((al (hash->list h #t)))
+    (apply append (map list (map car al) (map cdr al)))))
+
+(define (kwappend . args)
+  (hash->plist (apply ar-join! (make-hasheq) args)))
 
 (define (ar-+ . args)
   (cond ((null? args) 0)
