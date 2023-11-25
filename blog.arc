@@ -10,7 +10,7 @@
 ; $ echo test > arc/admins
 ; click "new post", then create a user named test
 
-(require "app.arc")
+(require "prompt.arc")
 
 (= postdir*   (libpath "arc/posts/")
    blogtitle* "A Blog")

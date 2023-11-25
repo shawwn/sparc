@@ -6,7 +6,7 @@
 
 ; bug: somehow (+ votedir* nil) is getting evaluated.
 
-(require "app.arc")
+(require "prompt.arc")
 (require "firebase.arc")
 (require "algolia.arc")
 
