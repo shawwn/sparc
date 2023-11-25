@@ -789,7 +789,8 @@
 (define direct-calls #f)
 
 (define (ac-call fn args)
-  (let ((args (ac-unflag-args args)))
+  (let* ((args (ac-unflag-args args))
+         (argc (length args)))
     (cond ((car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
           ((and direct-calls (symbol? fn) (not (ac-lex? fn))
@@ -797,19 +798,12 @@
            (ac-global-call fn args))
           ((memf keywordp args)
            `((symbol-function ,(ac fn)) ,@(map ac args)))
-          ((= (length args) 0)
-           `(ar-funcall0 ,(ac fn) ,@(map ac args)))
-          ((= (length args) 1)
-           `(ar-funcall1 ,(ac fn) ,@(map ac args)))
-          ((= (length args) 2)
-           `(ar-funcall2 ,(ac fn) ,@(map ac args)))
-          ((= (length args) 3)
-           `(ar-funcall3 ,(ac fn) ,@(map ac args)))
-          ((= (length args) 4)
-           `(ar-funcall4 ,(ac fn) ,@(map ac args)))
-          (#t
-           `(ar-apply ,(ac fn)
-                      (list ,@(map ac args)))))))
+          ((= argc 0) `(ar-funcall0 ,(ac fn) ,@(map ac args)))
+          ((= argc 1) `(ar-funcall1 ,(ac fn) ,@(map ac args)))
+          ((= argc 2) `(ar-funcall2 ,(ac fn) ,@(map ac args)))
+          ((= argc 3) `(ar-funcall3 ,(ac fn) ,@(map ac args)))
+          ((= argc 4) `(ar-funcall4 ,(ac fn) ,@(map ac args)))
+          (#t `(ar-apply ,(ac fn) (list ,@(map ac args)))))))
 
 (define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)))
   (cond ((pair? kwargs)
@@ -1251,11 +1245,9 @@
         ((keyword? x) (string-length (keyword->string x)))
         (#t (err "Can't get len of" x))))
 
-(define (ar-tag type rep)
+(xdef annotate (type rep)
   (cond ((eqv? (ar-type rep) type) rep)
         (#t (ar-tagged type rep))))
-
-(xdef annotate ar-tag)
 
 ; (type nil) -> sym
 
@@ -1323,12 +1315,10 @@
 
 ; use as general fn for looking inside things
 
-(define (ar-inside port #:bytes (bytes #f))
+(xdef inside (port #:bytes (bytes #f))
   (if (ar-false? bytes)
       (get-output-string port)
       (get-output-bytes port)))
-
-(xdef inside ar-inside)
 
 (xdef stdout current-output-port)  ; should be a vars
 (xdef stdin  current-input-port)
