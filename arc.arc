@@ -1692,19 +1692,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
 
-(or= reload-count* 0)
-
 (def reload ((o file (loaded-files)) :force)
   (if (acons file)
        (map [reload _ :force] file)
       (or force (file-changed? file))
-       (do1 (list file (load file))
-            (++ reload-count*))))
-
-(def reload-stats ()
-  (list reload-count*
-        (map [+ (cut (shash:string:cadr _) 0 4) ":" (car _)]
-             (tablist loaded-file-times*))))
+       (list file (load file))))
 
 (def positive (x)
   (and (number x) (> x 0)))
