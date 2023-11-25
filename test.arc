@@ -24,7 +24,7 @@
               (+ "failed: expected " (writes ,x) ", was " (writes ,y))))))
 
 (mac define-test (name . body)
-  (let id (sym (+ "test-" (string name)))
+  (let id (+ 'test- name)
     `(do (def ,id () (catch ,@body))
          (= (tests* ',name) ,id))))
 
