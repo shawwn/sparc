@@ -373,7 +373,12 @@
     (test? 42 ((t 'f)))
     (test? 42 (t!f))
     (test? nil ((fn ())))
-    (test? 10 ((fn (x) (- x 2)) 12))))
+    (test? 10 ((fn (x) (- x 2)) 12))
+    (= plus '+)
+    (test? 3 (plus 1 2))
+    (test? 3 ('plus 1 2))
+    (= p 'pr)
+    (test? "1,2,3" (tostring:p 1 2 3 sep: ","))))
 
 ;(define-test id
 ;  (let (a 10
