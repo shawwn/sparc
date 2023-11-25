@@ -7,7 +7,7 @@
 (mac test! (x msg)
   `(if (no ,x)
        (do (= failed* (+ failed* 1))
-           (throw ,msg))
+           (return ,msg))
      (++ passed*)))
 
 (def writes (x)
@@ -24,9 +24,10 @@
               (+ "failed: expected " (writes ,x) ", was " (writes ,y))))))
 
 (mac define-test (name . body)
-  (let id (+ 'test- name)
-    `(do (def ,id () (catch ,@body))
-         (= (tests* ',name) ,id))))
+  (let label (+ 'test- name)
+    `(do (def ,label ()
+           (point return ,@body))
+         (= (tests* ',name) ,label))))
 
 (def run-tests ()
   (= passed* 0 failed* 0)
