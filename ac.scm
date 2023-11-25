@@ -796,7 +796,7 @@
                 (procedure? (bound? fn)))
            (ac-global-call fn args))
           ((memf keywordp args)
-           `(,(ac fn) ,@(map ac args)))
+           `((symbol-function ,(ac fn)) ,@(map ac args)))
           ((= (length args) 0)
            `(ar-funcall0 ,(ac fn) ,@(map ac args)))
           ((= (length args) 1)
@@ -829,7 +829,7 @@
     (if (hash-empty? kvs)
         (ar-apply f xs)
         (let ((al (hash->list kvs #t)))
-          (keyword-apply f (map car al) (map cdr al) xs)))))
+          (keyword-apply (symbol-function f) (map car al) (map cdr al) xs)))))
 
 (define ar-kwapply
   (make-keyword-procedure
@@ -980,6 +980,16 @@
 (define (ar-true? x)
   (not (ar-false? x)))
 
+; circular references will go into an infinite loop
+(xdef symbol-value (name (fail unset))
+  (let ((v (bound? name fail)))
+    (if (unset? v) (err "Unbound variable" name)
+      (if (symbol? v) (symbol-value v fail) v))))
+
+(xdef symbol-function (name)
+  (let ((v (if (symbol? name) (symbol-value name) name)))
+    (if (procedure? v) v (err "Not a procedure" name))))
+
 ; call a function or perform an array ref, hash ref, &c
 
 ; Non-fn constants in functional position are valuable real estate, so
@@ -997,6 +1007,8 @@
 (define (ar-apply fn args)
   (cond ((procedure? fn)
          (apply fn args))
+        ((symbol? fn)
+         (ar-apply (symbol-value fn) args))
         ((pair? fn)
          (list-ref fn (car args)))
         ((string? fn)
@@ -1016,7 +1028,7 @@
 (xdef apply
       (make-keyword-procedure
         (lambda (keys vals fn . args)
-          (keyword-apply fn keys vals (ar-apply-args args)))
+          (keyword-apply (symbol-function fn) keys vals (ar-apply-args args)))
         (lambda (fn . args)
           (apply ar-kwapply fn #f args))))
 
