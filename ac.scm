@@ -1501,17 +1501,6 @@
               (let-values (((us them) (tcp-addresses out)))
                           them))))))
 
-; allow Arc to give up root privileges after it
-; calls open-socket. thanks, Eli!
-; (define setuid (get-ffi-obj 'setuid #f (_fun _int -> _int)
-;                  ; dummy version for Windows: http://arclanguage.org/item?id=10625.
-;                  (lambda () (lambda (x) ar-nil))))
-; (xdef setuid setuid)
-(xdef setuid args ar-nil)
-
-(define getuid (get-ffi-obj 'getuid #f (_fun -> _int)))
-(xdef getuid getuid)
-
 (xdef new-thread thread)
 (xdef kill-thread kill-thread)
 (xdef break-thread break-thread)

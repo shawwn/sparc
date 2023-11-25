@@ -15,7 +15,6 @@
   (ensure-srvdirs)
   (map [apply new-bgthread _] pending-bgthreads*)
   (w/socket s port
-    (setuid 2) ; XXX switch from root to pg
     (ero "ready to serve http://localhost:@port")
     (= currsock* s)
     (def serving ()
