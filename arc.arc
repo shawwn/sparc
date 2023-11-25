@@ -809,12 +809,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac whenlet (var expr . body)
   `(iflet ,var ,expr (do ,@body)))
 
-(mac aif (expr . body)
+(mac aif (expr . args)
   `(let it ,expr
      (if it
-         ,@(if (cddr body)
-               `(,(car body) (aif ,@(cdr body)))
-               body))))
+         ,@(if (cddr args)
+               `(,(car args) (aif ,@(cdr args)))
+               args))))
 
 (mac awhen (expr . body)
   `(let it ,expr (if it (do ,@body))))
@@ -826,10 +826,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (car args)
       `(let it ,(car args) (and it (aand ,@(cdr args))))))
 
-(mac w/accum body
+(mac w/accum args
   (w/uniq ga
     `(accum ,ga
-       ,@(each expr body
+       ,@(each expr args
            (out `(aif ,expr (,ga it)))))))
 
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
