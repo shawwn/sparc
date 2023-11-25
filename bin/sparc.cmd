@@ -7,4 +7,4 @@ cd "%home%"
 cd ..
 
 set DEV=1
-racket -t site.scm %*
+racket -t ac.scm %*
