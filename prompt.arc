@@ -2,6 +2,7 @@
 ; Prompt: Web-based programming application.  4 Aug 06.
 
 (require "app.arc")
+(require "pprint.arc")
 
 (= appdir* (libpath "arc/apps/"))
 
