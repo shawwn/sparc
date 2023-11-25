@@ -928,6 +928,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac w/param (var val . body)
   `(call-w/param ,var ,val (fn () ,@body)))
 
+(mac defvar (name value (o doc) :guard :const)
+  `(or= ,name (make-param ,value (or ,guard false) ',name)))
+
+(mac defconst (name value (o doc) (o :guard))
+  `(def ,name (make-param ,value (or ,guard false) ',name)))
+
 (or= original-stdin* (stdin)
      original-stdout* (stdout)
      original-stderr* (stderr))

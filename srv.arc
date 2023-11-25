@@ -324,8 +324,7 @@ Strict-Transport-Security: max-age=31556900
         (list op args)
         (list (sym (car xs)) (+ (list (list "path" (concat (map urldecode (cdr xs)) #\/))) args)))))
 
-(or= the-header* (make-param nil false 'the-header*)
-     the-req* (make-param (table) false 'the-req*))
+(defvar the-req* (table))
 
 (def srvsecure ((o req (the-req*)))
   (is (arg req "X-Arc-Secure") "1"))
@@ -336,6 +335,8 @@ Strict-Transport-Security: max-age=31556900
     (++ requests*)
     (++ (requests/ip* ip 0))
     xs))
+
+(defvar the-header* nil)
 
 (def parseheader (lines (o ip))
   (the-header* lines)
