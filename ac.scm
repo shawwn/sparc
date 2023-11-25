@@ -1518,9 +1518,8 @@
 
 (xdef system (if (eqv? (system-type) 'windows) (lambda args ar-nil) (wrapnil system)))
 
-(define (rmrf path)
+(xdef rmrf (path)
   (delete-directory/files path #:must-exist? #f))
-(xdef rmrf rmrf)
 
 (xdef ensure-dir (wrapnil make-directory*))
 
