@@ -240,7 +240,12 @@
 
 (define-test atstrings
   (let a 'foo
-    (test? "foobar" "@{a}bar")))
+    (test? "foobar" "@{a}bar")
+    (test? "" "@unset")
+    (test? "t" "@t")
+    (test? "nil" "@nil")
+    (test? "nil" "@(list)")
+    (test? "false" "@false")))
 
 (define-test quote
   (test? 7 (quote 7))

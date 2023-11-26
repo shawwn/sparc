@@ -782,7 +782,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (car args))
 
 (def prt (:file :flush :sep :end . args)
-  (apply pr (keep idfn args) :file :flush :sep :end)
+  (apply pr (keep ~null args) :file :flush :sep :end)
   (car args))
 
 (def prn (:file :flush :sep (o :end #\newline) . args)
