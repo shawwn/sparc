@@ -7,8 +7,7 @@ all:
 clean:
 	@rm -rf src/bcrypt/build
 
-dist-clean:
-	@rm -rf src/bcrypt/build
+dist-clean: clean
 	@rm -rf bin/racket*
 
 test: all
