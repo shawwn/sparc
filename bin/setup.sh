@@ -50,7 +50,7 @@ then
       set +ex
       ;;
     *)
-      echo "Don't know how to install racket on $(uanme -s)!" 1>&2 
+      echo "Don't know how to install racket on $(uname -s)!" 1>&2
       echo "Visit https://download.racket-lang.org/ and install racket to ${home}/bin/racket" 1>&2
       exit 1
       ;;
