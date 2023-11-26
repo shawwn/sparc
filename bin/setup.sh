@@ -14,7 +14,6 @@ do
 done
 cd "$(dirname "${bin}")"
 home="$(dirname "$(pwd)")"
-cd "${dir}"
 
 if [ ! -f "${home}/src/bcrypt/build/libbcrypt.so" ]
 then
@@ -55,7 +54,6 @@ then
       exit 1
       ;;
   esac
-
 fi
 
 cd "${dir}"
