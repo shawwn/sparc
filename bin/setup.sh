@@ -54,6 +54,9 @@ then
       exit 1
       ;;
   esac
+
+  cd "${home}"
+  "${home}/bin/racket/bin/raco" make *.scm
 fi
 
 cd "${dir}"

@@ -8,3 +8,4 @@ static/traffic*
 *.swp
 /bin/racket
 /bin/racket-*.*
+/compiled
