@@ -1534,10 +1534,10 @@ function vote(node) {
 ; redefined later
 
 (def byline (i)
-  (pr " by @(tostring (userlink i!by))")
+  (pr " by @(userlink i!by)")
   (awhen (and (metastory i) (tostring (sublinks i)))
     (pr " to @it"))
-  (pr " @(tostring (itemlink i (text-age:item-age i))) "))
+  (pr " @(itemlink i (text-age:item-age i)) "))
 
 
 (def itemlink (i (o label))
@@ -3874,10 +3874,10 @@ RNBQKBNR
 #place input { touch-action: manipulation; -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }
 "
    place-info* "
-If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit place-submit-url*) to @(tostring:underlink '/l/place).
+If you want to coordinate, come into our @(underlink 'discord discord-url*), or @(underlink 'submit place-submit-url*) to @(underlink '/l/place).
 &nbsp;
 Click the tiles. The first click selects a color (the tile will be marked with an x).
-To clear the selection, click the x again, or click here: @(tostring:underlink 'clear '/place)
+To clear the selection, click the x again, or click here: @(underlink 'clear '/place)
 ")
 
 (def place-board ((o from) (o to) (o board place-board*))
@@ -4014,7 +4014,7 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (def prize-msg ()
   "You found an easter egg. Message @site-discord* on
-  @(tostring:underlink 'discord discord-url*) or email @site-email* to
+  @(underlink 'discord discord-url*) or email @site-email* to
   claim a prize.")
 
 (newsop test ()
