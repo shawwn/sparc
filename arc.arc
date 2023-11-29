@@ -1056,7 +1056,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   val)
 
 (def writefile (val file (o writer write))
-  (savefile val file write))
+  (savefile val file writer))
 
 (def sym (x) (coerce x 'sym))
 (def str (x) (coerce x 'string))
