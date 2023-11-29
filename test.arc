@@ -1215,5 +1215,13 @@
     #`(let ([b 2])
         #,(test? 3 #`(+ #,a b)))))
 
+(define-test cons
+  (test? '(a) (cons 'a))
+  (test? '(a . b) (cons 'a 'b))
+  (test? '(a b . c) (cons 'a 'b 'c))
+  (test? '(nil) (cons))
+  (test? '(nil . nil) (cons))
+  (test? '(a . nil) (cons 'a)))
+
 run-tests
 

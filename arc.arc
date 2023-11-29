@@ -112,7 +112,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (f (car xs) (reduce f (cdr xs)))))
 
 (def cons args
-  (reduce join args))
+  (if (cdr args)
+      (reduce join args)
+      (join (car args))))
 
 (def snoc args
   (+ (car args) (cdr args)))
