@@ -1463,7 +1463,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; To write something to be read by temread, (write (tablist x))
 
 (def temread (tem (o str (stdin)))
-  (templatize tem (read str)))
+  (templatize tem (read str nil)))
 
 ; Converts alist to inst; ugly; maybe should make this part of coerce.
 ; Note: discards fields not defined by the template.
@@ -1507,7 +1507,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(safeset ,name (cache (fn () ,lasts)
                          (fn () ,@body))))
 
-(def saferead (arg) (errsafe:read arg))
+(def saferead (arg) (errsafe:read arg nil))
 
 (def safe-load-table (filename) 
   (or (errsafe:load-table filename)
@@ -1626,7 +1626,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
             (case c 
               #\# (do (a (str (rev chars)))
                       (wipe chars)
-                      (a (read s)))
+                      (a (read s nil)))
               #\~ (do (a (str (rev chars)))
                       (wipe chars)
                       (readc s)
@@ -1896,7 +1896,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def readenv (name (o default))
   (aif (get-environment-variable name)
-       (errsafe:read it)
+       (errsafe:read it nil)
        default))
 
 (def macos? ()

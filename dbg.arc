@@ -185,7 +185,7 @@
                      (fn ()
              (let expr (tlread "> ")
                (assign dbgexpr* expr)
-               (if (iso expr ''c)
+               (if (or (iso expr ''c) (is expr eof))
                    (do (= done t)
                        (dbg-prexpr e lenv retexpr
                                    (fn (expr result)
