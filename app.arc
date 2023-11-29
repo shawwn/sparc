@@ -174,7 +174,7 @@
   user)
 
 (def create-acct (user pw (o email))
-  (set (dc-usernames* (downcase user)))
+  (= (dc-usernames* (downcase user)) t)
   (set-pw pw user)
   (= (user->email* user) email)
   (hook 'create-acct user))
@@ -316,7 +316,7 @@
 (def username-taken (user)
   (when (empty dc-usernames*)
     (each (k v) hpasswords*
-      (set (dc-usernames* (downcase k)))))
+      (= (dc-usernames* (downcase k)) t)))
   (dc-usernames* (downcase user)))
 
 (def bad-newacct (user pw)

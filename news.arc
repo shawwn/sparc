@@ -294,7 +294,7 @@
   (when (nor i!dead (mem how i!keys))
     (log-kill i how)
     (wipe (comment-cache* i!id))
-    (set i!dead))
+    (= i!dead t))
   (when (in how 'flagged 'dupe)
     (pushnew how i!keys))
   (save-item i))
@@ -471,7 +471,7 @@
     (and (no (mature i!id))
          (acomment i)
          (or (< (item-age i) (min max-delay* (uvar i!by delay)))
-             (do (set (mature i!id))
+             (do (= (mature i!id) t)
                  nil)))))
 
 (def seesdead ((o user (get-user)))
@@ -1692,7 +1692,7 @@ function vote(node) {
         (do (wipe i!dead (ignored i!by))
             (awhen (and nuke (sitename i!url))
               (set-site-ban it nil)))
-        (do (set i!dead)
+        (do (= i!dead t)
             (ignore i!by (if nuke 'nuke 'blast))
             (awhen (and nuke (sitename i!url))
               (set-site-ban it 'ignore))))
@@ -2053,7 +2053,7 @@ function suggestTitle() {
 ; Bans
 
 (def ignore (subject cause)
-  (set (ignored subject))
+  (= (ignored subject) t)
   (save-prof subject)
   (log-ignore subject cause))
 
@@ -2347,7 +2347,7 @@ function suggestTitle() {
     (++ (baditemreqs* ip 0))
     (withs (r (requests/ip* ip) b (baditemreqs* ip))
        (when (and (> r 500) (> (/ b r) baditem-threshold*))
-         (set (throttle-ips* ip))))))
+         (= (throttle-ips* ip) t)))))
 
 ; redefined later
 

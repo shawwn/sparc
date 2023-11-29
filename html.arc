@@ -438,7 +438,7 @@
   (let intag nil
     (tostring
       (each c s
-        (if (is c #\<) (set intag)
+        (if (is c #\<) (= intag t)
             (is c #\>) (wipe intag)
             (no intag) (pr c))))))
 
@@ -456,7 +456,7 @@
     (tostring
       (each c str
         (pr c)
-        (unless (whitec c) (set ink))
+        (unless (whitec c) (= ink t))
         (when (is c #\newline)
           (unless ink (pr "<p>"))
           (wipe ink))))))

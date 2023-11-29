@@ -89,7 +89,7 @@
                   (and (>= (qlen (req-times* ip)) 
                            (if (throttle-ips* ip) 1 req-limit*))
                        (let dt (- now (deq (req-times* ip)))
-                         (if (< dt dos-window*) (set (ignore-ips* ip)))
+                         (if (< dt dos-window*) (= (ignore-ips* ip) t))
                          (< dt req-window*)))
                   (do (= (req-times* ip) (queue))
                       nil))
@@ -119,7 +119,7 @@
                       post (handle-post i o op args n cooks ip)
                            (respond-err o "Unknown request: " (car lines)))
                     (log-request type op args cooks ip t0 t1)
-                    (set responded)))
+                    (= responded t)))
                 (do (push (string (rev line)) lines)
                     (wipe line)))
             (unless (is c #\return)
@@ -226,7 +226,7 @@ Strict-Transport-Security: max-age=31556900
 
 (mac defopr (name parm . body)
   (w/uniq gs
-    `(do (set (redirector* ',name))
+    `(do (= (redirector* ',name) t)
          (defop-raw ,name (,gs ,parm)
            ,@body))))
 

@@ -810,9 +810,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
 
-(mac set args
-  `(do ,@(map (fn (a) `(= ,a t)) args)))
-
 ; Destructuring means ambiguity: are pat vars bound in else? (no)
 
 (mac iflet (var expr then . rest)
@@ -1176,7 +1173,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
           (and (no (nilcache args))
                (aif (apply f args)
                     (= (cache args) it)
-                    (do (set (nilcache args))
+                    (do (= (nilcache args) t)
                         nil)))))))
 
 
@@ -1595,7 +1592,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (each x xs
       (unless (h x)
         (push x acc)
-        (set (h x))))
+        (= (h x) t)))
     (rev acc)))
 
 (def single (x) (and (acons x) (no (cdr x))))
@@ -1799,7 +1796,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def memtable (ks)
   (with h (table)
-    (each k ks (set (h k)))))
+    (each k ks (= (h k) t))))
 
 (= bar* " | ")
 
@@ -1811,7 +1808,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                        (unless (is ,out "")
                          (if ,needbars
                              (pr bar* ,out)
-                             (do (set ,needbars)
+                             (do (= ,needbars t)
                                  (pr ,out))))))
                   body)))))
 
