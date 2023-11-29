@@ -741,20 +741,22 @@ function vote(node) {
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
-                    "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "*"))
+                    "show" "ask" "place" "*"))
 
 (def toprow (label)
+  (when (headmatch "/l/" label)
+    (zap cut label 3))
   (w/bars
     (toplink "new" "/newest" label)
     (awhen (get-user)
       (toplink "threads" (threads-url it) label))
     (toplink "comments" "/newcomments" label)
-    (when discord-url*
-      (toplink "discord"  discord-url* label))
+    (awhen discord-url*
+      (toplink "discord" it label))
     (link "tags" "/l")
-    (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
-    (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
-    (toplink "place" "/l/place" (if (is label "/l/place") "place" label))
+    (toplink "ask" "/l/ask" label)
+    (toplink "show" "/l/show" label)
+    (toplink "place" "/l/place" label)
     (hook 'toprow label)
     (link "submit" "/submit")
     (unless (mem label toplabels*)
@@ -1534,8 +1536,8 @@ function vote(node) {
 
 (def byline (i)
   (pr " by @(userlink i!by)")
-  (awhen (and (metastory i) (tostring (sublinks i)))
-    (pr " to @it"))
+  (when (metastory i)
+    (pr " to @(sublinks i)"))
   (pr " @(itemlink i (text-age:item-age i)) "))
 
 
