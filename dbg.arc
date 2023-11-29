@@ -32,8 +32,7 @@
 (def tlread (prompt)
   (w/stdout original-stdout*
     (w/stdin original-stdin*
-      (disp prompt)
-      (flushout)
+      (pr prompt :flush)
       (read))))
 
 (def tlerr (c)
