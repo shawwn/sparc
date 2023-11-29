@@ -94,7 +94,7 @@
         ((symbol? s) (ac-var-ref s))
         ((car? s '%do) (ac-do (cdr s)))
         ((car? s 'lexenv) (ac-lexenv))
-        ((car? s 'syntax) (cadr s))
+        ((car? s 'syntax) (scm-quoted (cadr s)))
         ((caar? s 'syntax) (map ac s))
         ((car? s ssyntax?) (ac (cons (expand-ssyntax (car s)) (cdr s))))
         ((car? s 'quote) (list 'quote (ac-quoted (cadr s))))
@@ -380,6 +380,15 @@
 
 ; quote
 
+(define (scm-quoted x)
+  (cond ((car? x '%brackets)
+         (cdr x))
+        ((car? x '%braces)
+         (cdr x))
+        ((pair? x)
+         (imap scm-quoted x))
+        (#t x)))
+
 (define (ac-quoted x)
   (cond ((pair? x)
          (imap ac-quoted x))
@@ -439,6 +448,10 @@
 (define (ac-qs1 level x)
   (cond ((= level 0)
          (ac x))
+        ((car? x '%brackets)
+         (cdr x))
+        ((car? x '%braces)
+         (cdr x))
         ((car? x 'unsyntax)
          (ac-qs1 (- level 1) (cadr x)))
         ((and (car? x 'unsyntax-splicing) (= level 1))

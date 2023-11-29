@@ -1206,5 +1206,14 @@
 (define-test part
   (test? "123" (tostring ((part pr sep: " ") 1 2 3 sep: ""))))
 
+(define-test scheme
+  #'(let ([a 1] [b 2])
+      (+ a b))
+  #`(let ([a 1] [b 2])
+      #,(test? 3 #`(+ a b)))
+  (let a 1
+    #`(let ([b 2])
+        #,(test? 3 #`(+ #,a b)))))
+
 run-tests
 
