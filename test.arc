@@ -496,8 +496,8 @@
 
 (define-test while
   (let i 0
-    (catch:while (< i 5)
-      (if (is i 3) (throw) (++ i)))
+    (while (< i 5)
+      (if (is i 3) (break) (++ i)))
     (test? 3 i)
     (while (< i 10)
       (++ i))
@@ -506,12 +506,14 @@
       (test? nil a)
       (test? 15 i))
     (let b
-        (catch:while (< i 20)
+        (while (< i 20)
           (if (is i 19)
-              (throw)
+              (break)
             (++ i)))
       (test? nil b)
-      (test? 19 i))))
+      (test? 19 i))
+    (test? '(1) (while t (out 1) (break)))
+    (test? 42 (while t (break 42)))))
 
 ;(define-test for
 ;  (let l ()

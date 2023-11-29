@@ -119,6 +119,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def snoc args
   (+ (car args) (cdr args)))
 
+(def consif (x y) (if x (cons x y) y))
+(def snocif (x y) (if y (snoc x y) x))
+
 (mac cons! (var . args)
   `(atomic (= ,var (cons ,@args ,var))))
 
@@ -245,22 +248,23 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac unless (test . body)
   `(if (no ,test) ((fn () ,@body))))
 
-(mac point (name . body)
+(mac point (name :default . body)
   (w/uniq (g p)
     `(#'call/ec
        (fn (,g)
-         (let ,name (fn ((o ,p)) (,g ,p))
-           ,@body)))))
+         (let ,name (fn ((o ,p ,default)) (,g ,p))
+           ,@(snocif body default))))))
 
 (mac catch body
   `(point throw ,@body))
 
 (mac while (test . body)
   (w/uniq (gf gp)
-    `(point break
-       ((rfn ,gf (,gp)
-          (when ,gp ((fn () ,@body)) (,gf ,test)))
-        ,test))))
+    `(let out (accfn)
+       (point break default: (out)
+         ((rfn ,gf (,gp)
+            (when ,gp ((fn () ,@body)) (,gf ,test)))
+          ,test)))))
 
 (def empty (seq) 
   (or (no seq) 
@@ -866,8 +870,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ;        (if (isa op 'mac)
 ;            (apply (rep op) (cdr e))
 ;            e))))
-
-(def consif (x y) (if x (cons x y) y))
 
 (def string args
   (apply + "" (map str args)))
