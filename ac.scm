@@ -2011,7 +2011,7 @@
                      (in (open-input-string rest))
                      (expr (read in))
                      (expr (if (car? expr '%braces) (cadr expr) expr))
-                     (expr `(tostring (prt (unquoted ,expr))))
+                     (expr `(%atstring ,expr))
                      (i2 (let-values (((x y z) (port-next-location in))) z)))
                 (close-input-port in)
                 (cons expr (codestring (substring rest (- i2 1))))))

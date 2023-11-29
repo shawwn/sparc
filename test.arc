@@ -242,9 +242,9 @@
   (let a 'foo
     (test? "foobar" "@{a}bar")
     (test? "" "@unset")
+    (test? "" "@nil")
+    (test? "" "@(list)")
     (test? "t" "@t")
-    (test? "nil" "@nil")
-    (test? "nil" "@(list)")
     (test? "false" "@false")))
 
 (define-test quote

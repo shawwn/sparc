@@ -793,6 +793,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def sp ((o n 1)) (repeat n (pr " ")))
 
+(def atdisp (x)
+  (unless (null x)
+    (pr (unquoted x))))
+
+(mac %atstring (x)
+  `(tostring (atdisp ,x)))
+
 (mac wipe args
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
 
