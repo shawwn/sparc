@@ -266,6 +266,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
             (when ,gp ((fn () ,@body)) (,gf ,test)))
           ,test)))))
 
+(mac until (test . body)
+  `(while (no ,test) ,@body))
+
 (def empty (seq) 
   (or (no seq) 
       (and (in (type seq) 'string 'bytes 'table)
@@ -847,12 +850,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
-(mac drain (expr (o eof nil))
-  (w/uniq (gacc gres)
-    `(accum ,gacc
-       (let ,gres nil
-         (while (isnt (= ,gres ,expr) ,eof)
-           (,gacc ,gres))))))
+(mac drain (expr (o eof eof))
+  (w/uniq g
+    `(whiler ,g ,expr ,eof
+       (out ,g))))
 
 ; For the common C idiom while x = snarfdata != stopval.
 ; Rename this if use it often.
@@ -860,7 +861,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac whiler (var expr endval . body)
   (w/uniq gf
     `(withs (,var nil ,gf (testify ,endval))
-       (while (no (,gf (= ,var ,expr)))
+       (until (,gf (= ,var ,expr))
          ,@body))))
   
 ;(def macex (e)
@@ -994,30 +995,28 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     `(w/outfile ,gv ,name ,@kwargs
        (w/stdout ,gv ,@body))))
 
-(def readstring1 (s (o eof nil) (o data t)) (w/instring i s (read i eof data)))
+(def readstring1 (s (o eof eof) :code) (w/instring i s (read i eof :code)))
 
-(def read ((o x (stdin)) (o eof nil) (o data t))
-  (if (isa x 'string) (readstring1 x eof data) ((if data sdata sread) x eof)))
+(def read ((o x (stdin)) (o eof eof) :code)
+  (if (isa x 'string) (readstring1 x eof :code) ((if code sread sdata) x eof)))
 
 ; inconsistency between names of readfile[1] and writefile
 
-(def codefile (name) (w/infile s name (drain (read-code s eof) eof)))
+(def codefile (name) (w/infile s name (drain (read-code s))))
 
-(def readfile (name) (w/infile s name (drain (read s eof) eof)))
+(def readfile (name) (w/infile s name (drain (read s))))
 
 (def readfile1 (name (o eof)) (w/infile s name (read s eof)))
 
-(def readall (src (o n) (o data t))
-  ((afn (i n)
-    (let x (read i eof data)
-      (if (or (is x eof) (and n (<= n 0)))
-          nil
-          (cons x (self i (and n (- n 1)))))))
-   (if (isa src 'string) (instring src) src)
-   n))
+(def readall ((o src (stdin)) (o n) :code)
+  (if (isa!string src) (zap instring src))
+  (whiler e (read src :code) eof
+    (if (and n (< (-- n) 0))
+        (break)
+        (out e))))
 
 (def allcode (src (o n))
-  (readall src n nil))
+  (readall src n :code))
 
 (def peekbytes (n (o i (stdin)))
   (#'peek-bytes n 0 i))
@@ -1187,11 +1186,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(safeset ,name (memo (fn ,parms ,@body))))
 
 (def readline ((o str (stdin)))
-  (awhen (readc str)
+  (when (peekc str)
     (tostring 
-      (writec it)
-      (whiler c (readc str) [in _ nil #\return #\newline]
-        (writec c)))))
+      (whiler c (readc str) [in _ nil #\newline]
+        (unless (is c #\return)
+          (writec c))))))
 
 ; Don't currently use this but suspect some code could.
 
@@ -1254,23 +1253,22 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          al)))
 
 (def obj (:kwargs . args)
-  (with h (listtab:hug args)
+  (with h (listtab (hug args))
     (each (k v) (hug kwargs)
       (= (h (sym k)) v))))
 
 (def load-table (file (o eof))
   (w/infile i file (read-table i eof)))
 
-(def read-table ((o i (stdin)) (o eof))
+(def read-table ((o i (stdin)) (o eof eof))
   (let e (read i eof)
     (if (alist e) (listtab e) e)))
 
 (def load-tables (file)
-  (w/infile i file
-    (drain (read-table i eof) eof)))
+  (fromfile file (drain (read-table))))
 
 (def save-table (h file)
-  (writefile (unquoted (tablist h)) file))
+  (writefile h file write-table))
 
 (def write-table (h (o o (stdout)))
   (write (unquoted (tablist h)) o))
@@ -1538,9 +1536,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def rand-elt (seq) 
   (seq (rand (len seq))))
 
-(mac until (test . body)
-  `(while (no ,test) ,@body))
-
 (def before (x y seq (o i 0))
   (withs (xp (pos x seq i) yp (pos y seq i))
     (and xp (or (no yp) (< xp yp)))))
@@ -1676,12 +1671,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       seval))
 
 (def read-code ((o x (stdin)) (o eof eof))
-  (read x eof nil))
+  (read x eof :code))
 
 (def load-code (file (o evalfn (evaluator file)))
   (with x nil
     (w/infile f file
-      (whiler e (read-code f eof) eof
+      (whiler e (read-code f) eof
         (= x (evalfn e))))))
 
 (def load (file :once)
@@ -1912,10 +1907,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def yesno ((o question) (o default))
   (if question (prn question))
   (pr "Continue? " (if default "[Y/n]" "[y/N]") " ")
-  (aand (read (stdin) eof)
-        (if (is it eof)
-            default
-            (in it 'y 'yes 'Y 'YES))))
+  (let it (read)
+    (if (is it eof)
+        default
+        (in it 'y 'yes 'Y 'YES))))
 
 (def unzip (xs) (apply map list xs))
 

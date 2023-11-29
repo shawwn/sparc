@@ -39,7 +39,7 @@
 
 (define-test reader
   (let read quoted:read
-    (test? nil (read ""))
+    (test? eof (read ""))
     (test? nil (read "nil"))
     (test? 17 (read "17"))
     (test? 1000 (read "1_000"))
