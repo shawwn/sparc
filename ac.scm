@@ -1,25 +1,20 @@
 ; Arc Compiler.
-#lang racket/load
+#lang racket/base
 
 (require json)
-(require syntax/stx)
+(require racket/string)
+(require racket/list)
+(require racket/sequence)
+(require racket/file)
 (require racket/port)
 (require racket/pretty)
 (require racket/runtime-path)
 (require racket/system)
 (require racket/tcp)
 (require racket/unsafe/ops)
-(require racket/path)
-(require racket/trace)
 (require racket/async-channel)
-(require racket/struct)
-(require syntax/srcloc)
 (require racket/undefined)
 (require ffi/unsafe)
-(require ffi/unsafe/define)
-(require ffi/vector)
-(require ffi/cvector)
-(require ffi/unsafe/cvector)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -797,13 +792,23 @@
                 (procedure? (bound? fn)))
            (ac-global-call fn args))
           ((memf keywordp args)
-           `((symbol-function ,(ac fn)) ,@(map ac args)))
+           `((ar-symbol-function ,(ac fn)) ,@(map ac args)))
           ((= argc 0) `(ar-funcall0 ,(ac fn) ,@(map ac args)))
           ((= argc 1) `(ar-funcall1 ,(ac fn) ,@(map ac args)))
           ((= argc 2) `(ar-funcall2 ,(ac fn) ,@(map ac args)))
           ((= argc 3) `(ar-funcall3 ,(ac fn) ,@(map ac args)))
           ((= argc 4) `(ar-funcall4 ,(ac fn) ,@(map ac args)))
           (#t `(ar-apply ,(ac fn) (list ,@(map ac args)))))))
+
+; circular references will go into an infinite loop
+(define (ar-symbol-value name (fail unset))
+  (let ((v (bound? name fail)))
+    (if (unset? v) (err "Unbound variable" name)
+      (if (symbol? v) (ar-symbol-value v fail) v))))
+
+(define (ar-symbol-function name)
+  (let ((v (if (symbol? name) (ar-symbol-value name) name)))
+    (if (procedure? v) v (err "Not a procedure" name))))
 
 (define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)))
   (cond ((pair? kwargs)
@@ -816,21 +821,21 @@
          (ar-unstash (cddr args) kwargs xs (ar-join! kws (list (keywordp (car args)) (cadr args)))))
         (#t (ar-unstash (cdr args) kwargs (cons (car args) xs) kws))))
 
-(define (ar-kwapply f kwargs . args)
+(define (ar-kwapply-1 f kwargs . args)
   (let* ((it (ar-unstash (ar-apply-args args) kwargs))
          (xs (car it))
          (kvs (cadr it)))
     (if (hash-empty? kvs)
         (ar-apply f xs)
         (let ((al (hash->list kvs #t)))
-          (keyword-apply (symbol-function f) (map car al) (map cdr al) xs)))))
+          (keyword-apply (ar-symbol-function f) (map car al) (map cdr al) xs)))))
 
 (define ar-kwapply
   (make-keyword-procedure
     (lambda (keys vals fn kws . args)
       (let ((kws1 (apply kwappend kws (map list keys vals))))
         (apply ar-kwapply fn kws1 args)))
-    ar-kwapply))
+    ar-kwapply-1))
 
 ; returns #f or the macro function
 
@@ -976,13 +981,10 @@
 
 ; circular references will go into an infinite loop
 (xdef symbol-value (name (fail unset))
-  (let ((v (bound? name fail)))
-    (if (unset? v) (err "Unbound variable" name)
-      (if (symbol? v) (symbol-value v fail) v))))
+  (ar-symbol-value name fail))
 
 (xdef symbol-function (name)
-  (let ((v (if (symbol? name) (symbol-value name) name)))
-    (if (procedure? v) v (err "Not a procedure" name))))
+  (ar-symbol-function name))
 
 ; call a function or perform an array ref, hash ref, &c
 
@@ -1002,7 +1004,7 @@
   (cond ((procedure? fn)
          (apply fn args))
         ((symbol? fn)
-         (ar-apply (symbol-value fn) args))
+         (ar-apply (ar-symbol-value fn) args))
         ((pair? fn)
          (list-ref fn (car args)))
         ((string? fn)
@@ -1022,7 +1024,7 @@
 (xdef apply
       (make-keyword-procedure
         (lambda (keys vals fn . args)
-          (keyword-apply (symbol-function fn) keys vals (ar-apply-args args)))
+          (keyword-apply (ar-symbol-function fn) keys vals (ar-apply-args args)))
         (lambda (fn . args)
           (apply ar-kwapply fn #f args))))
 
@@ -1145,6 +1147,16 @@
   (and (pair? xs)
        (apply ar-+ (add-between xs sep))))
 
+(define (ar-sref com val ind)
+  (cond ((hash? com)  (if (ar-nil? val)
+                          (hash-remove! com ind)
+                          (hash-set! com ind val)))
+        ((string? com) (string-set! com ind val))
+        ((bytes? com)  (bytes-set! com ind val))
+        ((pair? com)   (nth-set! com ind val))
+        (#t (err "Can't set reference " com ind val)))
+  val)
+
 (define (ar-each-kv xs (f list))
   (cond ((hash? xs) (hash-for-each xs f))
         ((null? xs) xs)
@@ -1153,11 +1165,12 @@
 
 (define (ar-join! l x . args)
   (cond ((hash? l)
-         (ar-each-kv x (lambda (k v) (sref l v k)))
+         (ar-each-kv x (lambda (k v) (ar-sref l v k)))
          (if (null? args) l (apply ar-join! l args)))
         (#t (err "Can't join" l))))
 
-(xdef join! ar-join!)
+(xdef join! (l x . args)
+  (apply ar-join! l x args))
 
 (define (hash->plist h)
   (let ((al (hash->list h #t)))
@@ -1570,8 +1583,8 @@
 
 (xdef expandpath ar-expand-path)
 
-(define-runtime-path here-path (build-path "."))
-(define ar-libdir (make-parameter (ar-expand-path "." here-path)
+(define-runtime-path ar-path ".")
+(define ar-libdir (make-parameter (ar-expand-path "." ar-path)
                                 #f
                                 'libdir))
 
@@ -1799,16 +1812,8 @@
 
 ; Later may want to have multiple indices.
 
-(xdef sref
-  (lambda (com val ind)
-    (cond ((hash? com)  (if (ar-nil? val)
-                            (hash-remove! com ind)
-                            (hash-set! com ind val)))
-          ((string? com) (string-set! com ind val))
-          ((bytes? com)  (bytes-set! com ind val))
-          ((pair? com)   (nth-set! com ind val))
-          (#t (err "Can't set reference " com ind val)))
-    val))
+(xdef sref (com val ind)
+  (ar-sref com val ind))
 
 (define (nth-set! lst n val)
   (x-set-car! (list-tail lst n) val))
@@ -2080,3 +2085,4 @@
 
 (xdef uuid uuid-generate)
 
+(provide (all-defined-out))
