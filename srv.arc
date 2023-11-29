@@ -269,7 +269,7 @@ Strict-Transport-Security: max-age=31556900
                             (awhen static-max-age*
                               (prn "Cache-Control: max-age=" it))
                             (prn)
-                            (w/infile i it :binary
+                            (w/infile i it :bytes
                               (whilet b (readb i)
                                 (writeb b str))))
                         (respond-err str unknown-msg*))))))))
@@ -305,7 +305,7 @@ Strict-Transport-Security: max-age=31556900
   (#'sha1 (instring str)))
 
 (defmemo shashfile-1 (filename modtime)
-  (w/infile i filename :binary
+  (w/infile i filename :bytes
     (#'sha1 i)))
 
 (def shashfile (filename)

@@ -959,7 +959,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(w/param stdin ,str ,@body))
 
 (mac tobytes body
-  `(tostring :bytes ,@body))
+  `(tostring bytes: true ,@body))
 
 (mac tostring (:bytes . body)
   (w/uniq gv
@@ -1042,14 +1042,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (coerce (allbytes str) 'string 'utf8))
 
 (def filebytes (name)
-  (w/infile s name (allbytes s) :binary))
+  (w/infile s name (allbytes s) :bytes))
 
 (def filechars (name)
   (w/infile s name (allchars s)))
 
-(def savefile (val file (o writer disp) (o :binary (isa!bytes val)))
+(def savefile (val file (o writer disp) (o :bytes (isa!bytes val)))
   (let tmpfile (+ file ".tmp")
-    (w/outfile o tmpfile (writer val o) :binary)
+    (w/outfile o tmpfile (writer val o) :bytes)
     (mvfile tmpfile file))
   val)
 

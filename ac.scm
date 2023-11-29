@@ -1324,10 +1324,10 @@
 
 (xdef modtime file-or-directory-modify-seconds)
 
-(xdef infile  (f #:binary (binary? #f))
+(xdef infile  (f #:bytes (binary? #f))
   (open-input-file f #:mode (if (ar-true? binary?) 'binary 'text)))
 
-(xdef outfile (f #:binary (binary? #f) #:append (append? #f))
+(xdef outfile (f #:bytes (binary? #f) #:append (append? #f))
   (open-output-file f
                     #:mode (if (ar-true? binary?) 'binary 'text)
                     #:exists (if (ar-true? append?) 'append 'truncate)))
