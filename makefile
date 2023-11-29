@@ -10,4 +10,5 @@ clean:
 dist-clean: clean
 	@rm -rf bin/racket*
 
-test: all
+test:
+	@bin/arc test.arc
