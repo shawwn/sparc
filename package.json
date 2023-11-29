@@ -1,16 +1,22 @@
 {
-  "name": "tlarc",
-  "version": "1.0.8",
-  "description": "",
-  "main": "index.js",
-  "repository": "https://github.com/tensorfork/tlarc",
+  "name": "sparclisp",
+  "version": "0.0.1",
+  "description": "Arc Lisp for Racket",
+  "repository": "shawwn/sparc",
+  "bin": {
+    "arc": "./bin/arc",
+    "sparc": "./bin/sparc"
+  },
+  "main": "news.arc",
   "author": "Shawn Presser <shawnpresser@gmail.com>",
   "license": "MIT",
   "private": false,
   "dependencies": {},
   "scripts": {
-    "arc": "echo 'NOISY=1 DEV=1 rlwrap bin/arc, then evaluate ((load \"news.arc\"))'",
-    "dev": "DEV=1 bin/tlarc",
-    "start": "PULL=10 FLUSH=nil bin/tlarc"
+    "racket": "./bin/racket/bin/racket",
+    "raco": "./bin/racket/bin/raco",
+    "pkg": "./bin/racket/bin/raco pkg",
+    "dev": "DEV=1 bin/sparc",
+    "start": "PULL=10 FLUSH=nil bin/sparc"
   }
 }
