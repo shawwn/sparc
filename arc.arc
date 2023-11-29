@@ -86,9 +86,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def edge (x) (- (len x) 1))
 
 (def alist (x)
-  (if (acons x) t
-      (id x nil) t
-      (unset? x)))
+  (if (acons x) t (null x)))
 
 (def listify (x)
   (if (alist x) x (list x)))
