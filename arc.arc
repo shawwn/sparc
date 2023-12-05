@@ -845,7 +845,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
-(mac drain (expr (o eof eof))
+(mac drain (expr (o eof 'eof))
   (w/uniq g
     `(whiler ,g ,expr ,eof
        (out ,g))))
