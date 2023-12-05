@@ -340,7 +340,7 @@
                  acc
                  keepsep?))))
 
-(define (ac-global-name s)
+(define (ac-name s)
   (if (and (symbol? s) (memq s scm-reserved))
       (string->symbol (string-append "arc--" (symbol->string s)))
       s))
@@ -348,7 +348,7 @@
 (define (ac-var-ref s)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
         ((ac-lex? s)        s)
-        (#t                 (ac-global-name s))))
+        (#t                 (ac-name s))))
 
 (define (ac-tonumber s (base 10))
   (with-handlers ((exn:fail? (lambda (c) #f)))
@@ -709,7 +709,7 @@
                      ((eqv? a 'false) (err "Can't rebind false"))
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
                      ((ac-lex? a) `(set! ,a ,n))
-                     (#t `(namespace-set-variable-value! ',(ac-global-name a)
+                     (#t `(namespace-set-variable-value! ',(ac-name a)
                                                          ,n
                                                          #t)))
                n))
@@ -783,7 +783,7 @@
   (cond ((and (assoc fn ac-binaries) (= (length args) 2))
          `(,(cadr (assoc fn ac-binaries)) ,@(ac-args '() args)))
         (#t
-         `(,(ac-global-name fn) ,@(ac-args '() args)))))
+         `(,(ac-name fn) ,@(ac-args '() args)))))
 
 ; compile a function call
 ; special cases for speed, to avoid compiled output like
@@ -920,13 +920,13 @@
 ; run-time primitive procedures
 
 ;(define (xdef a b)
-;  (namespace-set-variable-value! (ac-global-name a) b)
+;  (namespace-set-variable-value! (ac-name a) b)
 ;  b)
 
 (define-syntax xdef
   (syntax-rules ()
     ((xxdef a b)
-     (let* ((nm (ac-global-name 'a))
+     (let* ((nm (ac-name 'a))
             (a b)
             (val (namespace-variable-value nm #t (lambda () (void)))))
        (when (and (not (eqv? 'a 'b))
@@ -948,7 +948,7 @@
 ; Haven't started using it yet.
 
 (define (odef a parms b)
-  (namespace-set-variable-value! (ac-global-name a) b)
+  (namespace-set-variable-value! (ac-name a) b)
   (hash-set! fn-signatures a (list parms))
   b)
 
@@ -1671,8 +1671,8 @@
   val)
  
 (define (ac-prompt-print val)
-  (namespace-set-variable-value! (ac-global-name 'that) val)
-  (namespace-set-variable-value! (ac-global-name 'thatexpr) (ac-that-expr*))
+  (namespace-set-variable-value! (ac-name 'that) val)
+  (namespace-set-variable-value! (ac-name 'thatexpr) (ac-that-expr*))
   (unless (null? val)
     (pp val))
   val)
@@ -1834,7 +1834,7 @@
 ; rewrite to pass a (true) gensym instead of #f in case var bound to #f
 
 (define (bound? arcname (fail #f))
-  (let ((it (namespace-variable-value (ac-global-name arcname)
+  (let ((it (namespace-variable-value (ac-name arcname)
                                       #t
                                       (lambda () undefined))))
     (if (eq? it undefined) fail it)))
