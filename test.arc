@@ -619,15 +619,15 @@
     (test? 40 ((fn (n) (+ n 10)) 30))
     (test? '(2 3 4) (map (fn (x) (+ x 1)) '(1 2 3)))))
 
-;(define-test define
-;  (define x 20)
-;  (define f () 42)
-;  (test? 20 x)
-;  (test? 42 (f))
-;  ((fn ()
-;     (define f () 38)
-;     (test? 38 (f))))
-;  (test? 42 (f)))
+(define-test def
+  (def x 20)
+  (def f () 42)
+  (test? 20 x)
+  (test? 42 (f))
+  ((fn ()
+     (def f () 38)
+     (test? 38 (f))))
+  (test? 42 (f)))
 
 ;(define-test return
 ;  (let a ((fn () 17))

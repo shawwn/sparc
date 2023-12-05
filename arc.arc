@@ -34,15 +34,13 @@
 (assign safeset (annotate 'mac
                   (fn (var val)
                     (assign val `(assign ,var ,val))
-                    (if (lex var) val
-                        (lexname) `(do (#'define ,(#'ac-env! var) nil) ,val)
+                    (if (lexname) `(do (#'define ,(#'ac-env! var) nil) ,val)
                                   `(do (warnset ',var) ,val)))))
 
 (assign def (annotate 'mac
                (fn (:tag name parms . body)
                  (assign body (if body `(fn ,parms ,@body) parms))
-                 (if (lex name) nil
-                     (lexname) nil
+                 (if (lexname) nil
                      (assign body `(do (sref sig ',parms ',name) ,body)))
                  `(safeset ,name ,(if tag `(annotate ',tag ,body) body)))))
 
