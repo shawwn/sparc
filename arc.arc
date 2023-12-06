@@ -216,14 +216,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Only used when the call to compose doesn't occur in functional position.  
 ; Composes in functional position are transformed away by ac.
 
-(mac compose args
+(mac compose fs
   (w/uniq (gk ga)
     `(fn (kwargs: ,gk . ,ga)
-       ,((afn (fs)
-           (if (cdr fs)
-               (list (car fs) (self (cdr fs)))
-               `(kwapply ,(if (car fs) (car fs) 'idfn) ,gk ,ga)))
-         args))))
+       ,((afn ((f . fs))
+           (if fs
+               (list f (self fs))
+               `(kwapply ,f ,gk ,ga)))
+         (or fs (list 'idfn))))))
 
 ; Ditto: complement in functional position optimized by ac.
 
