@@ -61,7 +61,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def idfn (x) x)
 
 (def con (x)
-  (fn args x))
+  (fn (:kwargs . args) x))
 
 (def caar (xs) (car (car xs)))
 (def cadr (xs) (car (cdr xs)))
