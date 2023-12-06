@@ -1863,13 +1863,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (= ,gv ,expr)))))
 
 (def rand-key (h)
-  (if (empty h)
-      nil
-      (let n (rand (len h))
-        (catch
-          (each (k v) h
-            (when (is (-- n) -1)
-              (throw k)))))))
+  (unless (empty h)
+    (let n (rand (len h))
+      (each (k v) h
+        (when (< (-- n) 0)
+          (break k))))))
 
 (def ratio (test xs)
   (if (empty xs)
