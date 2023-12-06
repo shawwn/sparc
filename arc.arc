@@ -261,13 +261,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac catch body
   `(point throw ,@body))
 
+(mac looping body
+  `(let out (accfn)
+     (point break default: (out)
+       ,@body)))
+
 (mac while (test . body)
   (w/uniq (gf gp)
-    `(let out (accfn)
-       (point break default: (out)
-         ((rfn ,gf (,gp)
-            (when ,gp ((fn () ,@body)) (,gf ,test)))
-          ,test)))))
+    `(looping
+       ((rfn ,gf (,gp)
+          (when ,gp ((fn () ,@body)) (,gf ,test)))
+        ,test))))
 
 (mac until (test . body)
   `(while (no ,test) ,@body))
@@ -557,13 +561,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
-    `(accum out
-       (point break
-         ,start
-         ((rfn ,gfn (,gparm) 
-            (if ,gparm
-                (do ((fn () ,@body)) ,update (,gfn ,test))))
-          ,test)))))
+    `(looping
+       ,start
+       ((rfn ,gfn (,gparm) 
+          (if ,gparm
+              (do ((fn () ,@body)) ,update (,gfn ,test))))
+        ,test))))
 
 (mac for (v init max . body)
   (w/uniq (gi gm)
@@ -601,9 +604,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (f (l i)))))
 
 (mac each (var expr . body)
-  `(accum out
-     (point break
-       (across ,expr (fn (,var) ,@body)))))
+  `(looping (across ,expr (fn (,var) ,@body))))
 
 (def clamp (x a b)
   (if (< x a) a
