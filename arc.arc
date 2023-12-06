@@ -227,7 +227,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
    xs nil))
 
 (def in (x . choices)
-  (mem x choices))
+  (yes (mem x choices)))
 
 ; Could take n args, but have never once needed that.
 
