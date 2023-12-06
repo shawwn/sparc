@@ -1235,8 +1235,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def listtab (al)
   (with h (table)
-    (map (fn ((k v)) (= (h k) v))
-         al)))
+    (each (k v) al
+      (= (h k) v))))
 
 (def obj (:kwargs . args)
   (with h (listtab (hug args))
