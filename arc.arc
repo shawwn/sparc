@@ -603,8 +603,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (for i 0 (edge l)
          (f (l i)))))
 
-(mac each (var expr . body)
-  `(looping (across ,expr (fn (,var) ,@body))))
+(mac each (var xs . body)
+  (w/uniq f
+    `(looping
+       (across ,xs (rfn ,f (,var) ,@body)))))
 
 (def clamp (x a b)
   (if (< x a) a
