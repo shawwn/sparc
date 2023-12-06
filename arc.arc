@@ -228,9 +228,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Ditto: complement in functional position optimized by ac.
 
 (mac complement (f)
-  (w/uniq (gk ga)
-    `(fn (kwargs: ,gk . ,ga)
-       (no (kwapply ,f ,gk ,ga)))))
+  (w/uniq gf
+    `(let ,gf ,f
+       (if (isa!fn ,gf)
+           (compose no ,gf)
+           (no ,gf)))))
 
 (mac combine (op)
   `(fn fs
