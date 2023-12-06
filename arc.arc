@@ -293,7 +293,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (recstring f:seq seq))))
 
 (def all (test seq) 
-  (~some (complement (testify test)) seq))
+  (let f (testify test)
+    (~some ~f seq)))
        
 (def mem (test seq)
   (let f (testify test)
@@ -641,7 +642,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; is to make keep the more primitive, not rem.
 
 (def keep (test seq) 
-  (rem (complement (testify test)) seq))
+  (let f (testify test)
+    (rem ~f seq)))
 
 (def trues (f seq) 
   (rem nil (map f seq)))
