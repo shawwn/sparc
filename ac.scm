@@ -1760,12 +1760,14 @@
 ; If an err occurs in an on-err expr, no val is returned and code
 ; after it doesn't get executed.  Not quite what I had in mind.
 
-(define (on-err errfn f)
+(define (on-err fail f)
   ((call-with-current-continuation
      (lambda (k)
        (lambda ()
          (with-handlers ((exn:fail? (lambda (c)
-                                      (k (lambda () (errfn c))))))
+                                      (k (lambda () (if (procedure? fail)
+                                                        (fail c)
+                                                        fail))))))
                         (f)))))))
 (xdef on-err on-err)
 
