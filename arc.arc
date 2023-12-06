@@ -546,16 +546,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                 `(atomic (or ,(getter var) (= ,var ,val)))))))
 
 (def <= args
-  (or (no args)
-      (no (cdr args))
-      (and (no (> (car args) (cadr args)))
-           (apply <= (cdr args)))))
+  (complement (apply > args)))
 
 (def >= args
-  (or (no args)
-      (no (cdr args))
-      (and (no (< (car args) (cadr args)))
-           (apply >= (cdr args)))))
+  (complement (apply < args)))
 
 (def whitec (c)
   (in c #\space #\newline #\tab #\return))
