@@ -1464,6 +1464,9 @@
                                        (iround n)
                                        (err "Can't coerce" x type))))
                       ((bool)    #t)
+                      ((char)    (if (= (string-length x) 1)
+                                     (string-ref x 0)
+                                     (err "Can't coerce" x type)))
                       (else      (err "Can't coerce" x type))))
     ((bytes? x)     (case type
                       ((cons)    (bytes->list x))

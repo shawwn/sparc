@@ -231,6 +231,7 @@
   (test? 3 (len "\"a\""))
   ;(test? 'a "a")
   (test? #\a ("bar" 1))
+  (test? #\a (coerce "a" 'char))
   (let s "a
 b"
     (test? 3 (len s)))
