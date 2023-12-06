@@ -282,9 +282,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(while (no ,test) ,@body))
 
 (def empty (seq) 
-  (or (no seq) 
-      (and (in (type seq) 'string 'bytes 'table)
-           (is (len seq) 0))))
+  (or (null seq)
+      (let n (unless (acons seq)
+               (errsafe:len seq))
+        (is n 0))))
 
 (def reclist (f xs)
   (and xs (or (f xs) (reclist f (cdr xs)))))
