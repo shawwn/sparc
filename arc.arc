@@ -332,7 +332,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 
 (def map (f . seqs)
-  (if (some [isa _ 'string] seqs) 
+  (if (some isa!string seqs)
        (withs (n   (apply min (map len seqs))
                new (newstring n))
          ((afn (i)
