@@ -1768,10 +1768,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (cons start (range (inc start) end))))
 
 (def mismatch (s1 s2)
-  (catch
-    (on c s1
-      (when (isnt c (s2 index))
-        (throw index)))))
+  (on c s1
+    (when (isnt c (s2 index))
+      (break index))))
 
 (def memtable (ks)
   (with h (table)
