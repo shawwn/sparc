@@ -232,6 +232,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     `(fn (kwargs: ,gk . ,ga)
        (no (kwapply ,f ,gk ,ga)))))
 
+(mac combine (op)
+  `(fn fs
+     (reduce (fn (f g)
+               (fn (:kwargs . args)
+                 (,op (kwapply f kwargs args)
+                      (kwapply g kwargs args))))
+             (or fs (list (con (,op)))))))
+
+(def cand (combine and))
+(def cor  (combine or))
+
 (def rev (xs) 
   ((afn (xs acc)
      (if (no xs)
@@ -1529,18 +1540,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (withs (xp (pos x seq i) yp (pos y seq i))
     (and xp (or (no yp) (< xp yp)))))
 
-(def orf fns
-  (fn (:kwargs . args)
-    ((afn (fs)
-       (and fs (or (kwapply (car fs) kwargs args) (self (cdr fs)))))
-     fns)))
+(def orf fns (apply cor fns))
 
-(def andf fns
-  (fn (:kwargs . args)
-    (with r false
-      (each f fns
-        (= r (kwapply f kwargs args))
-        (unless r (break))))))
+(def andf fns (apply cand fns))
 
 (def atend (i s)
   (> i (- (len s) 2)))

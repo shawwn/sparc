@@ -1221,7 +1221,10 @@ c"
   (let 1st (fn (:kwargs . args) (car args))
     (test? "" (tostring (1st&pr nil 'a 'b sep: " ")))
     (test? "a b" (tostring (1st&pr 'a 'b sep: " ")))
-    (test? "a b" (tostring ((do 1st&pr) 'a 'b sep: " ")))))
+    (test? "a b" (tostring ((do 1st&pr) 'a 'b sep: " ")))
+    (test? "" (tostring ((cand 1st pr) nil 'a 'b sep: " ")))
+    (test? "a b" (tostring ((cand 1st pr) 'a 'b sep: " ")))
+    (test? "a b" (tostring ((do (cand 1st pr)) 'a 'b sep: " ")))))
 
 (define-test part
   (test? "123" (tostring ((part pr sep: " ") 1 2 3 sep: ""))))
