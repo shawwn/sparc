@@ -67,8 +67,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def cadr (xs) (car (cdr xs)))
 (def cddr (xs) (cdr (cdr xs)))
 
-(def no (x) (is x nil))
-(def yes (x) (no (no x)))
+(def no (x) (if x false true))
+(def yes (x) (if x true false))
 
 (def isa (x (o y))
   (if y
@@ -244,15 +244,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def in (x . choices)
   (yes (mem x choices)))
-
-; Could take n args, but have never once needed that.
-
-(def iso (x y)
-  (or (id x y)
-      (and (acons x) 
-           (acons y) 
-           (iso (car x) (car y)) 
-           (iso (cdr x) (cdr y)))))
 
 (mac when (test . body)
   `(if ,test ((fn () ,@body))))
@@ -714,7 +705,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (do1 (car ,g) 
               (,setter (cdr ,g)))))))
 
-(def adjoin (x xs (o test iso))
+(def adjoin (x xs (o test is))
   (if (some [test x _] xs)
       xs
       (cons x xs)))

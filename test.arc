@@ -14,9 +14,7 @@
   (tostring (write x)))
 
 (def equal? (a b)
-  (if (or (alist a) (isa!table a))
-      (is (writes a) (writes b))
-      (id a b)))
+  (is (writes a) (writes b)))
 
 (mac test? (a b)
   (w/uniq (x y)
@@ -167,7 +165,6 @@
   (test? 0 (apply * '(0 0)))
   (test? 4 (apply + '(2 2)))
   (test? 0 (apply + ()))
-  (test? 18 18.00)
   (test? 4 (- 7 3))
   (test? 4 (apply - '(7 3)))
   ;(test? 0 (apply - ()))
@@ -183,6 +180,8 @@
   (test? true (< 2e-3 0.0021))
   (test? false (< 2 2))
   (test? true (<= 2 2))
+  (test? true (is 2 2.0))
+  (test? true (is -0.0 +0.0))
   (test? -7 (- 7))
   ;(test? false (numeric ""))
   )

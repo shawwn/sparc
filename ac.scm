@@ -1122,7 +1122,7 @@
 
 (define (ar-is2 a b)
   (or (ar-id a b)
-      (and (ar-false? a) (ar-false? b))))
+      (equal?/recur a b ar-is2)))
 
 ; for all other uses of is
 
