@@ -69,7 +69,7 @@
 (def opesc (key val)
   `(awhen ,val
      (pr ,(string " " key "=\""))
-     (if (isa it 'string) (pr-escaped it) (pr it))
+     (if (isa!string it) (pr-escaped it) (pr it))
      (pr  #\")))
 
 ; need to escape more?  =?
@@ -190,11 +190,11 @@
   (if (atom spec)
       `(pr ,(string "<" spec ">"))
       (let opts (tag-options (car spec) (hug (cdr spec)))
-        (if (all [isa _ 'string] opts)
+        (if (all [isa!string _] opts)
             `(pr ,(string "<" (car spec) (apply string opts) ">"))
             `(do (pr ,(string "<" (car spec)))
                  ,@(map (fn (opt)
-                          (if (isa opt 'string)
+                          (if (isa!string opt)
                               `(pr ,opt)
                               opt))
                         opts)
@@ -364,7 +364,7 @@
               (w/uniq (gl gt)
                 `(let ,gl ,len
                    (tr (td (pr ',label ":"))
-                       (if (isa ,gl 'cons)
+                       (if (isa!cons ,gl)
                            (td (textarea ',name (car ,gl) (cadr ,gl)
                                  (let ,gt ,text (if ,gt (pr ,gt)))))
                            (td (gentag input type ',(if (is label 'password)

@@ -281,7 +281,7 @@
 ; because people try e.g. item?id=363/blank.php
 
 (def safe-item (id)
-  (ok-id&item (if (isa id 'string) (saferead id) id)))
+  (ok-id&item (if (isa!string id) (saferead id) id)))
 
 (def ok-id (id)
   (and (exact id) (<= 1 id maxid*)))
@@ -1147,7 +1147,7 @@ function vote(node) {
 (def stats-from-log (filename)
   (each x (lines:filechars filename)
     (let (s h) (halve x)
-      (awhen (aand (saferead s) (if (isa it 'int) it))
+      (awhen (aand (saferead s) (if (isa!int it) it))
         (out it (car:halve (cut h 1)))))))
 
 (def stats-day ((o ymd (date)))
@@ -2003,7 +2003,7 @@ function suggestTitle() {
 (defmemo sitename (url)
   (and (valid-url url)
        (let toks (parse-site (rem #\space url))
-         (if (isa (saferead (car toks)) 'int)
+         (if (isa!int (saferead (car toks)))
              (tostring (apply pr toks sep: "."))
              (let (t1 t2 t3 . rest) toks
                (if (and (~in t3 nil "www")

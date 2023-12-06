@@ -6,7 +6,7 @@
 (defcache algolia-key 600
   (when (file-exists algolia-key*)
     (w/infile i algolia-key*
-      (aand (read-json i) (if (isa it 'string) it it!key)))))
+      (aand (read-json i) (if (isa!string it) it it!key)))))
 
 (def algolia-set (index value (o auth algolia-write*))
   (withs (app algolia-app-id*

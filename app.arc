@@ -332,7 +332,7 @@
        nil))
 
 (def goodname (str (o min 1) (o max nil))
-  (and (isa str 'string)
+  (and (isa!string str)
        (>= (len str) min)
        (~find (fn (c) (no (or (alphadig c) (in c #\- #\_))))
               str)

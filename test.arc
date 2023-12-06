@@ -33,7 +33,7 @@
   (= passed* 0 failed* 0)
   (each (name f) tests*
     (let result (f)
-      (when (isa result 'string)
+      (when (isa!string result)
         (prn (+ " " name " " result)))))
   (prn (+ " " passed* " passed, " failed* " failed")))
 

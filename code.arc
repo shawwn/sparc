@@ -38,7 +38,7 @@
   (in x 'quote 'unquote 'quasiquote 'unquote-splicing))
 
 (def common-operators (files)
-  (keep [and (isa (car _) 'sym) (bound (car _))] (common-tokens files)))
+  (keep [and (isa!sym (car _)) (bound (car _))] (common-tokens files)))
 
 (def top40 (xs)
   (map prn (firstn 40 xs))
@@ -48,7 +48,7 @@
   (let counts (tokcount files)
     (with ranking nil
       (each (k v) counts
-        (when (and (isa k 'sym) (bound k))
+        (when (and (isa!sym k) (bound k))
           (insort (compare > [* (len (string (car _)))
                                 (cadr _)])
                   (list k v (* (len (string k)) v))

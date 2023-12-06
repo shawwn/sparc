@@ -104,7 +104,7 @@
       (map [trim:tostring:pprint _] xs))))
 
 (def dbg-slot ((k v))
-  (list k (if (isa v 'fn) (v) v)))
+  (list k (if (isa!fn v) (v) v)))
 
 (def dbg-locals (lenv)
   (map dbg-slot lenv))

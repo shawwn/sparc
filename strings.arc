@@ -120,7 +120,7 @@
 
 (def posmatch (pat seq (o start 0))
   (catch
-    (if (isa pat 'fn)
+    (if (isa!fn pat)
         (for i start (- (len seq) 1)
           (when (pat (seq i)) (throw i)))
         (for i start (- (len seq) (len pat))

@@ -563,7 +563,7 @@ Strict-Transport-Security: max-age=31556900
   (w/uniq (ga gx gr)
     (if redir
         `(fn (,ga) (withs (,gx (,f ,ga) ,gr ,redir)
-                     (if (isa ,gr 'string) ,gr ,gx)))
+                     (if (isa!string ,gr) ,gr ,gx)))
         `(fn (,ga) (prn) (,f ,ga)))))
 
 (mac flink (f (o k `(lexkey flink ,f)) :redir)

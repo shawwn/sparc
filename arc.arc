@@ -70,14 +70,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def no (x) (if x false true))
 (def yes (x) (if x true false))
 
-(def isa (x (o y))
-  (if y
-      (is (type x) y)
-      [is (type _) x]))
+(def isa (x) [is (type _) x])
 
 (def isnt (x y) (no (is x y)))
 
-(def acons (x) (is (type x) 'cons))
+(def acons (x) (isa!cons x))
 
 (def atom (x) (no (acons x)))
 
@@ -293,7 +290,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
    start))
 
 (def testify (x)
-  (if (isa x 'fn) x [is _ x]))
+  (if (isa!fn x) x [is _ x]))
 
 ; Like keep, seems like some shouldn't testify.  But find should,
 ; and all probably should.
@@ -457,7 +454,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def setforms (expr0)
   (let expr (macex expr0)
-    (if (isa expr 'sym)
+    (if (isa!sym expr)
          (if (ssyntax expr)
              (setforms (ssexpand expr))
              (w/uniq (g h)
@@ -511,7 +508,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (if (lex g) (uniq g) g)))
 
 (def expand= (place val)
-  (if (and (isa place 'sym) (~ssyntax place))
+  (if (and (isa!sym place) (~ssyntax place))
       `(assign ,place ,val)
       (let (vars prev setter) (setforms place)
         (let g (uniq-place place)
@@ -598,7 +595,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def across (l f)
   (if (alist l)
        (map1 [do (f _) unset] l)
-      (isa l 'table)
+      (isa!table l)
        (maptable (fn args (f args)) l)
        (for i 0 (edge l)
          (f (l i)))))
@@ -857,7 +854,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ;  (if (atom e)
 ;      e
 ;      (let op (and (atom (car e)) (eval (car e)))
-;        (if (isa op 'mac)
+;        (if (isa!mac op)
 ;            (apply (rep op) (cdr e))
 ;            e))))
 
@@ -987,7 +984,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def readstring1 (s (o eof eof) :code) (w/instring i s (read i eof :code)))
 
 (def read ((o x (stdin)) (o eof eof) :code)
-  (if (isa x 'string) (readstring1 x eof :code) ((if code sread sdata) x eof)))
+  (if (isa!string x) (readstring1 x eof :code) ((if code sread sdata) x eof)))
 
 ; inconsistency between names of readfile[1] and writefile
 
