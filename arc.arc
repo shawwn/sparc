@@ -301,6 +301,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (reclist f:car seq)
         (recstring f:seq seq))))
 
+(def any (seq (o test idfn))
+  (some test seq))
+
 (def all (test seq) 
   (let f (testify test)
     (~some ~f seq)))
@@ -1860,12 +1863,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (if (empty xs)
       0
       (/ (count test xs) (len xs))))
-
-(def any (l (o test idfn))
-  (catch
-    (each x l
-      (when (test x)
-        (throw t)))))
 
 (def readenv (name (o default))
   (aif (get-environment-variable name)
