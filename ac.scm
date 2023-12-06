@@ -1100,11 +1100,20 @@
 ;   (and (pred a b) (pred b c) (pred c d))
 ; reduce?
 
-(define (pairwise pred lst)
+(define (pairwise-1 pred lst)
   (or (null? lst)
       (null? (cdr lst))
       (and (ar-true? (pred (car lst) (cadr lst)))
-           (pairwise pred (cdr lst)))))
+           (pairwise-1 pred (cdr lst)))))
+
+(define (pairwise pred lst)
+  (if (and (pair? lst)
+           (null? (cdr lst)))
+      (let ((v (car lst)))
+        (procedure-rename 
+          (lambda (x) (pred x v))
+          (object-name pred)))
+      (pairwise-1 pred lst)))
 
 ; not quite right, because behavior of underlying eqv unspecified
 ; in many cases according to r5rs
