@@ -20,14 +20,14 @@
 (def load-userinfo ()
   (= hpasswords*   (safe-load-table hpwfile*)
      openids*      (safe-load-table oidfile*)
-     admins*       (map string (errsafe (readfile adminfile*)))
+     admins*       (map string (safe (readfile adminfile*)))
      cookie->user* (safe-load-table cookfile*))
   (each (c u) cookie->user*
     (= (user->cookie* u) c))
   t)
 
 (defhook reload-admins ()
-  (= admins* (map string (errsafe (readfile adminfile*))))
+  (= admins* (map string (safe (readfile adminfile*))))
   nil)
 
 (defhook create-acct (user) name: first-acct-becomes-admin
@@ -448,7 +448,7 @@
     mdtext2 (md-from-form str t)                      ; for md with no links
     sym     (or (sym:car:tokens str) fail)
     syms    (map sym (tokens str))
-    sexpr   (errsafe (readall str))
+    sexpr   (safe (readall str))
     users   (rem [no (goodname _)] (tokens str))
     toks    (tokens str)
     bigtoks (tokens str)
@@ -456,8 +456,8 @@
     choice  (readvar (cadr typ) str)
     yesno   (is str "yes")
     hexcol  (if (hex>color str) str fail)
-    time    (or (errsafe (parse-time str)) fail)
-    date    (or (errsafe (parse-date str)) fail)
+    time    (or (safe (parse-time str)) fail)
+    date    (or (safe (parse-date str)) fail)
             (err "unknown readvar type" typ)))
 
 ; dates should be tagged date, and just redefine <
@@ -750,14 +750,14 @@
          (withs ((ds ms ys) toks
                  d          (int ds))
            (aif (monthnum ms)
-                (list (or (errsafe (int ys)) ynow) 
+                (list (or (safe (int ys)) ynow) 
                       it
                       d)
                 nil))
         (monthnum (car toks))
          (let (ms ds ys) toks
-           (aif (errsafe (int ds))
-                (list (or (errsafe (int ys)) ynow) 
+           (aif (safe (int ds))
+                (list (or (safe (int ys)) ynow) 
                       (monthnum (car toks))
                       it)
                 nil))

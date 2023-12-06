@@ -12,7 +12,7 @@
 (current-directory arc-curdir)
 
 (define (safe-read x)
-  (arc-eval `(or (errsafe (coerce ,x 'num)) ,x)))
+  (arc-eval `(or (safe (coerce ,x 'num)) ,x)))
 
 (define (arc-main . args)
   (let* ((repl (or (car? args "-i")

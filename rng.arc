@@ -36,7 +36,7 @@
   (bitwise-and x (u32mask)))
 
 (def shapeof (x)
-  (or (errsafe:list:len x) (list)))
+  (or (safe:list:len x) (list)))
 
 (def broadcast (x y)
   (withs (x (listify x)

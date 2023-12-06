@@ -4,7 +4,7 @@
        #,,@body))
 
 (def try-require (lib)
-  (errsafe:seval `(begin (require ,lib) ',lib)))
+  (safe:seval `(begin (require ,lib) ',lib)))
 
 ;; Optional debugger
 ;;   raco pkg install debug

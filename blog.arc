@@ -26,7 +26,7 @@
 
 (def save-post (p) (save-table p (string postdir* p!id)))
 
-(def post (id) (posts* (errsafe:int id)))
+(def post (id) (posts* (safe:int id)))
 
 (mac blogpage body
   `(whitepage 

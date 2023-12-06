@@ -50,7 +50,7 @@
 (def handle-request (s breaksrv)
   (if breaksrv
       (handle-request-1 s)
-      (errsafe (handle-request-1 s))))
+      (safe (handle-request-1 s))))
 
 (def handle-request-1 (s)
   (let (i o ip) (socket-accept s)
@@ -350,7 +350,7 @@ Strict-Transport-Security: max-age=31556900
             (and (is type 'post)
                  (some (fn (s)
                          (and (begins s "Content-Length:")
-                              (errsafe:coerce (cadr (tokens s)) 'int)))
+                              (safe:coerce (cadr (tokens s)) 'int)))
                        (cdr lines)))
             (some (fn (s)
                     (and (or (begins s "Cookie:")
@@ -359,7 +359,7 @@ Strict-Transport-Security: max-age=31556900
                   (cdr lines))
             (or (some (fn (s)
                          (and (begins s "CF-Connecting-IP:")
-                              (errsafe:cadr (tokens s))))
+                              (safe:cadr (tokens s))))
                        (cdr lines))
                  ip)))))
 
@@ -770,11 +770,11 @@ Strict-Transport-Security: max-age=31556900
      git-pull-count* 0)
 
 (def git-pull-reload ()
-  (when (errsafe:git-pull)
+  (when (safe:git-pull)
     (when (readenv "NUKE")
-      (errsafe:git-reset-to-origin t))
+      (safe:git-reset-to-origin t))
     (++ git-pull-count*))
-  (errsafe:reload))
+  (safe:reload))
 
 (def git-pull-stats ()
   (git-pull-reload)

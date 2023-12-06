@@ -7,7 +7,7 @@
   (zap clamp b 0 255)
   (obj :r :g :b))
 
-(def dehex (str) (errsafe (coerce str 'int 16)))
+(def dehex (str) (safe (coerce str 'int 16)))
 
 (defmemo hex>color (str)
   (and (is (len str) 6)

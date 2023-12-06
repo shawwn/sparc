@@ -180,7 +180,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     `(let (,ok ,var) (guard ,expr)
        (if ,ok (do ,@body) ,fail))))
 
-(mac errsafe (expr)
+(mac safe (expr)
   `(on-err nil (fn () ,expr)))
 
 (def assoc (key al)
@@ -279,7 +279,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def empty (seq) 
   (or (null seq)
       (let n (unless (acons seq)
-               (errsafe:len seq))
+               (safe:len seq))
         (is n 0))))
 
 (def reclist (f xs)
@@ -1498,10 +1498,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(safeset ,name (cache (fn () ,lasts)
                          (fn () ,@body))))
 
-(def saferead (arg) (errsafe:read arg nil))
+(def saferead (arg) (safe:read arg nil))
 
 (def safe-load-table (filename) 
-  (or (errsafe:load-table filename)
+  (or (safe:load-table filename)
       (table)))
 
 (def date ((o s (seconds)))
@@ -1887,7 +1887,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def readenv (name (o default))
   (aif (get-environment-variable name)
-       (errsafe:read it nil)
+       (safe:read it nil)
        default))
 
 (def macos? ()
@@ -1913,7 +1913,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def call-w/tmpfile (val f (o writer disp) (o name "tmpXXXXXXXXXX.tmp") (o path (libpath "arc/tmp/")))
   (let file (tmpfile val writer name path)
     (after (f file)
-      (errsafe:rmfile file))))
+      (safe:rmfile file))))
 
 (mac w/tmpfile (var val . body)
   `(call-w/tmpfile ,val (fn (,var) ,@body)))
@@ -1936,7 +1936,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (tostring (shellrun cmd args) :bytes)))
 
 (def shellsafe (cmd :async :bytes . args)
-  (errsafe (apply shell cmd :async :bytes args)))
+  (safe (apply shell cmd :async :bytes args)))
 
 (def GET (url :bytes)
   (shell "curl" "-fsSL" (clean-url url) :bytes))

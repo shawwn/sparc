@@ -237,7 +237,7 @@
   (ensure-topstories))
 
 (def ensure-topstories ()
-  (aif (errsafe (readfile1 (+ newsdir* "topstories")))
+  (aif (safe (readfile1 (+ newsdir* "topstories")))
        (= ranked-stories* (map item it))
        (do (ero "ranking stories.")
            (gen-topstories))))
@@ -273,7 +273,7 @@
        (hook 'maxid maxid*)))
 
 (def item (id)
-  (or (items* id) (errsafe:load-item id)))
+  (or (items* id) (safe:load-item id)))
 
 (def kids (i) (map item i!kids))
 
@@ -3958,7 +3958,7 @@ To clear the selection, click the x again, or click here: @(underlink 'clear '/p
 
 (def placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
-    (when (errsafe (> y 0))
+    (when (safe (> y 0))
       (atomic
         (= (place-board* (place-at x y))
            (place-board* (place-at a b)))
