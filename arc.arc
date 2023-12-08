@@ -1401,7 +1401,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
              xs (listify xs) ys (listify ys) zs (map listify zs))
        (aif (if sorted zs (map [sort f _] zs))
              (apply ,self :sorted test: f (,self test: f xs ys) it)
-            (unset? ys)
+            (is ys unset)
              xs
             (afn ((x . xs) (y . ys))
               (if ,@body))
