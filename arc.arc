@@ -1920,17 +1920,19 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (or= traced* (table))
 
+(defvar trace-depth* 0)
+
 (def traced (f name)
   (aif (traced* f)
        f
        (annotate (type f)
-         (let i (make-param 0)
-           (fn (:kwargs . args)
-             (def pre (* " |" (i)))
-             (w/param i (+ (i) 1)
-               (ero pre (i) "Enter" name (+ args kwargs))
-               (with it (kwapply (rep f) kwargs args)
-                 (ero pre (i) "Exit" name it))))))
+         (fn (:kwargs . args)
+           (w/param trace-depth* (+ (trace-depth*) 1)
+             (def n (trace-depth*))
+             (def pre (* " |" n))
+             (ero pre n "Enter" name (+ args kwargs))
+             (with it (kwapply (rep f) kwargs args)
+               (ero pre n "Exit" name it)))))
        (do (= (traced* it) f)
            it)))
 
