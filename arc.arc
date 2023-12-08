@@ -1930,10 +1930,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (fn (:kwargs . args)
       (w/param trace-depth* (+ (trace-depth*) 1)
         (def n (trace-depth*))
-        (def pre (* " |" (- n 1)))
-        (ero pre n "Enter" name (+ args kwargs))
+        (def pre (* " │ " (- n 1)))
+        (ero pre "╭" n (cons name (+ args kwargs)))
         (with it (kwapply (rep f) kwargs args)
-          (ero pre n "Exit" name it))))))
+          (ero pre "╰" n name "==>" (writes it)))))))
 
 (def traced (f name)
   (if (traced* f)
