@@ -1240,10 +1240,15 @@
 
 (define (ar-* . args)
   (define (seq? x) (or (ar-seq? x) (null? x)))
+  (define (repeat seq n)
+    (define v (make-list n seq))
+    (if (null? v)
+        (if (pair? seq) v (ar-coerce v (ar-type seq)))
+        (apply ar-+ v)))
   (cond ((and (= (length args) 2) (seq? (car args)))
-         (apply ar-+ (make-list (cadr args) (car args))))
+         (repeat (car args) (cadr args)))
         ((and (= (length args) 2) (seq? (cadr args)))
-         (apply ar-+ (make-list (car args) (cadr args))))
+         (repeat (cadr args) (car args)))
         (#t (apply * args))))
 
 (xdef * ar-*)

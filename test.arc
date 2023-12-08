@@ -1313,7 +1313,9 @@ c"
   (test? nil (* nil 3))
   (test? nil (* 3 nil))
   (test? '(a a a) (* '(a) 3))
-  (test? '(a a a) (* 3 '(a))))
+  (test? '(a a a) (* 3 '(a)))
+  (test? "" (* 0 " "))
+  (test? nil (* '(a) 0)))
 
 run-tests
 
