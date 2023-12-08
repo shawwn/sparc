@@ -1307,5 +1307,13 @@ c"
   (test? true ((~is 1) 2))
   (test? false ((~is 1) 1)))
 
+(define-test *
+  (test? "   " (* 3 " "))
+  (test? "   " (* " " 3))
+  (test? nil (* nil 3))
+  (test? nil (* 3 nil))
+  (test? '(a a a) (* '(a) 3))
+  (test? '(a a a) (* 3 '(a))))
+
 run-tests
 

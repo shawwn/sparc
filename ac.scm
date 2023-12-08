@@ -1232,10 +1232,21 @@
          (string->symbol (ar-cat x y)))
         ((keyword? x)
          (string->keyword (ar-cat x y)))
+        ((vector? x)
+         (vector-append x y))
         (#t (+ x y))))
 
 (xdef - -)
-(xdef * *)
+
+(define (ar-* . args)
+  (define (seq? x) (or (ar-seq? x) (null? x)))
+  (cond ((and (= (length args) 2) (seq? (car args)))
+         (apply ar-+ (make-list (cadr args) (car args))))
+        ((and (= (length args) 2) (seq? (cadr args)))
+         (apply ar-+ (make-list (car args) (cadr args))))
+        (#t (apply * args))))
+
+(xdef * ar-*)
 (xdef / /)
 (xdef mod modulo)
 (xdef expt expt)
