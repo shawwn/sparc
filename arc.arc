@@ -1918,6 +1918,32 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def GET (url :bytes)
   (shell "curl" "-fsSL" (clean-url url) :bytes))
 
+(or= traced* (table))
+
+(def traced (f name)
+  (aif (traced* f)
+       f
+       (annotate (type f)
+         (let i (make-param 0)
+           (fn (:kwargs . args)
+             (def pre (* " |" (i)))
+             (w/param i (+ (i) 1)
+               (ero pre (i) "Enter" name (+ args kwargs))
+               (with it (kwapply (rep f) kwargs args)
+                 (ero pre (i) "Exit" name it))))))
+       (do (= (traced* it) f)
+           it)))
+
+(def untraced (f)
+  (with it (or (traced* f) f)
+    (wipe (traced* f))))
+
+(mac trace (f)
+  `(def ,f (atomic (traced ,f ',f))))
+
+(mac untrace (f)
+  `(def ,f (atomic (untraced ,f))))
+
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
 ; idea: implicit tables of tables; setf empty field, becomes table
