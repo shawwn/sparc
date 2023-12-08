@@ -824,7 +824,7 @@
     (if (procedure? v) v (err "Not a procedure" name))))
 
 (define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)))
-  (cond ((pair? kwargs)
+  (cond ((ar-list? kwargs)
          (list args (cadr (ar-unstash kwargs #f xs kws))))
         ((hash? kwargs)
          (ar-unstash args (hash->plist kwargs) xs kws))

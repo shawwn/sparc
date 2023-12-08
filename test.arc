@@ -1103,6 +1103,7 @@ c"
 (define-test apply
   (test? 4 (apply (fn (a b) (+ a b)) '(2 2)))
   (test? '(2 2) (apply (fn a a) '(2 2)))
+  (test? '(2 2 a: 2) (kwapply (fn a a) nil '(2 2 a: 2)))
   ;(let t '(1)
   ;  (= (get t 'foo) 17)
   ;  (test? 17 (apply (fn a (get a 'foo)) t)))
