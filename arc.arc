@@ -1922,29 +1922,33 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (defvar trace-depth* 0)
 
+(def tracer (f name)
+  (annotate (type f)
+    (fn (:kwargs . args)
+      (w/param trace-depth* (+ (trace-depth*) 1)
+        (def n (trace-depth*))
+        (def pre (* " |" (- n 1)))
+        (ero pre n "Enter" name (+ args kwargs))
+        (with it (kwapply (rep f) kwargs args)
+          (ero pre n "Exit" name it))))))
+
 (def traced (f name)
-  (aif (traced* f)
-       f
-       (annotate (type f)
-         (fn (:kwargs . args)
-           (w/param trace-depth* (+ (trace-depth*) 1)
-             (def n (trace-depth*))
-             (def pre (* " |" n))
-             (ero pre n "Enter" name (+ args kwargs))
-             (with it (kwapply (rep f) kwargs args)
-               (ero pre n "Exit" name it)))))
-       (do (= (traced* it) f)
-           it)))
+  (if (traced* f)
+      f
+      (with it (tracer f name)
+        (= (traced* it) f))))
 
 (def untraced (f)
   (with it (or (traced* f) f)
     (wipe (traced* f))))
 
-(mac trace (f)
-  `(def ,f (atomic (traced ,f ',f))))
+(mac trace fs
+  `(do ,@(each f fs
+           (out `(def ,f (atomic (traced ,f ',f)))))))
 
-(mac untrace (f)
-  `(def ,f (atomic (untraced ,f))))
+(mac untrace fs
+  `(do ,@(each f fs
+           (out `(def ,f (atomic (untraced ,f)))))))
 
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
