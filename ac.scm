@@ -4,6 +4,7 @@
 (require json)
 (require racket/string)
 (require racket/list)
+(require racket/vector)
 (require racket/sequence)
 (require racket/file)
 (require racket/port)
@@ -1215,6 +1216,8 @@
          (string->symbol (apply ar-cat args)))
         ((keyword? (car args))
          (string->keyword (apply ar-cat args)))
+        ((vector? (car args))
+         (apply vector-append args))
         (#t (apply + args))))
 
 (xdef + ar-+)
