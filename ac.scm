@@ -1539,6 +1539,7 @@
                       ((string)  (if x  "t"  "false"))
                       ((bytes)   (if x #"t" #"false"))
                       (else      (err "Can't coerce" x type))))
+    ((sequence? x)  (retry (sequence->list x)))
     (#t             (err "Can't coerce" x type))))
 
 (xdef coerce ar-coerce)
