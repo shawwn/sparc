@@ -55,6 +55,9 @@
 For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(obj ,@(+ args kwargs)))
 
+(def call (f :kwargs . args)
+  (kwapply f kwargs args))
+
 (def list (:kwargs . args)
   (+ args kwargs))
 
