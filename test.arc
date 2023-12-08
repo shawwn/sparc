@@ -1246,5 +1246,42 @@ c"
   (test? '(nil . nil) (cons))
   (test? '(a . nil) (cons 'a)))
 
+(define-test operators
+  (test? true (isa!fn (is 3)))
+  (test? true (isa!fn (< 3)))
+  (test? true (isa!fn (> 3)))
+  (test? true (isa!fn (<= 3)))
+  (test? true (isa!fn (>= 3)))
+
+  (test? false ((is 3) 2))
+  (test? true  ((is 3) 3))
+  (test? false ((is 3) 4))
+
+  (test? true  ((< 3) 2))
+  (test? false ((< 3) 3))
+  (test? false ((< 3) 4))
+
+  (test? false ((> 3) 2))
+  (test? false ((> 3) 3))
+  (test? true  ((> 3) 4))
+
+  (test? true  ((<= 3) 2))
+  (test? true  ((<= 3) 3))
+  (test? false ((<= 3) 4))
+
+  (test? false ((>= 3) 2))
+  (test? true  ((>= 3) 3))
+  (test? true  ((>= 3) 4))
+
+  (test? true (<= #\a #\a #\z))
+  (test? true (>= #\z #\a #\a))
+  (test? false (< #\a #\a #\z))
+  (test? false (> #\z #\a #\a))
+
+  (test? false (<= #\a #\space #\z))
+  (test? false (>= #\z #\space #\a))
+  (test? false (< #\a #\space #\z))
+  (test? false (> #\z #\space #\a)))
+
 run-tests
 

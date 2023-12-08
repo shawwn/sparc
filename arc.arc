@@ -545,11 +545,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
               (fn (var val)
                 `(atomic (or ,(getter var) (= ,var ,val)))))))
 
-(def <= args
-  (complement (apply > args)))
+(def >= args (#'pairwise ~< args))
 
-(def >= args
-  (complement (apply < args)))
+(def <= args (#'pairwise ~> args))
 
 (def whitec (c)
   (in c #\space #\newline #\tab #\return))
