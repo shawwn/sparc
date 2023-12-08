@@ -1249,38 +1249,48 @@ c"
   (test? '(nil . nil) (cons))
   (test? '(a . nil) (cons 'a)))
 
-(define-test operators
+(define-test pairwise
+  ; zero args should always return true
+  (each op (list < <= is isnt >= >)
+    (test? true (op)))
+
+  ; (op x) is short for [op _ x]
   (test? true (isa!fn (is 3)))
+  (test? true (isa!fn (isnt 3)))
   (test? true (isa!fn (< 3)))
   (test? true (isa!fn (> 3)))
   (test? true (isa!fn (<= 3)))
   (test? true (isa!fn (>= 3)))
-
   (test? false ((is 3) 2))
   (test? true  ((is 3) 3))
   (test? false ((is 3) 4))
-
+  (test? true  ((isnt 3) 2))
+  (test? false ((isnt 3) 3))
+  (test? true  ((isnt 3) 4))
   (test? true  ((< 3) 2))
   (test? false ((< 3) 3))
   (test? false ((< 3) 4))
-
   (test? false ((> 3) 2))
   (test? false ((> 3) 3))
   (test? true  ((> 3) 4))
-
   (test? true  ((<= 3) 2))
   (test? true  ((<= 3) 3))
   (test? false ((<= 3) 4))
-
   (test? false ((>= 3) 2))
   (test? true  ((>= 3) 3))
   (test? true  ((>= 3) 4))
 
+  ; (op x y z) is short for (and (op x y) (op y z))
+  (test? true (is #\a #\a #\a))
+  (test? false (is #\a #\a #\z))
+  (test? false (isnt #\a #\a #\a))
+  (test? false (isnt #\a #\a #\z))
+  (test? true (isnt #\a #\b #\c))
+  (test? true (isnt #\a #\b #\a))
   (test? true (<= #\a #\a #\z))
   (test? true (>= #\z #\a #\a))
   (test? false (< #\a #\a #\z))
   (test? false (> #\z #\a #\a))
-
   (test? false (<= #\a #\space #\z))
   (test? false (>= #\z #\space #\a))
   (test? false (< #\a #\space #\z))
@@ -1292,7 +1302,9 @@ c"
   (test? true (~no true))
   (test? false (~no false))
   (test? true (call ~no true))
-  (test? false (call ~no false)))
+  (test? false (call ~no false))
+  (test? true ((~is 1) 2))
+  (test? false ((~is 1) 1)))
 
 run-tests
 

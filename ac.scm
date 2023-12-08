@@ -108,7 +108,7 @@
         ; every elt of s, not just the car)
         ((caar? s 'compose) (ac (decompose (cdar s) (cdr s))))
         ((caar? s 'complement)
-         (ac (list 'no (cons (cadar s) (cdr s)))))
+         (ac (list 'complement (cons (cadar s) (cdr s)))))
         ((caar? s 'andf) (ac-andf s))
         ((pair? s) (ac-call (car s) (cdr s)))
         (#t s)))

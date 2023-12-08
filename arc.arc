@@ -75,8 +75,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def isa (x) [is (type _) x])
 
-(def isnt (x y) (no (is x y)))
-
 (def acons (x) (isa!cons x))
 
 (def atom (x) (no (acons x)))
@@ -547,6 +545,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(do ,@(hug (map1 ssexpand args)
               (fn (var val)
                 `(atomic (or ,(getter var) (= ,var ,val)))))))
+
+(def isnt args (#'pairwise ~is args))
 
 (def >= args (#'pairwise ~< args))
 
