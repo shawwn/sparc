@@ -10,9 +10,6 @@
            (return ,msg))
      (++ passed*)))
 
-(def writes (x)
-  (tostring (write x)))
-
 (def equal? (a b)
   (is (writes a) (writes b)))
 

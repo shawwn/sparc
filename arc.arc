@@ -1918,6 +1918,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def GET (url :bytes)
   (shell "curl" "-fsSL" (clean-url url) :bytes))
 
+(def writes (x)
+  (tostring (write x)))
+
 (or= traced* (table))
 
 (defvar trace-depth* 0)
