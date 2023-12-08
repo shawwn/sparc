@@ -1286,5 +1286,13 @@ c"
   (test? false (< #\a #\space #\z))
   (test? false (> #\z #\space #\a)))
 
+(define-test complement
+  (test? true ~false)
+  (test? false ~true)
+  (test? true (~no true))
+  (test? false (~no false))
+  (test? true (call ~no true))
+  (test? false (call ~no false)))
+
 run-tests
 
