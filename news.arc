@@ -388,15 +388,13 @@
 ; (map item (retrieve consider metastory:item (gen maxid* [- _ 1])))
 
 (def latest-items (test (o stop) (o n))
-  (accum a
-    (catch
-      (down id maxid* 1
-        (let i (item id)
-          (if (or (and stop (stop i)) (and n (<= n 0)))
-              (throw))
-          (when (test i)
-            (a i)
-            (if n (-- n))))))))
+  (down id maxid* 1
+    (let i (item id)
+      (if (or (and stop (stop i)) (and n (<= n 0)))
+          (break))
+      (when (test i)
+        (out i)
+        (if n (-- n))))))
 
 ; redefined later
 
@@ -1272,8 +1270,11 @@ function vote(node) {
 #'(require racket/os)
 
 (defop uptime req
-  (let ((o s "00") (o m "00") (o h "00") (o d "00")) (rev:tokens (trim:shell "ps -o etime= -p" (#'getpid)) [in _ #\- #\:])
-    (pr:string d "d " h "h " m "m " s "s")))
+  (aand (trim:shell "ps -o etime= -p" (#'getpid))
+        (tokens it [in _ #\- #\:])
+        (let (s m h d) (rev it)
+          (or= s "00" m "00" h "00" d "00")
+          (pr d "d " h "h " m "m " s "s"))))
 
 (newsop lists ()
   (longpage (now) nil "lists" "Lists" "lists"

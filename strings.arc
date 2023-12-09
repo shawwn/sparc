@@ -119,13 +119,11 @@
                   (rev acc)))))))
 
 (def posmatch (pat seq (o start 0))
-  (catch
-    (if (isa!fn pat)
-        (for i start (- (len seq) 1)
-          (when (pat (seq i)) (throw i)))
-        (for i start (- (len seq) (len pat))
-          (when (headmatch pat seq i) (throw i))))
-    nil))
+  (if (isa!fn pat)
+      (for i start (- (len seq) 1)
+        (when (pat (seq i)) (break i)))
+      (for i start (- (len seq) (len pat))
+        (when (headmatch pat seq i) (break i)))))
 
 (def headmatch (pat seq (o start 0))
   (withs (p (len pat) s (len seq))

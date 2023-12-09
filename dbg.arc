@@ -47,11 +47,9 @@
     (= (*fncounts k) nil)))
 
 (def dbg-exnenv (env c)
-  (catch
-    (each x (stacktrace c)
-      (if (env x)
-          (throw (env x))))
-    nil))
+  (each x (stacktrace c)
+    (if (env x)
+        (break (env x)))))
 
 ;(when (~bound 'exn*)
 (assign exn* nil)
