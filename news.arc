@@ -784,25 +784,25 @@ function vote(node) {
 
 ; News-Specific Defop Variants
 
-(mac defopt (name parm test msg :kwargs . body)
-  `(defop ,name ,parm ,@kwargs
+(mac defopt (name parm test msg :kws . body)
+  `(defop ,name ,parm ,@kws
      (if (,test (get-user))
          (do ,@body)
          (login-page 'both (+ "Please log in" ,msg ".")
                      (list (fn () nil)
                            (string ',name (reassemble-args ,parm)))))))
 
-(mac defopg (name parm :kwargs . body)
-  `(defopt ,name ,parm idfn "" ,@kwargs ,@body))
+(mac defopg (name parm :kws . body)
+  `(defopt ,name ,parm idfn "" ,@kws ,@body))
 
-(mac defope (name parm :kwargs . body)
-  `(defopt ,name ,parm editor " as an editor" ,@kwargs ,@body))
+(mac defope (name parm :kws . body)
+  `(defopt ,name ,parm editor " as an editor" ,@kws ,@body))
 
-(mac defopa (name parm :kwargs . body)
-  `(defopt ,name ,parm admin " as an administrator" ,@kwargs ,@body))
+(mac defopa (name parm :kws . body)
+  `(defopt ,name ,parm admin " as an administrator" ,@kws ,@body))
 
-(mac opexpand (definer name parms :kwargs . body)
-  `(,definer ,name ,(uniq 'req) ,@kwargs
+(mac opexpand (definer name parms :kws . body)
+  `(,definer ,name ,(uniq 'req) ,@kws
      (withs (user (get-user) ip (get-ip))
        (withs ,(and parms (mappend [list _ `(arg ,(string _))]
                                    parms))
@@ -811,24 +811,24 @@ function vote(node) {
 
 (or= newsop-names* nil)
 
-(mac newsop (name parms :kwargs . body)
+(mac newsop (name parms :kws . body)
   `(do (pushnew ',name newsop-names*)
-       (opexpand defop ,name ,parms ,@kwargs ,@body)))
+       (opexpand defop ,name ,parms ,@kws ,@body)))
 
-(mac newsopr (name parms :kwargs . body)
+(mac newsopr (name parms :kws . body)
   `(do (pushnew ',name newsop-names*)
-       (opexpand defopr ,name ,parms ,@kwargs ,@body)))
+       (opexpand defopr ,name ,parms ,@kws ,@body)))
 
-(mac adop (name parms :kwargs . body)
+(mac adop (name parms :kws . body)
   (w/uniq g
-    `(opexpand defopa ,name ,parms ,@kwargs
+    `(opexpand defopa ,name ,parms ,@kws
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
            ,@body)))))
 
-(mac edop (name parms :kwargs . body)
+(mac edop (name parms :kws . body)
   (w/uniq g
-    `(opexpand defope ,name ,parms ,@kwargs
+    `(opexpand defope ,name ,parms ,@kws
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
            ,@body)))))
@@ -2022,8 +2022,8 @@ function suggestTitle() {
                    "eurekster" "blogsome" "edogo" "blog" "com"
                    "ycombinator"))
 
-(def create-item (type :kwargs . args)
-  (kwapply inst kwargs 'item 'type type 'id (new-item-id) args))
+(def create-item (type :kws . args)
+  (kwapply inst kws 'item 'type type 'id (new-item-id) args))
 
 (def create-story (sub url title text (o user (get-user)) (o ip (get-ip)))
   (newslog 'create sub url (list title))

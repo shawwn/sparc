@@ -47,24 +47,24 @@
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
 
-(mac %brackets (:kwargs . args)
-  `(fn (_) ,(+ args kwargs)))
+(mac %brackets (:kws . args)
+  `(fn (_) ,(+ args kws)))
 
-(mac %braces (:kwargs . args)
+(mac %braces (:kws . args)
 "The function invoked on curly-bracket calls.
 For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
-  `(obj ,@(+ args kwargs)))
+  `(obj ,@(+ args kws)))
 
-(def call (f :kwargs . args)
-  (kwapply f kwargs args))
+(def call (f :kws . args)
+  (kwapply f kws args))
 
-(def list (:kwargs . args)
-  (+ args kwargs))
+(def list (:kws . args)
+  (+ args kws))
 
 (def idfn (x) x)
 
 (def con (x)
-  (fn (:kwargs . args) x))
+  (fn (:kws . args) x))
 
 (def caar (xs) (car (car xs)))
 (def cadr (xs) (car (cdr xs)))
@@ -202,15 +202,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(rfn self ,parms ,@body))
 
 (def flip (f)
-  (fn (:kwargs . args)
-    (kwapply f kwargs (rev args))))
+  (fn (:kws . args)
+    (kwapply f kws (rev args))))
 
-(def part (f :kwargs . args)
-  (fn (kwargs: kwrest . rest)
-    (kwapply f (+ kwargs kwrest) (+ args rest))))
+(def part (f :kws . args)
+  (fn (kws: kwrest . rest)
+    (kwapply f (+ kws kwrest) (+ args rest))))
 
-(def trap (f :kwargs . args)
-  (flip (kwapply part kwargs (flip f) (rev args))))
+(def trap (f :kws . args)
+  (flip (kwapply part kws (flip f) (rev args))))
 
 ; Ac expands x:y:z into (compose x y z), ~x into (complement x)
 
@@ -219,7 +219,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (mac compose fs
   (w/uniq (gk ga)
-    `(fn (kwargs: ,gk . ,ga)
+    `(fn (kws: ,gk . ,ga)
        ,((afn ((f . fs))
            (if fs
                (list f (self fs))
@@ -238,9 +238,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac combine (op)
   `(fn fs
      (reduce (fn (f g)
-               (fn (:kwargs . args)
-                 (,op (kwapply f kwargs args)
-                      (kwapply g kwargs args))))
+               (fn (:kws . args)
+                 (,op (kwapply f kws args)
+                      (kwapply g kws args))))
              (or fs (list (con (,op)))))))
 
 (def cand (combine and))
@@ -907,21 +907,21 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(protect (fn () ,x) (fn () ,@ys)))
 
 (let expander 
-     (fn (f var name body (o kwargs))
-       `(let ,var (,f ,name ,@kwargs)
+     (fn (f var name body (o kws))
+       `(let ,var (,f ,name ,@kws)
           (after (do ,@body) (close ,var))))
 
-  (mac w/infile (var name :kwargs . body)
-    (expander 'infile var name body kwargs))
+  (mac w/infile (var name :kws . body)
+    (expander 'infile var name body kws))
 
-  (mac w/outfile (var name :kwargs . body)
-    (expander 'outfile var name body kwargs))
+  (mac w/outfile (var name :kws . body)
+    (expander 'outfile var name body kws))
 
   ; what happens to a file opened for append if arc is killed in
   ; the middle of a write?
 
-  (mac w/appendfile (var name :kwargs . body)
-    `(w/outfile ,var ,name :append ,@kwargs ,@body))
+  (mac w/appendfile (var name :kws . body)
+    `(w/outfile ,var ,name :append ,@kws ,@body))
 
   (mac w/instring (var str . body)
     (expander 'instring var str body))
@@ -976,19 +976,19 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         (list (inside ,go bytes: ,bytes)
               (inside ,ge bytes: ,bytes))))))
 
-(mac fromstring (str :kwargs . body)
+(mac fromstring (str :kws . body)
   (w/uniq gv
-   `(w/instring ,gv ,str ,@kwargs
+   `(w/instring ,gv ,str ,@kws
       (w/stdin ,gv ,@body))))
 
-(mac fromfile (name :kwargs . body)
+(mac fromfile (name :kws . body)
   (w/uniq gv
-    `(w/infile ,gv ,name ,@kwargs
+    `(w/infile ,gv ,name ,@kws
        (w/stdin ,gv ,@body))))
 
-(mac tofile (name :kwargs . body)
+(mac tofile (name :kws . body)
   (w/uniq gv
-    `(w/outfile ,gv ,name ,@kwargs
+    `(w/outfile ,gv ,name ,@kws
        (w/stdout ,gv ,@body))))
 
 (def readstring1 (s (o eof eof) :code) (w/instring i s (read i eof :code)))
@@ -1248,9 +1248,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (each (k v) al
       (= (h k) v))))
 
-(def obj (:kwargs . args)
+(def obj (:kws . args)
   (with h (listtab (hug args))
-    (each (k v) (hug kwargs)
+    (each (k v) (hug kws)
       (= (h (sym k)) v))))
 
 (def load-table (file (o eof))
@@ -1448,13 +1448,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                           (hug fields)))
              (templates* ',name))))
 
-(def inst (tem :kwargs . args)
+(def inst (tem :kws . args)
   (with x (table)
     (each (k v) (if (acons tem) tem (templates* tem))
       (unless (no v) (= (x k) (v))))
     (each (k v) (hug args)
       (= (x k) v))
-    (each (k v) (hug kwargs)
+    (each (k v) (hug kws)
       (= (x (sym k)) v))
     (or= (x 'type) tem)))
 
@@ -1563,7 +1563,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ;(def compare (comparer scorer)
 ;  (fn args (apply comparer map scorer args)))
 
-(def only (:kwargs . args)
+(def only (:kws . args)
   (car args))
 
 (mac conswhen (f x y)
@@ -1927,12 +1927,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def tracer (f name)
   (annotate (type f)
-    (fn (:kwargs . args)
+    (fn (:kws . args)
       (w/param trace-depth* (+ (trace-depth*) 1)
         (def n (trace-depth*))
         (def pre (* " │ " (- n 1)))
-        (ero pre "╭" n (cons name (+ args kwargs)))
-        (with it (kwapply (rep f) kwargs args)
+        (ero pre "╭" n (cons name (+ args kws)))
+        (with it (kwapply (rep f) kws args)
           (ero pre "╰" n name "==>" (writes it)))))))
 
 (def traced (f name)

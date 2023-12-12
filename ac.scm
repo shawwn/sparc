@@ -553,13 +553,13 @@
   (if (pair? args)
       (or (ac-kwargs? (car args))
           (ac-kwargs? (cdr args)))
-      (eq? args '#:kwargs)))
+      (eq? args '#:kws)))
 
 (define (ar-kwproc f)
   (make-keyword-procedure
     (lambda (ks vs . args)
       (let ((kwargs (apply append (map list ks vs))))
-        (apply f args #:kwargs kwargs)))
+        (apply f args #:kws kwargs)))
     f))
 
 ; does an fn arg list use optional parameters or destructuring?
