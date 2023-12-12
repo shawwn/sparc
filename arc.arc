@@ -311,27 +311,27 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; and all probably should.
 
 (def some (test seq)
-  (let f (testify test)
-    (if (alist seq)
-        (reclist f:car seq)
-        (recstring f:seq seq))))
+  (def f (testify test))
+  (if (alist seq)
+      (reclist f:car seq)
+      (recstring f:seq seq)))
 
 (def any (seq (o test idfn))
   (some test seq))
 
 (def all (test seq) 
-  (let f (testify test)
-    (~some ~f seq)))
+  (def f (testify test))
+  (~some ~f seq))
        
 (def mem (test seq)
-  (let f (testify test)
-    (reclist [if (f:car _) _] seq)))
+  (def f (testify test))
+  (reclist [if (f:car _) _] seq))
 
 (def find (test seq)
-  (let f (testify test)
-    (if (alist seq)
-        (reclist   [if (f:car _) (car _)] seq)
-        (recstring [if (f:seq _) (seq _)] seq))))
+  (def f (testify test))
+  (if (alist seq)
+      (reclist   [if (f:car _) (car _)] seq)
+      (recstring [if (f:seq _) (seq _)] seq)))
 
 ; Possible to write map without map1, but makes News 3x slower.
 
