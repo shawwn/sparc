@@ -27,6 +27,8 @@
   (bitwise-and (rshift i by)
                (u32mask)))
 
+#'(require ffi/vector)
+
 (def ensure-u64 (n)
   (let v (make-u64vector 1)
     (u64vector-set! v 0 n)
@@ -352,8 +354,11 @@
                (nextafter -1.0 0.0) 1.0
                [* (sqrt 2) (erf-inv _)]))
 
-(= nextafter  #'(get-ffi-obj 'nextafter  #f (_fun _double _double -> _double))
-   nextafterf #'(get-ffi-obj 'nextafterf #f (_fun _float _float -> _float)))
+#'(require ffi/unsafe)
+
+(def nextafter #'(get-ffi-obj 'nextafter  #f (_fun _double _double -> _double)))
+
+(def nextafterf #'(get-ffi-obj 'nextafterf #f (_fun _float _float -> _float)))
 
 ;def polevl(x, coefs, N):
 ;    ans = 0
