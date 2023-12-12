@@ -207,8 +207,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (kwapply f kws (rev args))))
 
 (def part (f :kws . args)
-  (fn (kws: kwrest . rest)
-    (kwapply f (+ kws kwrest) (+ args rest))))
+  (fn (kws: kws1 . args1)
+    (kwapply f (+ kws kws1) (+ args args1))))
 
 (def trap (f :kws . args)
   (flip (kwapply part kws (flip f) (rev args))))
