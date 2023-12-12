@@ -116,6 +116,9 @@
 
 (define ar-nil '())
 (define ar-t #t)
+(define ar-nan +nan.0)
+(define ar-inf +inf.0)
+(define ar-ninf -inf.0)
 
 (define (ar-nil? x)
   (or (null? x)
@@ -401,6 +404,12 @@
          ar-t)
         ((eqv? x 'false)
          #f)
+        ((eqv? x 'nan)
+         ar-nan)
+        ((eqv? x 'inf)
+         ar-inf)
+        ((eqv? x '-inf)
+         ar-ninf)
         (#t (or (keywordp x) (ac-number-literal x) x))))
 
 (define (ac-unquoted x)
@@ -412,6 +421,12 @@
          't)
         ((eqv? x #f)
          'false)
+        ((eqv? x ar-nan)
+         'nan)
+        ((eqv? x ar-inf)
+         'inf)
+        ((eqv? x ar-ninf)
+         '-inf)
         (#t x)))
 
 ; quasiquote
@@ -704,10 +719,8 @@
                  (ac-dbname! a)
                  (ac b1))))
         (list 'let `((,n ,b))
-               (cond ((eqv? a 'nil) (err "Can't rebind nil"))
-                     ((eqv? a 't) (err "Can't rebind t"))
-                     ((eqv? a 'true) (err "Can't rebind true"))
-                     ((eqv? a 'false) (err "Can't rebind false"))
+               (cond ((not (eqv? a (ac-quoted a)))
+                      (err "Can't rebind constant" a))
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
                      ((ac-lex? a) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-name a)
@@ -1144,6 +1157,9 @@
 (xdef t   ar-t)
 (xdef false #f)
 (xdef true  #t)
+(xdef nan ar-nan)
+(xdef inf ar-inf)
+(xdef -inf ar-ninf)
 
 (define (all test seq)
   (or (null? seq)
