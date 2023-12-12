@@ -114,6 +114,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (+ (car args) (cdr args)))
 
 (def consif (x y) (if x (cons x y) y))
+
 (def snocif (x y) (if y (snoc x y) x))
 
 (mac cons! (var . args)
