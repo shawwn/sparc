@@ -1272,6 +1272,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def copy (x . args)
   (let x2 (case (type x)
+            nil    x
             sym    x
             cons   (apply (fn args args) x)
             string (with new (newstring (len x))

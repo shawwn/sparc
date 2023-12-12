@@ -1314,5 +1314,13 @@ c"
   (test? "" (* 0 " "))
   (test? nil (* '(a) 0)))
 
+(define-test nil
+  (test? true (isa!nil nil))
+  (test? true (isa!nil (list)))
+  (test? true (isa!nil '()))
+  (test? false (isa!nil '(a)))
+  (test? false (isa!nil 'a))
+  (test? nil (coerce (list) 'nil)))
+
 run-tests
 

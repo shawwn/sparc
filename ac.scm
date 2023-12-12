@@ -1311,7 +1311,7 @@
   (cond ((ar-tagged? x)     (ar-tagged-type x))
         ((pair? x)          'cons)
         ((symbol? x)        'sym)
-        ((null? x)          'sym)
+        ((null? x)          ar-nil)
         ((procedure? x)     'fn)
         ((char? x)          'char)
         ((string? x)        'string)
