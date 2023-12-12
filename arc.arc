@@ -402,14 +402,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac atomic body
   `(atomic-invoke (fn () ,@body)))
 
-(mac atlet args
-  `(atomic (let ,@args)))
+(mac atlet body
+  `(atomic (let ,@body)))
   
-(mac atwith args
-  `(atomic (with ,@args)))
+(mac atwith body
+  `(atomic (with ,@body)))
 
-(mac atwiths args
-  `(atomic (withs ,@args)))
+(mac atwiths body
+  `(atomic (withs ,@body)))
 
 
 ; setforms returns (vars get set) for a place based on car of an expr
