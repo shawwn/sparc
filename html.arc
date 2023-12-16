@@ -47,7 +47,7 @@
   (+ (hexreps (col 'r)) (hexreps (col 'g)) (hexreps (col 'b))))
 
 (def opcolor (key val)
-  (w/uniq gv
+  (letu gv
     `(whenlet ,gv ,val
        (pr ,(string " " key "=#") (hexrep ,gv)))))
 
@@ -268,7 +268,7 @@
   `(tr ,@(map [list 'td _] args)))
 
 (mac prrow args
-  (w/uniq g
+  (letu g
     `(tr ,@(map (fn (a)
                   `(let ,g ,a
                      (if (number ,g)
@@ -361,7 +361,7 @@
 (mac inputs args
   `(tag (table border 0)
      ,@(map (fn ((name label len text (o plain) (o autofocus)))
-              (w/uniq (gl gt)
+              (letu (gl gt)
                 `(let ,gl ,len
                    (tr (td (pr ',label ":"))
                        (if (isa!cons ,gl)
@@ -477,7 +477,7 @@
        (~find [in _ #\< #\> #\" #\'] url)))
 
 (mac fontcolor (c . body)
-  (w/uniq g
+  (letu g
     `(let ,g ,c
        (tag-if color (font color ,g)
          ,@body))))

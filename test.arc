@@ -14,7 +14,7 @@
   (is (writes a) (writes b)))
 
 (mac test? (a b)
-  (w/uniq (x y)
+  (letu (x y)
     `(withs (,x ,a ,y ,b)
        (test! (equal? ,x ,y)
               (+ "failed: expected " (writes ,x) ", was " (writes ,y)
@@ -653,7 +653,7 @@ c"
   (test? 1 ((fn () (point return (return (if true (return 1) 2)))))))
 
 (mac guard1 (x)
-  (w/uniq (ok v)
+  (letu (ok v)
     `(let (,ok ,v) (guard ,x)
        (list ,ok (if ,ok ,v (details ,v))))))
 

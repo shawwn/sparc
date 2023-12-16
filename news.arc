@@ -305,7 +305,7 @@
   (push (list i!id how) kill-log*))
 
 (mac each-loaded-item (var . body)
-  (w/uniq g
+  (letu g
     `(down ,g maxid* 1
        (whenlet ,var (items* ,g)
          ,@body))))
@@ -553,7 +553,7 @@
 (or= pagefns* nil)
 
 (mac fulltop (lid label title whence . body)
-  (w/uniq (gi gl gt gw)
+  (letu (gi gl gt gw)
     `(withs (,gi ,lid ,gl ,label ,gt ,title ,gw ,whence)
        (npage (+ (if ,gt (+ ,gt bar*) "") site-name*) ,gl
          (if (check-procrast)
@@ -563,7 +563,7 @@
              (row (procrast-msg ,gw)))))))
 
 (mac longpage (t1 lid label title whence . body)
-  (w/uniq (gt gi)
+  (letu (gt gi)
     `(withs (,gt (con ,t1) ,gi ,lid)
        (fulltop ,gi ,label ,title ,whence
          (trtd ,@body)
@@ -820,14 +820,14 @@ function vote(node) {
        (opexpand defopr ,name ,parms ,@kws ,@body)))
 
 (mac adop (name parms :kws . body)
-  (w/uniq g
+  (letu g
     `(opexpand defopa ,name ,parms ,@kws
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
            ,@body)))))
 
 (mac edop (name parms :kws . body)
-  (w/uniq g
+  (letu g
     `(opexpand defope ,name ,parms ,@kws
        (let ,g (string ',name)
          (shortpage nil ,g ,g ,g
@@ -1048,7 +1048,7 @@ function vote(node) {
 ; stored value to a hash table whose keys were lists of arguments.
 
 (mac newsfn (user time . body)
-  (w/uniq gc
+  (letu gc
     `(let ,gc (cache (fn () (* caching* ,time))
                      (fn () (tostring (let ,user nil ,@body))))
        (fn (,user)

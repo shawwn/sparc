@@ -138,30 +138,33 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(let ,(car parms) ,(cadr parms) 
          (withs ,(cddr parms) ,@body))))
 
-(mac w/uniq (names . body)
+(mac uvar names
+  `(uniq ',(lexname) ,@names))
+
+(mac letu (names . body)
   (if names
       (let (var . names) (listify names)
-        `(let ,var (uniq ',(lexname) ',var)
-           (w/uniq ,names ,@body)))
+        `(let ,var (uvar)
+           (letu ,names ,@body)))
       `(do ,@body)))
 
 (mac and ((o x 'true) . args)
   (if args
-      (w/uniq g
+      (letu g
         `(let ,g ,x
            (if ,g (and ,@args) ,g)))
       x))
 
 (mac or ((o x 'false) . args)
   (if args
-      (w/uniq g
+      (letu g
         `(let ,g ,x
            (if ,g ,g (or ,@args))))
       x))
 
 (mac either ((o x 'nil) . args)
   (if args
-      (w/uniq g
+      (letu g
         `(let ,g ,x
            (if (null ,g) (either ,@args) ,g)))
       x))
@@ -175,7 +178,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            (fn () (list true (do ,@body)))))
 
 (mac eif (var expr (o fail var) . body)
-  (w/uniq ok
+  (letu ok
     `(let (,ok ,var) (guard ,expr)
        (if ,ok (do ,@body) ,fail))))
 
@@ -219,7 +222,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Composes in functional position are transformed away by ac.
 
 (mac compose fs
-  (w/uniq (gk ga)
+  (letu (gk ga)
     `(fn (kws: ,gk . ,ga)
        ,((afn ((f . fs))
            (if fs
@@ -230,7 +233,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Ditto: complement in functional position optimized by ac.
 
 (mac complement (f)
-  (w/uniq gf
+  (letu gf
     `(let ,gf ,f
        (if (isa!fn ,gf)
            (compose no ,gf)
@@ -264,7 +267,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(if (no ,test) ((fn () ,@body))))
 
 (mac point (name :default . body)
-  (w/uniq (g p)
+  (letu (g p)
     `(#'call/ec
        (fn (,g)
          (let ,name (fn ((o ,p ,default)) (,g ,p))
@@ -279,7 +282,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        ,@body)))
 
 (mac while (test . body)
-  (w/uniq (gf gp)
+  (letu (gf gp)
     `(looping
        ((rfn ,gf (,gp)
           (when ,gp ((fn () ,@body)) (,gf ,test)))
@@ -428,7 +431,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (assign setter (table))
 
 (mac defset (name parms . body)
-  (w/uniq gexpr
+  (letu gexpr
     `(sref setter 
            (fn (,gexpr)
              (let ,parms (cdr ,gexpr)
@@ -436,31 +439,31 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            ',name)))
 
 (defset car (x)
-  (w/uniq g
+  (letu g
     (list (list g x)
           `(car ,g)
           `(fn (val) (scar ,g val)))))
 
 (defset cdr (x)
-  (w/uniq g
+  (letu g
     (list (list g x)
           `(cdr ,g)
           `(fn (val) (scdr ,g val)))))
 
 (defset caar (x)
-  (w/uniq g
+  (letu g
     (list (list g x)
           `(caar ,g)
           `(fn (val) (scar (car ,g) val)))))
 
 (defset cadr (x)
-  (w/uniq g
+  (letu g
     (list (list g x)
           `(cadr ,g)
           `(fn (val) (scar (cdr ,g) val)))))
 
 (defset cddr (x)
-  (w/uniq g
+  (letu g
     (list (list g x)
           `(cddr ,g)
           `(fn (val) (scdr (cdr ,g) val)))))
@@ -475,7 +478,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (if (isa!sym expr)
          (if (ssyntax expr)
              (setforms (ssexpand expr))
-             (w/uniq (g h)
+             (letu (g h)
                (list (list g expr)
                      g
                      `(fn (,h) (assign ,expr ,h)))))
@@ -491,7 +494,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                (do (when (caris (car expr) 'fn)
                      (warn "Inverting what looks like a function call"
                            expr0 expr))
-                   (w/uniq (g h)
+                   (letu (g h)
                      (let argsyms (map [uniq] (cdr expr))
                         (list (+ (list g (car expr))
                                  (mappend list argsyms (cdr expr)))
@@ -568,7 +571,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (in c #\. #\, #\; #\: #\! #\?))
 
 (mac loop (start test update . body)
-  (w/uniq (gfn gparm)
+  (letu (gfn gparm)
     `(looping
        ,start
        ((rfn ,gfn (,gparm) 
@@ -577,13 +580,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         ,test))))
 
 (mac for (v init max . body)
-  (w/uniq (gi gm)
+  (letu (gi gm)
     `(withs (,v nil ,gi ,init ,gm (+ ,max 1))
        (loop (assign ,v ,gi) (< ,v ,gm) (assign ,v (+ ,v 1))
          ,@body))))
 
 (mac down (v init min . body)
-  (w/uniq (gi gm)
+  (letu (gi gm)
     `(withs (,v nil ,gi ,init ,gm (- ,min 1))
        (loop (assign ,v ,gi) (> ,v ,gm) (assign ,v (- ,v 1))
          ,@body))))
@@ -612,7 +615,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (f (l i)))))
 
 (mac each (var xs . body)
-  (w/uniq f
+  (letu f
     `(looping
        (across ,xs (rfn ,f (,var) ,@body)))))
 
@@ -683,14 +686,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(caselet ,(uniq) ,expr ,@args))
 
 (mac push (x place)
-  (w/uniq gx
+  (letu gx
     (let (binds val setter) (setforms place)
       `(let ,gx ,x
          (atwiths ,binds
            (,setter (cons ,gx ,val)))))))
 
 (mac swap (place1 place2)
-  (w/uniq (g1 g2)
+  (letu (g1 g2)
     (withs ((binds1 val1 setter1) (setforms place1)
             (binds2 val2 setter2) (setforms place2))
       `(atwiths ,(+ binds1 (list g1 val1) binds2 (list g2 val2))
@@ -710,7 +713,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
               forms))))
 
 (mac pop (place)
-  (w/uniq g
+  (letu g
     (let (binds val setter) (setforms place)
       `(atwiths ,(+ binds (list g val))
          (do1 (car ,g) 
@@ -722,19 +725,19 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (cons x xs)))
 
 (mac pushnew (x place . args)
-  (w/uniq gx
+  (letu gx
     (let (binds val setter) (setforms place)
       `(atwiths ,(+ (list gx x) binds)
          (,setter (adjoin ,gx ,val ,@args))))))
 
 (mac pull (test place)
-  (w/uniq g
+  (letu g
     (let (binds val setter) (setforms place)
       `(atwiths ,(+ (list g test) binds)
          (,setter (rem ,g ,val))))))
 
 (mac togglemem (x place . args)
-  (w/uniq gx
+  (letu gx
     (let (binds val setter) (setforms place)
       `(atwiths ,(+ (list gx x) binds)
          (,setter (if (mem ,gx ,val)
@@ -762,14 +765,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (,setter (,gop ,val ,@gargs))))))
 
 (mac alset (place key val)
-  (w/uniq v
+  (letu v
     `(atwith ,v ,val
        (pull [caris _ ,key] ,place)
        (unless (null ,v)
          (push (list ,key ,v) ,place)))))
 
 (defset alref (l key)
-  (w/uniq k
+  (letu k
     (list (list k key)
           `(alref ,l ,k)
           `(fn (val) (alset ,l ,k val)))))
@@ -815,7 +818,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Destructuring means ambiguity: are pat vars bound in else? (no)
 
 (mac iflet (var expr then . rest)
-  (w/uniq gv
+  (letu gv
     `(let ,gv ,expr
        (if ,gv (let ,var ,gv ,then) ,@rest))))
 
@@ -840,7 +843,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(let it ,(car args) (and it (aand ,@(cdr args))))))
 
 (mac w/accum args
-  (w/uniq ga
+  (letu ga
     `(accum ,ga
        ,@(each expr args
            (out `(aif ,expr (,ga it)))))))
@@ -848,7 +851,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
 (mac drain (expr (o eof 'eof))
-  (w/uniq g
+  (letu g
     `(whiler ,g ,expr ,eof
        (out ,g))))
 
@@ -856,7 +859,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Rename this if use it often.
 
 (mac whiler (var expr endval . body)
-  (w/uniq gf
+  (letu gf
     `(withs (,var nil ,gf (testify ,endval))
        (until (,gf (= ,var ,expr))
          ,@body))))
@@ -883,7 +886,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
    x nil))
 
 (mac check (x test (o alt))
-  (w/uniq gx
+  (letu gx
     `(let ,gx ,x
        (if (,test ,gx) ,gx ,alt))))
 
@@ -962,13 +965,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(tostring bytes: true ,@body))
 
 (mac tostring (:bytes . body)
-  (w/uniq gv
+  (letu gv
    `(w/outstring ,gv
       (w/stdout ,gv ,gv ,@body)
       (inside ,gv bytes: ,bytes))))
 
 (mac tostrings (:bytes . body)
-  (w/uniq (ge go)
+  (letu (ge go)
    `(w/outstring ,ge
       (w/outstring ,go
         (w/stderr ,ge
@@ -978,17 +981,17 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
               (inside ,ge bytes: ,bytes))))))
 
 (mac fromstring (str :kws . body)
-  (w/uniq gv
+  (letu gv
    `(w/instring ,gv ,str ,@kws
       (w/stdin ,gv ,@body))))
 
 (mac fromfile (name :kws . body)
-  (w/uniq gv
+  (letu gv
     `(w/infile ,gv ,name ,@kws
        (w/stdin ,gv ,@body))))
 
 (mac tofile (name :kws . body)
-  (w/uniq gv
+  (letu gv
     `(w/outfile ,gv ,name ,@kws
        (w/stdout ,gv ,@body))))
 
@@ -1071,7 +1074,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                   exprs))))
 
 (mac n-of (n expr)
-  (w/uniq ga
+  (letu ga
     `(let ,ga nil     
        (repeat ,n (push ,expr ,ga))
        (rev ,ga))))
@@ -1111,7 +1114,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac on (var s . body)
   (if (is var 'index)
       (err "Can't use index as first arg to on.")
-      (w/uniq gs
+      (letu gs
         `(let ,gs ,s
            (forlen index ,gs
              (let ,var (,gs index)
@@ -1128,7 +1131,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def min args (best < args))
 
 ; (mac max2 (x y)
-;   (w/uniq (a b)
+;   (letu (a b)
 ;     `(withs (,a ,x ,b ,y) (if (> ,a ,b) ,a ,b))))
 
 (def most (f seq) 
@@ -1192,7 +1195,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Don't currently use this but suspect some code could.
 
 (mac summing (sumfn . body)
-  (w/uniq (gc gt)
+  (letu (gc gt)
     `(with ,gc 0
        (let ,sumfn (fn (,gt) (if ,gt (++ ,gc)))
          ,@body))))
@@ -1385,7 +1388,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (list (cut seq 0 pos) (cut seq pos)))
 
 (mac time (expr (o label))
-  (w/uniq (t1 t2)
+  (letu (t1 t2)
     `(let ,t1 (now)
        (do1 ,expr
             (let ,t2 (now)
@@ -1569,7 +1572,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (car args))
 
 (mac conswhen (f x y)
-  (w/uniq (gf gx)
+  (letu (gf gx)
    `(withs (,gf ,f ,gx ,x)
       (if (,gf ,gx) (cons ,gx ,y) ,y))))
 
@@ -1741,7 +1744,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   ((sort > ns) (trunc (/ (len ns) 2))))
 
 (mac noisy-each (n var val . body)
-  (w/uniq (gn gc)
+  (letu (gn gc)
     `(withs (,gn ,n ,gc 0)
        (after
          (each ,var ,val
@@ -1782,7 +1785,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (= bar* " | ")
 
 (mac w/bars body
-  (w/uniq (out needbars)
+  (letu (out needbars)
     `(let ,needbars nil
        (do ,@(map (fn (e)
                     `(let ,out (tostring ,e)
@@ -1801,7 +1804,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(new-thread (fn () ,@body)))
 
 (mac trav (x . fs)
-  (w/uniq g
+  (letu g
     `((afn (,g)
         (when ,g
           ,@(map [list _ g] fs)))
@@ -1826,7 +1829,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (or= savers* (table))
 
 (mac fromdisk (var file init load save)
-  (w/uniq (gf gv)
+  (letu (gf gv)
     `(do1 (= ,var (iflet ,gf (file-exists ,file)
                          (,load ,gf)
                          ,init))
@@ -1847,7 +1850,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 
 (mac evtil (expr test)
-  (w/uniq gv
+  (letu gv
     `(with ,gv ,expr
        (while (no (,test ,gv))
          (= ,gv ,expr)))))

@@ -100,7 +100,7 @@
 ; username and ip addr of every genlink, and check if they match.
 
 (mac ulink (text :redir . body)
-  (w/uniq (u req)
+  (letu (u req)
     `(let ,u (get-user)
        (linkf ,text (,req) redir: ,redir
          (when-umatch ,u redir: ,redir

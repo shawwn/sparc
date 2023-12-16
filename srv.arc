@@ -204,7 +204,7 @@ Strict-Transport-Security: max-age=31556900
 ; to prn a blank line before anything meant to be part of the page.
 
 (mac defop-raw (name parms . body)
-  (w/uniq t1
+  (letu t1
     `(= (srvops* ',name) 
         (fn ,parms 
           (let ,t1 (con (mnow))
@@ -216,7 +216,7 @@ Strict-Transport-Security: max-age=31556900
       (srvops* ',name)     (fn ,parms ,@body)))
 
 (mac defop (name parm :header . body)
-  (w/uniq gs
+  (letu gs
     `(do ,(if header `(= (static-header* ',name) ,header))
          (wipe (redirector* ',name))
          (defop-raw ,name (,gs ,parm) 
@@ -225,7 +225,7 @@ Strict-Transport-Security: max-age=31556900
 ; Defines op as a redirector.  Its retval is new location.
 
 (mac defopr (name parm . body)
-  (w/uniq gs
+  (letu gs
     `(do (= (redirector* ',name) t)
          (defop-raw ,name (,gs ,parm)
            ,@body))))
@@ -560,7 +560,7 @@ Strict-Transport-Security: max-age=31556900
   (string rfnurl* "?fnid=" (fnid f k)))
 
 (def fredir (f redir)
-  (w/uniq (ga gx gr)
+  (letu (ga gx gr)
     (if redir
         `(fn (,ga) (withs (,gx (,f ,ga) ,gr ,redir)
                      (if (isa!string ,gr) ,gr ,gx)))
@@ -592,7 +592,7 @@ Strict-Transport-Security: max-age=31556900
 ; bad to have both flink and linkf; rename flink something like fnid-link
 
 (mac linkf (text parms :redir . body)
-  (w/uniq gtext
+  (letu gtext
     `(let ,gtext ,text
        (tag (a href (flink redir: ,redir (fn ,parms ,@body)))
          (pr ,gtext)))))
@@ -641,7 +641,7 @@ Strict-Transport-Security: max-age=31556900
 ; (unless the server is restarted).
 
 (mac taform (lasts f :redir . body)
-  (w/uniq (gl gf gi ge)
+  (letu (gl gf gi ge)
     `(withs (,gl ,lasts
              ,ge (lexkey taform ,f ,@body)
              ,gf ,(fredir f redir))

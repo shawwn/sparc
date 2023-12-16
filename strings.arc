@@ -91,7 +91,7 @@
           (pr (upcase:coerce i 'string 16)))))))
 
 (mac litmatch (pat string (o start 0))
-  (w/uniq (gstring gstart)
+  (letu (gstring gstart)
     `(withs (,gstring ,string ,gstart ,start)
        (unless (> (+ ,gstart ,(len pat)) (len ,gstring))
          (and ,@(let acc nil
@@ -108,7 +108,7 @@
 ;                    pat)
 
 (mac endmatch (pat string)
-  (w/uniq (gstring glen)
+  (letu (gstring glen)
     `(withs (,gstring ,string ,glen (len ,gstring))
        (unless (> ,(len pat) (len ,gstring))
          (and ,@(let acc nil
