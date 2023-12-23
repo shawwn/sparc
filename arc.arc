@@ -170,7 +170,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       x))
 
 (mac do1 args
-  `(with ,(uniq) ,(car args)
+  `(with ,(uvar) ,(car args)
      ,@(cdr args)))
 
 (mac guard body
@@ -495,7 +495,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
                      (warn "Inverting what looks like a function call"
                            expr0 expr))
                    (letu (g h)
-                     (let argsyms (map [uniq] (cdr expr))
+                     (let argsyms (map [uvar] (cdr expr))
                         (list (+ (list g (car expr))
                                  (mappend list argsyms (cdr expr)))
                               `(,g ,@argsyms)
@@ -592,7 +592,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          ,@body))))
 
 (mac repeat (n . body)
-  `(for ,(uniq) 1 ,n ,@body))
+  `(for ,(uvar) 1 ,n ,@body))
 
 (def accfn ((o l))
   (fn xs
@@ -683,7 +683,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(let ,var ,expr ,(ex args)))
 
 (mac case (expr . args)
-  `(caselet ,(uniq) ,expr ,@args))
+  `(caselet ,(uvar) ,expr ,@args))
 
 (mac push (x place)
   (letu gx
@@ -701,7 +701,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (,setter2 ,g1)))))
 
 (mac rotate places
-  (withs (vars (map [uniq] places)
+  (withs (vars (map [uvar] places)
           forms (map setforms places))
     `(atwiths ,(mappend (fn (g (binds val setter))
                           (+ binds (list g val)))
@@ -753,8 +753,8 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; E.g. (++ x) equiv to (zap + x 1)
 
 (mac zap (op place . args)
-  (withs (gop    (uniq)
-          gargs  (map [uniq] args)
+  (withs (gop    (uvar)
+          gargs  (map [uvar] args)
           mix    (afn seqs 
                    (if (some no seqs)
                        nil
@@ -1610,7 +1610,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       (when (> v n) (= winner k n v)))
     (list winner n)))
 
-(let argsym (uniq)
+(let argsym (uvar)
 
   (def parse-format (str)
     (accum a
