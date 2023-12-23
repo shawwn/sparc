@@ -1002,7 +1002,7 @@
     (if (eof-object? c) fail c)))
 
 (define (ready? check peek i fail)
-  (atomic-invoke
+  (ar-atomic-invoke
     (lambda ()
       (if (check i) (peek i) fail))))
 
@@ -1102,10 +1102,8 @@
   (hash-for-each table fn)
   table)
 
-(define (protect during after)
-  (dynamic-wind (lambda () #t) during after))
-
-(xdef protect protect)
+(xdef protect (during after)
+  (ar-protect during after))
 
 ; need to use a better seed
 
@@ -1369,28 +1367,7 @@
   (let-values (((x y) (tcp-addresses port)))
     y))
 
-; make sure only one thread at a time executes anything
-; inside an atomic-invoke. atomic-invoke is allowed to
-; nest within a thread; the thread-cell keeps track of
-; whether this thread already holds the lock.
-
-(define ar-the-sema (make-semaphore 1))
-
-(define ar-sema-cell (make-thread-cell #f))
-
-(define atomic-invoke (lambda (f)
-                       (if (thread-cell-ref ar-sema-cell)
-                           (ar-apply f '())
-                           (begin
-                             (thread-cell-set! ar-sema-cell #t)
-			     (protect
-			      (lambda ()
-				(call-with-semaphore
-				 ar-the-sema
-				 (lambda () (ar-apply f '()))))
-			      (lambda ()
-				(thread-cell-set! ar-sema-cell #f)))))))
-(xdef atomic-invoke atomic-invoke)
+(xdef atomic-invoke (f) (ar-atomic-invoke f))
 
 (xdef dead thread-dead?)
 

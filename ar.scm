@@ -546,3 +546,28 @@
         ((keyword? x) (string-length (keyword->string x)))
         (#t (ar-err "Can't get len of" x))))
 
+(define (ar-protect during after)
+  (dynamic-wind (lambda () #t) during after))
+
+; make sure only one thread at a time executes anything
+; inside an atomic-invoke. atomic-invoke is allowed to
+; nest within a thread; the thread-cell keeps track of
+; whether this thread already holds the lock.
+
+(define ar-the-sema (make-semaphore 1))
+
+(define ar-sema-cell (make-thread-cell #f))
+
+(define (ar-atomic-invoke f)
+  (if (thread-cell-ref ar-sema-cell)
+      (ar-apply f '())
+      (dynamic-wind
+        (lambda ()
+          (thread-cell-set! ar-sema-cell #t))
+        (lambda ()
+          (call-with-semaphore
+            ar-the-sema
+            (lambda () (ar-apply f '()))))
+        (lambda ()
+          (thread-cell-set! ar-sema-cell #f)))))
+
