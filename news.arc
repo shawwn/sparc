@@ -49,7 +49,7 @@
   weight     .5
   ignore     nil
   email      nil
-  verified   nil ; if (is (uvar u email) (uvar u verified)), then email is valid
+  verified   nil ; if (is (uval u email) (uval u verified)), then email is valid
   about      nil
   showdead   nil
   notify     nil
@@ -190,13 +190,13 @@
 
 (def save-prof  ((o u (get-user))) (save-table (profs* u) (+ profdir* u)) (hook 'save-prof (profs* u)))
 
-(mac uvar args (if (len> args 1)
+(mac uval args (if (len> args 1)
                    (let (u k) args
                      `((profile ,u) ',k))
                    `((profile) ',@args)))
 
-(mac karma   u `(uvar ,@u karma))
-(mac ignored u `(uvar ,@u ignore))
+(mac karma   u `(uval ,@u karma))
+(mac ignored u `(uval ,@u ignore))
 
 ; Note that users will now only consider currently loaded users.
 
@@ -204,7 +204,7 @@
   (keep f (keys profs*)))
 
 (def check-key (k (o user (get-user)))
-  (and user (mem k (uvar user keys))))
+  (and user (mem k (uval user keys))))
 
 (def author (i) (is-user i!by))
 
@@ -361,7 +361,7 @@
 
 (def item-age (i) (minutes-since i!time))
 
-(def user-age ((o u (get-user))) (minutes-since (uvar u created)))
+(def user-age ((o u (get-user))) (minutes-since (uval u created)))
 
 ; Only looks at the 1000 most recent stories, which might one day be a
 ; problem if there is massive spam.
@@ -468,12 +468,12 @@
   (def delayed (i)
     (and (no (mature i!id))
          (acomment i)
-         (or (< (item-age i) (min max-delay* (uvar i!by delay)))
+         (or (< (item-age i) (min max-delay* (uval i!by delay)))
              (do (= (mature i!id) t)
                  nil)))))
 
 (def seesdead ((o user (get-user)))
-  (or (and user (uvar user showdead) (~ignored user))
+  (or (and user (uval user showdead) (~ignored user))
       (editor user)))
 
 (def visible (items)
@@ -488,10 +488,10 @@
             c!kids)))
 
 (def editor ((o u (get-user)))
-  (and u (or (admin u) (> (uvar u auth) 0))))
+  (and u (or (admin u) (> (uval u auth) 0))))
 
 (def member ((o u (get-user)))
-  (and u (or (admin u) (uvar u member))))
+  (and u (or (admin u) (uval u member))))
 
 
 ; Page Layout
@@ -708,7 +708,7 @@ function vote(node) {
 (= sand (color 246 246 239) textgray (gray 130))
 
 (def main-color ((o user (get-user)))
-  (aif (and user (uvar user topcolor))
+  (aif (and user (uval user topcolor))
        (hex>color it)
        site-color*))
 
@@ -779,7 +779,7 @@ function vote(node) {
                            whence)))))
 
 (def noob ((o user (get-user)))
-  (and user (< (days-since (uvar user created)) 1)))
+  (and user (< (days-since (uval user created)) 1)))
 
 
 ; News-Specific Defop Variants
@@ -1013,7 +1013,7 @@ function vote(node) {
         (uform (get-user) req
                (try-verify subject arg!e)
           (single-input "New email:  " 'e 30 "send verification email"
-                        nil (uvar subject email)))))))
+                        nil (uval subject email)))))))
 
 (def try-verify (subject newemail)
   (if (len< newemail 4)
@@ -1556,7 +1556,7 @@ function vote(node) {
 
 (def userlink (subject (o show-avg t))
   (link (user-name subject) (user-url subject))
-  (awhen (and show-avg* (admin) show-avg (uvar subject avg))
+  (awhen (and show-avg* (admin) show-avg (uval subject avg))
     (pr " (@(num it 1 t t))")))
 
 (= admin-color* darkblue
@@ -1590,7 +1590,7 @@ function vote(node) {
      (sum [visible-family:item _] i!kids)))
 
 (def threadavg (i)
-  (only&avg (map [or (uvar _ avg) 1]
+  (only&avg (map [or (uval _ avg) 1]
                  (rem admin (dedup (map !by (keep live (family i))))))))
 
 (= user-changetime* 120 editor-changetime* 1440)
@@ -1658,10 +1658,10 @@ function vote(node) {
 (def favlink (i whence)
   (when (and (get-user) (cansee i))
     (pr bar*)
-    (w/rlink (do (togglemem i!id (uvar favorites))
+    (w/rlink (do (togglemem i!id (uval favorites))
                  (save-prof)
                  (favorites-url))
-      (pr "@(if (mem i!id (uvar favorites)) 'un-)favorite"))))
+      (pr "@(if (mem i!id (uval favorites)) 'un-)favorite"))))
 
 (def killlink (i whence)
   (when (admin)
@@ -1756,11 +1756,11 @@ function vote(node) {
 
 (def legit-user ((o user (get-user)))
   (or (editor user)
-      (and user (mem 'legit (uvar user keys)))))
+      (and user (mem 'legit (uval user keys)))))
 
 (def possible-sockpuppet ((o user (get-user)))
   (or (ignored user)
-      (< (uvar user weight) .5)
+      (< (uval user weight) .5)
       (and (< (user-age user) new-age-threshold*)
            (< (karma user) new-karma-threshold*))))
 
@@ -1805,10 +1805,10 @@ function vote(node) {
       (push vote i!votes)
       (save-item i)
       (push (list (seconds) i!id i!by (sitename i!url) dir)
-            (uvar votes))
+            (uval votes))
       (= ((votes* (get-user)) i!id) vote)
       (save-votes)
-      (zap [firstn votewindow* _] (uvar votes))
+      (zap [firstn votewindow* _] (uval votes))
       (save-prof)
       (push (cons i!id vote) recent-votes*))))
 
@@ -1953,7 +1953,7 @@ function suggestTitle() {
              "newest"))))
 
 (def submit-item (i)
-  (push i!id (uvar submitted))
+  (push i!id (uval submitted))
   (save-prof)
   (vote-for i))
 
@@ -2567,9 +2567,9 @@ function suggestTitle() {
   (whenlet subject parent!by
     (aand (isnt subject c!by)
           (live c)
-          (uvar subject notify)
-          (uvar subject email)
-          (if (is it (uvar subject verified)) it)
+          (uval subject notify)
+          (uval subject email)
+          (if (is it (uval subject verified)) it)
           (let p (superparent c)
             (send-email site-email* it
                         "New reply from @c!by"
@@ -2770,13 +2770,13 @@ function suggestTitle() {
                                     comments label title end newend))))))))))
 
 (def submissions (user (o limit))
-  (map item (firstn limit (uvar user submitted))))
+  (map item (firstn limit (uval user submitted))))
 
 (def favorites (user (o limit))
-  (map item (firstn limit (uvar user favorites))))
+  (map item (firstn limit (uval user favorites))))
 
 (def comments (user (o limit))
-  (map item (retrieve limit acomment:item (uvar user submitted))))
+  (map item (retrieve limit acomment:item (uval user submitted))))
 
 (def subcomment (c)
   (some [and (acomment _) (is _!by c!by) (no _!deleted)]
@@ -2921,7 +2921,7 @@ function suggestTitle() {
               (td (userlink u nil))
               (tdr:pr (karma u))
               (when (admin)
-                (tdr:prt (only&num (uvar u avg) 2 t t))))
+                (tdr:prt (only&num (uval u avg) 2 t t))))
           (if (is i 10) (spacerow 30)))))))
 
 (= leader-threshold* 0)  ; redefined later
@@ -2931,7 +2931,7 @@ function suggestTitle() {
         (users [and (> (karma _) leader-threshold*) (~admin _)])))
 
 (adop editors ()
-  (tab (each u (users [is (uvar _ auth) 1])
+  (tab (each u (users [is (uval _ auth) 1])
          (row (userlink u)))))
 
 
@@ -2939,13 +2939,13 @@ function suggestTitle() {
 
 (defbg update-avg 45
   (unless (or (empty profs*) (no stories*))
-    (update-avg (rand-user [and (only&> (car (uvar _ submitted))
+    (update-avg (rand-user [and (only&> (car (uval _ submitted))
                                         (- maxid* initload*))
-                                (len> (uvar _ submitted)
+                                (len> (uval _ submitted)
                                       update-avg-threshold*)]))))
 
 (def update-avg (user)
-  (= (uvar user avg) (comment-score user))
+  (= (uval user avg) (comment-score user))
   (save-prof user))
 
 (def rand-user ((o test idfn))
@@ -3010,27 +3010,27 @@ reproduced verbatim.  (This is intended for code.)
 
 (def check-procrast ()
   (or (no (get-user))
-      (no (uvar noprocrast))
+      (no (uval noprocrast))
       (let now (seconds)
-        (unless (uvar firstview)
+        (unless (uval firstview)
           (reset-procrast))
-        (or (when (< (/ (- now (uvar firstview)) 60)
-                     (uvar maxvisit))
-              (= (uvar lastview) now)
+        (or (when (< (/ (- now (uval firstview)) 60)
+                     (uval maxvisit))
+              (= (uval lastview) now)
               (save-prof)
               t)
-            (when (> (/ (- now (uvar lastview)) 60)
-                     (uvar minaway))
+            (when (> (/ (- now (uval lastview)) 60)
+                     (uval minaway))
               (reset-procrast)
               t)))))
 
 (def reset-procrast ()
-  (= (uvar lastview) (= (uvar firstview) (seconds)))
+  (= (uval lastview) (= (uval firstview) (seconds)))
   (save-prof))
 
 (def procrast-msg (whence)
-  (let m (+ 1 (trunc (- (uvar minaway)
-                        (minutes-since (uvar lastview)))))
+  (let m (+ 1 (trunc (- (uval minaway)
+                        (minutes-since (uval lastview)))))
     (pr "<b>Get back to work!</b>")
     (para "Sorry, you can't see this page.  Based on the anti-procrastination
            parameters you set in your profile, you'll be able to use the site
@@ -3057,7 +3057,7 @@ reproduced verbatim.  (This is intended for code.)
   (minipage "Reset Password for @(get-user)"
     (if msg
          (pr msg)
-        (blank (uvar email))
+        (blank (uval email))
          (do (pr "Before you do this, please add your email address to your ")
              (underlink "profile" (user-url))
              (pr ". Otherwise you could lose your account if you mistype
@@ -3647,7 +3647,7 @@ for help.
 ; Rather useless thus; should add more data.
 
 (adop badguys ()
-  (tab (each u (sort (compare > [uvar _ created])
+  (tab (each u (sort (compare > [uval _ created])
                      (users [ignored _]))
          (row (userlink u nil)))))
 
@@ -3722,7 +3722,7 @@ for help.
 (defop topcolors req
   (minipage "Custom Colors"
     (tab
-      (each c (dedup (map downcase (trues [uvar _ topcolor] (users))))
+      (each c (dedup (map downcase (trues [uval _ topcolor] (users))))
         (tr (td c) (tdcolor (hex>color c) (hspace 30)))))))
 
 
