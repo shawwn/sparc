@@ -517,10 +517,9 @@
         f)))
 
 (define (ac-kwargs? args)
-  (if (pair? args)
-      (or (ac-kwargs? (car args))
-          (ac-kwargs? (cdr args)))
-      (eq? args '#:kws)))
+  (or (ar-car? args '#:kws)
+      (and (pair? args)
+           (ac-kwargs? (ar-cdr args)))))
 
 (define (ar-kwproc f)
   (make-keyword-procedure
