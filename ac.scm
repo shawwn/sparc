@@ -1727,7 +1727,7 @@
 
 (define (tl2)
   (parameterize ((port-count-lines-enabled #t)
-                 (current-namespace (arc-namespace))
+                 ; (current-namespace (arc-namespace))
                  (current-prompt-read ac-prompt-read)
                  (current-print       ac-prompt-print)
                  ; ((dynamic-require 'readline/pread 'current-prompt) #"arc> ")
