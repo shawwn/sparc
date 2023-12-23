@@ -669,10 +669,10 @@
                  (ac-dbname! a)
                  (ac b1))))
         (list 'let `((,n ,b))
-               (cond ((not (eqv? a (ac-quoted a)))
+               (cond ((ac-boxed? 'set a)  (ac-boxed-set a b))
+                     ((ac-lex? a)        `(set! ,a ,n))
+                     ((not (eqv? a (ac-quoted a)))
                       (ar-err "Can't rebind constant" a))
-                     ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
-                     ((ac-lex? a) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ar-name a)
                                                          ,n
                                                          #t)))
