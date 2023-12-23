@@ -1202,8 +1202,7 @@
       (substring s 0 (- n 1)))))
 
 (define (pp val (port (current-output-port)))
-  (display (pp-to-string val) port)
-  (display #\newline port)
+  (displayln (pp-to-string val) port)
   val)
  
 (define (ac-prompt-print val)
@@ -1278,8 +1277,7 @@
       (lambda (ip)
         (call-with-output-file outname
           (lambda (op)
-            (display "#lang racket/load" op)
-            (display #\newline op)
+            (displayln "#lang racket/load" op)
             (acompile1 ip op)))))))
 
 (xdef macex (e) (ac-macex e))
