@@ -307,8 +307,7 @@
         (#t                 (ar-name s))))
 
 (define (ac-tonumber s (base 10))
-  (with-handlers ((exn:fail? (lambda (c) #f)))
-    (ar-coerce s 'num base)))
+  (on-err #f (lambda () (ar-coerce s 'num base))))
 
 (define (ac-parse-number s (prefix #f))
   (and (string? s)
@@ -1298,14 +1297,10 @@
 ; after it doesn't get executed.  Not quite what I had in mind.
 
 (define (on-err fail f)
-  ((call-with-current-continuation
-     (lambda (k)
-       (lambda ()
-         (with-handlers ((exn:fail? (lambda (c)
-                                      (k (lambda () (if (procedure? fail)
-                                                        (fail c)
-                                                        fail))))))
-                        (f)))))))
+  (with-handlers ((exn:fail? (lambda (c)
+                               (if (procedure? fail) (fail c) fail))))
+    (f)))
+
 (xdef on-err on-err)
 
 (define (disp-to-string x (writer display))
