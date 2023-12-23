@@ -40,9 +40,9 @@
 (assign def (annotate 'mac
                (fn (:tag name parms . body)
                  (assign body (if body `(fn ,parms ,@body) parms))
-                 (if (lexname) nil
-                     (assign body `(do (sref sig ',parms ',name) ,body)))
-                 `(safeset ,name ,(if tag `(annotate ',tag ,body) body)))))
+                 (assign body (if tag `(annotate ',tag ,body) body))
+                 (assign body (if (lexname) body `(do (sref sig ',parms ',name) ,body)))
+                 `(safeset ,name ,body))))
 
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
