@@ -4,6 +4,7 @@
 (compile-enforce-module-constants #f)
 
 (require "./ac.scm")
+(require "./ar.scm")
 (require "./brackets.scm")
 (use-arc-readtable)
 

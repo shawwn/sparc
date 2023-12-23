@@ -15,10 +15,10 @@
   (arc-eval `(or (safe (coerce ,x 'num)) ,x)))
 
 (define (arc-main . args)
-  (let* ((repl (or (car? args "-i")
-                   (car? args "--interact")))
+  (let* ((repl (or (ar-car? args "-i")
+                   (ar-car? args "--interact")))
          (args (if repl (cdr args) args))
-         (name (car? args))
+         (name (ar-car? args))
          (args (if name (cdr args) args)))
     (current-command-line-arguments (list->vector args))
     (if name
