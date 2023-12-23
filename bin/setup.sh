@@ -56,6 +56,7 @@ then
   esac
 
   cd "${home}"
+  "${home}/bin/racket/bin/raco" pkg install --auto compiler-lib
   "${home}/bin/racket/bin/raco" make *.scm
 fi
 
