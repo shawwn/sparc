@@ -304,6 +304,8 @@
 (define (ac-var-ref s)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
         ((ac-lex? s)        s)
+        ((eq? s 'globe)     '(current-namespace))
+        ((eq? s 'scope)     (ac-lexenv))
         (#t                 (ar-name s))))
 
 (define (ac-tonumber s (base 10))
