@@ -521,13 +521,7 @@
       (equal?/recur a b ar-is)))
 
 (define (ar->2 x y)
-  (cond ((and (number? x) (number? y)) (> x y))
-        ((and (string? x) (string? y)) (string>? x y))
-        ((and (symbol? x) (symbol? y)) (string>? (symbol->string x) (symbol->string y)))
-        ((and (keyword? x) (keyword? y)) (string>? (keyword->string x) (keyword->string y)))
-        ((and (bytes? x) (bytes? y)) (bytes>? x y))
-        ((and (char? x) (char? y)) (char>? x y))
-        (#t (> x y))))
+  (ar-<2 y x))
 
 (define (ar-<2 x y)
   (cond ((and (number? x) (number? y)) (< x y))
