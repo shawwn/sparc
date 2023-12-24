@@ -1193,16 +1193,11 @@
     (parameterize ((current-read-interaction ac-read-interaction))
       ((current-read-interaction) (object-name in) in))))
 
-(define (pp-to-string val)
-  (let* ((s (disp-to-string val pretty-print))
-         (n (string-length s)))
-    (if (and (> n 0)
-             (char=? (string-ref s 0) #\'))
-      (substring s 1 (- n 1))
-      (substring s 0 (- n 1)))))
+(define (pp-to-string val (writer pretty-write))
+  (string-trim (disp-to-string val writer)))
 
-(define (pp val (port (current-output-port)))
-  (displayln (pp-to-string val) port)
+(define (pp val (port (current-output-port)) (writer pretty-write))
+  (displayln (pp-to-string val writer) port)
   val)
  
 (define (ac-prompt-print val)
