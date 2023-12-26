@@ -312,14 +312,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
      ,@body
      (,f)))
 
-(def across (l f)
-  (if (alist l)
-       (map1 [do (f _) unset] l)
-      (isa!table l)
-       (maptable (fn args (f args)) l)
-       (forlen i l
-         (f (l i)))))
-
 (mac w/break body
   `(let out (accfn)
      (point break default: (out)
@@ -373,6 +365,14 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
          (each ,var ,s
            ,@body
            (assign index (+ index 1))))))
+
+(def across (l f)
+  (if (alist l)
+       (map1 [do (f _) unset] l)
+      (isa!table l)
+       (maptable (fn args (f args)) l)
+       (forlen i l
+         (f (l i)))))
 
 (def empty (seq) 
   (or (null seq)
