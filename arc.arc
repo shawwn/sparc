@@ -261,10 +261,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (yes (mem x choices)))
 
 (mac when (test . body)
-  `(if ,test ((fn () ,@body))))
+  `(if ,test (do ,@body)))
 
 (mac unless (test . body)
-  `(if (no ,test) ((fn () ,@body))))
+  `(when (no ,test) ,@body))
 
 (mac point (name :default . body)
   (letu (g p)

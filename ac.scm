@@ -450,8 +450,10 @@
   (cond ((null? args) (list 'quote ar-nil))
         ((null? (cdr args)) (ac (car args)))
         (#t `(if (ar-true? ,(ac (car args)))
-                 ,(ac (cadr args))
-                 ,(ac-if (cddr args))))))
+                 ((lambda ()
+                   ,(ac (cadr args))))
+                 ((lambda ()
+                   ,(ac-if (cddr args))))))))
 
 (define (ac-dbname! name (env (env*)))
   (env* (if (symbol? name)
