@@ -138,6 +138,18 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       `(let ,(car parms) ,(cadr parms) 
          (withs ,(cddr parms) ,@body))))
 
+(mac atomic body
+  `(atomic-invoke (fn () ,@body)))
+
+(mac atlet body
+  `(atomic (let ,@body)))
+  
+(mac atwith body
+  `(atomic (with ,@body)))
+
+(mac atwiths body
+  `(atomic (withs ,@body)))
+
 (mac uvar names
   `(uniq ',(lexname) ,@names))
 
@@ -214,6 +226,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac afn (parms . body)
   `(rfn self ,parms ,@body))
 
+(def rev (xs) 
+  ((afn (xs acc)
+     (if (no xs)
+         acc
+         (self (cdr xs) (cons (car xs) acc))))
+   xs nil))
+
 (def flip (f)
   (fn (:kws . args)
     (kwapply f kws (rev args))))
@@ -256,12 +275,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def cand (combine and))
 (def cor  (combine or))
 
-(def rev (xs) 
-  ((afn (xs acc)
-     (if (no xs)
-         acc
-         (self (cdr xs) (cons (car xs) acc))))
-   xs nil))
+(def isnt args (pairwise (fn (x y) (~is x y)) args))
+
+(def >= args   (pairwise (fn (x y) (~< x y)) args))
+
+(def <= args   (pairwise (fn (x y) (~> x y)) args))
 
 (def in (x . choices)
   (yes (mem x choices)))
@@ -282,20 +300,79 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac catch body
   `(point throw ,@body))
 
-(mac looping body
+(def accfn ((o l))
+  (fn xs
+    (if (cdr xs) (assign l (cons xs l))
+        xs       (assign l (cons (car xs) l))
+                 (atwith r (rev l)
+                   (assign l nil)))))
+
+(mac accum (f . body)
+  `(let ,f (accfn)
+     ,@body
+     (,f)))
+
+(def across (l f)
+  (if (alist l)
+       (map1 [do (f _) unset] l)
+      (isa!table l)
+       (maptable (fn args (f args)) l)
+       (forlen i l
+         (f (l i)))))
+
+(mac w/break body
   `(let out (accfn)
      (point break default: (out)
        ,@body)))
 
-(mac while (test . body)
-  (letu (gf gp)
-    `(looping
-       ((rfn ,gf (,gp)
-          (when ,gp ((fn () ,@body)) (,gf ,test)))
-        ,test))))
+(mac each (var xs . body)
+  (letu f
+    `(w/break
+       (across ,xs (rfn ,f (,var) ,@body)))))
+
+(mac loop (var init update test . body)
+  (letu v
+    `(w/break
+       ((rfn ,v (,var)
+          (when ,test ,@body (,v ,update)))
+        ,init))))
+
+(mac while (expr . body)
+  (letu v
+    `(loop ,v ,expr ,expr ,v ,@body)))
 
 (mac until (test . body)
   `(while (no ,test) ,@body))
+
+(mac for (var init max . body)
+  (if (is init 'in)
+     `(each ,var ,max ,@body)
+      (letu (vi vm)
+        `(withs (,vi ,init
+                 ,vm (+ ,max 1))
+           (loop ,var ,vi (+ ,var 1) (< ,var ,vm)
+             ,@body)))))
+
+(mac down (var init min . body)
+  (letu (vi vm)
+    `(withs (,vi ,init
+             ,vm (- ,min 1))
+       (loop ,var ,vi (- ,var 1) (> ,var ,vm)
+         ,@body))))
+
+(mac repeat (n . body)
+  `(for ,(uvar) 1 ,n ,@body))
+
+(mac forlen (var s . body)
+  `(for ,var 0 (edge ,s) ,@body))
+
+(mac on (var s . body)
+  (if (is var 'index)
+      (err "Can't use index as first arg to on.")
+      `(let index 0
+         (each ,var ,s
+           ,@body
+           (assign index (+ index 1))))))
 
 (def empty (seq) 
   (or (null seq)
@@ -407,18 +484,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (disp (+ "Warning: " msg ". "))
   (map [do (write _) (disp " ")] args)
   (disp #\newline))
-
-(mac atomic body
-  `(atomic-invoke (fn () ,@body)))
-
-(mac atlet body
-  `(atomic (let ,@body)))
-  
-(mac atwith body
-  `(atomic (with ,@body)))
-
-(mac atwiths body
-  `(atomic (withs ,@body)))
 
 
 ; setforms returns (vars get set) for a place based on car of an expr
@@ -556,12 +621,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
               (fn (var val)
                 `(atomic (or ,(getter var) (= ,var ,val)))))))
 
-(def isnt args (pairwise ~is args))
-
-(def >= args (pairwise ~< args))
-
-(def <= args (pairwise ~> args))
-
 (def whitec (c)
   (in c #\space #\newline #\tab #\return))
 
@@ -575,55 +634,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def punc (c)
   (in c #\. #\, #\; #\: #\! #\?))
-
-(mac loop (start test update . body)
-  (letu (gfn gparm)
-    `(looping
-       ,start
-       ((rfn ,gfn (,gparm) 
-          (if ,gparm
-              (do ((fn () ,@body)) ,update (,gfn ,test))))
-        ,test))))
-
-(mac for (v init max . body)
-  (letu (gi gm)
-    `(withs (,v nil ,gi ,init ,gm (+ ,max 1))
-       (loop (assign ,v ,gi) (< ,v ,gm) (assign ,v (+ ,v 1))
-         ,@body))))
-
-(mac down (v init min . body)
-  (letu (gi gm)
-    `(withs (,v nil ,gi ,init ,gm (- ,min 1))
-       (loop (assign ,v ,gi) (> ,v ,gm) (assign ,v (- ,v 1))
-         ,@body))))
-
-(mac repeat (n . body)
-  `(for ,(uvar) 1 ,n ,@body))
-
-(def accfn ((o l))
-  (fn xs
-    (if (cdr xs) (cons! l xs)
-        xs       (cons! l (car xs))
-                 (atwith r (rev l)
-                   (= l nil)))))
-
-(mac accum (accfn . body)
-  `(let ,accfn (accfn)
-     ,@body
-     (,accfn)))
-
-(def across (l f)
-  (if (alist l)
-       (map1 [do (f _) unset] l)
-      (isa!table l)
-       (maptable (fn args (f args)) l)
-       (for i 0 (edge l)
-         (f (l i)))))
-
-(mac each (var xs . body)
-  (letu f
-    `(looping
-       (across ,xs (rfn ,f (,var) ,@body)))))
 
 (def clamp (x a b)
   (if (< x a) a
@@ -1104,18 +1114,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def rand-char ()
   ((rand-string 1) 0))
-
-(mac forlen (var s . body)
-  `(for ,var 0 (edge ,s) ,@body))
-
-(mac on (var s . body)
-  (if (is var 'index)
-      (err "Can't use index as first arg to on.")
-      (letu gs
-        `(let ,gs ,s
-           (forlen index ,gs
-             (let ,var (,gs index)
-               ,@body))))))
 
 (def best (f seq)
   (if (no seq)
