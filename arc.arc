@@ -192,6 +192,15 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
        (car al)
       (assoc key (cdr al))))
 
+(def last (xs)
+  (if (cdr xs)
+      (last (cdr xs))
+      (car xs)))
+
+(def almost (xs)
+  (if (cdr xs)
+      (cons (car xs) (almost (cdr xs)))))
+
 (def alref (al key (o else))
   (either (cadr (assoc key al))
           else))
@@ -222,13 +231,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ; Composes in functional position are transformed away by ac.
 
 (mac compose fs
-  (letu (gk ga)
-    `(fn (kws: ,gk . ,ga)
-       ,((afn ((f . fs))
-           (if fs
-               (list f (self fs))
-               `(kwapply ,f ,gk ,ga)))
-         (or fs (list 'idfn))))))
+  (let fs (or fs `(idfn))
+    (letu (gk ga)
+      `(fn (kws: ,gk . ,ga)
+         ,(reduce list (snoc (almost fs) `(kwapply ,(last fs) ,gk ,ga)))))))
 
 ; Ditto: complement in functional position optimized by ac.
 
@@ -642,15 +648,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       
 (mac whilet (var test . body)
   `(while (iflet ,var ,test (do ,@body t))))
-
-(def last (xs)
-  (if (cdr xs)
-      (last (cdr xs))
-      (car xs)))
-
-(def almost (xs)
-  (if (cdr xs)
-      (cons (car xs) (almost (cdr xs)))))
 
 (def rem (test seq)
   (let f (testify test)
