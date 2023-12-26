@@ -1763,10 +1763,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def inc (x (o n 1))
   (coerce (+ (coerce x 'int) n) (type x)))
 
-(def range (start end)
-  (if (> start end)
-      nil
-      (cons start (range (inc start) end))))
+(def range (start (o end unset) (o step 1))
+  (if (is end unset) (= end start start 0))
+  (if (is step 0)
+       (err "range: arg 3 must not be zero")
+      (> start end)
+       (if (< step 0) (loop i start (+ i step) (> i end) (out i)))
+       (if (> step 0) (loop i start (+ i step) (< i end) (out i)))))
 
 (def mismatch (s1 s2)
   (on c s1
