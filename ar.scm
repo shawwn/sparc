@@ -70,6 +70,13 @@
 (define (ar-caar? l (k ar-unset) #:test (test ar-id))
   (ar-car? (ar-car? l) k #:test test))
 
+(define (ar-caar x) (ar-car (ar-car x)))
+(define (ar-cadr x) (ar-car (ar-cdr x)))
+(define (ar-cddr x) (ar-cdr (ar-cdr x)))
+(define (ar-cadar x) (ar-car (ar-cdr (ar-car x))))
+(define (ar-caddr x) (ar-car (ar-cdr (ar-cdr x))))
+(define (ar-cadddr x) (ar-car (ar-cdr (ar-cdr (ar-cdr x)))))
+
 ; waterhouse's code to modify Racket's immutable pairs.
 ; http://arclanguage.org/item?id=13616
 (require (only-in racket/unsafe/ops unsafe-set-immutable-car! unsafe-set-immutable-cdr!))
