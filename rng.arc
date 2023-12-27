@@ -45,14 +45,14 @@
           y (listify y)
           xs (shapeof x)
           ys (shapeof y))
-    (assert (or (iso xs '(1))
-                (iso ys '(1))
-                (iso xs ys))
+    (assert (or (is xs '(1))
+                (is ys '(1))
+                (is xs ys))
             "One of the operand shapes must be 1, or the operand shapes must be equal"
             'x x 'xs xs
             'y y 'ys ys)
-    (if (iso xs '(1)) (list (n-of (ys 0) (x 0)) y)
-        (iso ys '(1)) (list x (n-of (xs 0) (y 0)))
+    (if (is xs '(1)) (list (n-of (ys 0) (x 0)) y)
+        (is ys '(1)) (list x (n-of (xs 0) (y 0)))
       (list x y))))
 
 ;(def vop (op)
