@@ -74,18 +74,20 @@
 ; http://arclanguage.org/item?id=13616
 (require (only-in racket/unsafe/ops unsafe-set-immutable-car! unsafe-set-immutable-cdr!))
 
-(define (ar-set-car! p x)
+(define (ar-xar p x)
   (if (pair? p)
       (unsafe-set-immutable-car! p x)
-      (raise-type-error 'ar-set-car! "pair" p)))
+      (raise-type-error 'xar "pair" p))
+  x)
 
-(define (ar-set-cdr! p x)
+(define (ar-xdr p x)
   (if (pair? p)
       (unsafe-set-immutable-cdr! p x)
-      (raise-type-error 'ar-set-cdr! "pair" p)))
+      (raise-type-error 'xdr "pair" p))
+  x)
 
 (define (nth-set! lst n val)
-  (ar-set-car! (list-tail lst n) val))
+  (ar-xar (list-tail lst n) val))
 
 (define (ar-sref com val ind)
   (cond ((hash? com)  (if (ar-nil? val)

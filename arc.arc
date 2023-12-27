@@ -522,31 +522,31 @@
   (letu g
     (list (list g x)
           `(car ,g)
-          `(fn (val) (scar ,g val)))))
+          `(fn (val) (xar ,g val)))))
 
 (defset cdr (x)
   (letu g
     (list (list g x)
           `(cdr ,g)
-          `(fn (val) (scdr ,g val)))))
+          `(fn (val) (xdr ,g val)))))
 
 (defset caar (x)
   (letu g
     (list (list g x)
           `(caar ,g)
-          `(fn (val) (scar (car ,g) val)))))
+          `(fn (val) (xar (car ,g) val)))))
 
 (defset cadr (x)
   (letu g
     (list (list g x)
           `(cadr ,g)
-          `(fn (val) (scar (cdr ,g) val)))))
+          `(fn (val) (xar (cdr ,g) val)))))
 
 (defset cddr (x)
   (letu g
     (list (list g x)
           `(cddr ,g)
-          `(fn (val) (scdr (cdr ,g) val)))))
+          `(fn (val) (xdr (cdr ,g) val)))))
 
 ; Note: if expr0 macroexpands into any expression whose car doesn't
 ; have a setter, setforms assumes it's a data structure in functional 
@@ -1349,13 +1349,13 @@
                (is n 2)
                 (withs (x (car lst) y (cadr lst) p lst)
                   (= lst (cddr lst))
-                  (when (less? y x) (scar p y) (scar (cdr p) x))
-                  (scdr (cdr p) nil)
+                  (when (less? y x) (xar p y) (xar (cdr p) x))
+                  (xdr (cdr p) nil)
                   p)
                (is n 1)
                 (withs (p lst)
                   (= lst (cdr lst))
-                  (scdr p nil)
+                  (xdr p nil)
                   p)
                nil))
          n))))
@@ -1365,18 +1365,18 @@
 (def merge (less? x y)
   (def lup (r x y r-x?) ; r-x? for optimization -- is r connected to x?
     (if (less? (car y) (car x))
-      (do (if r-x? (scdr r y))
-          (if (cdr y) (lup y x (cdr y) nil) (scdr y x)))
+      (do (if r-x? (xdr r y))
+          (if (cdr y) (lup y x (cdr y) nil) (xdr y x)))
       ; (car x) <= (car y)
-      (do (if (no r-x?) (scdr r x))
-          (if (cdr x) (lup x (cdr x) y t) (scdr x y)))))
+      (do (if (no r-x?) (xdr r x))
+          (if (cdr x) (lup x (cdr x) y t) (xdr x y)))))
   (if (no x) y
       (no y) x
       (less? (car y) (car x))
-      (do (if (cdr y) (lup y x (cdr y) nil) (scdr y x))
+      (do (if (cdr y) (lup y x (cdr y) nil) (xdr y x))
           y)
       ; (car x) <= (car y)
-      (do (if (cdr x) (lup x (cdr x) y t) (scdr x y))
+      (do (if (cdr x) (lup x (cdr x) y t) (xdr x y))
           x)))
 
 (def bestn (n f seq)

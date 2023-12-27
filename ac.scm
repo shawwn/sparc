@@ -1309,20 +1309,12 @@
 (xdef details (c)
   (disp-to-string (exn-message c)))
 
-(xdef scar (x val)
-  (if (string? x)
-      (string-set! x 0 val)
-      (ar-set-car! x val))
-  val)
+(xdef xar (x val) (ar-xar x val))
 
-(xdef scdr (x val)
-  (if (string? x)
-      (ar-err "Can't set cdr of a string" x)
-      (ar-set-cdr! x val))
-  val)
+(xdef xdr (x val) (ar-xdr x val))
 
 ; When and if cdr of a string returned an actual (eq) tail, could
-; say (if (string? x) (string-replace! x val 1) ...) in scdr, but
+; say (if (string? x) (string-replace! x val 1) ...) in xdr, but
 ; for now would be misleading to allow this, because fails for cddr.
 
 (define (string-replace! str val index)
