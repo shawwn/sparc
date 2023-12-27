@@ -321,7 +321,7 @@
 (= current-rng current-pseudo-random-generator)
 
 (mac w/rng (r . body)
-  `(w/param current-rng ,r
+  `(let (param current-rng) ,r
      ,@body))
 
 (def make-rng ((o seed))

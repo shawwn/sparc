@@ -1099,7 +1099,7 @@ function vote(node) {
   (retrieve n cansee stories*))
 
 (newshook create-story (s)
-  (let ids (w/param the-req* (table) ; TODO: turn this into a w/user macro
+  (let ids (let (param the-req*) (table) ; TODO: turn this into a w/user macro
              (map !id (newstories 500)))
     (firebase-set "v0/newstories" ids)))
 

@@ -1322,5 +1322,27 @@ c"
   (test? false (isa!nil 'a))
   (test? nil (coerce (list) 'nil)))
 
+(define-test values
+  (let (values x) 1
+    (test? 1 x))
+  (let (values x) (values 1)
+    (test? 1 x))
+  (let (values x) (values 1 2)
+    (test? 1 x))
+  (let (values x y) 1
+    (test? x 1)
+    (test? y nil))
+  (def f (x y) (values x y))
+  (let (values x y) (f 1 2)
+    (test? '(1 2) (list x y)))
+  (let (values x) (f 1 2)
+    (test? 1 x))
+  (let (values x y) (f 1 2)
+    (test? 1 x))
+  (let (values x y z) (f 1 2)
+    (test? 1 x)
+    (test? 2 y)
+    (test? nil z)))
+
 run-tests
 

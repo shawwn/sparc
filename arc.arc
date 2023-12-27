@@ -53,9 +53,6 @@
 (mac %braces (:kws . args)
   `(obj ,@(+ args kws)))
 
-(mac w/values body
- `(#'call-with-values (fn () ,@body) list))
-
 (def list (:kws . args)
   (+ args kws))
 
@@ -93,6 +90,15 @@
 (def listify (x)
   (if (alist x) x (list x)))
 
+(def carif (x)
+  (if (atom x) x (car x)))
+
+(def caris (x val) 
+  (if (acons x) (is (car x) val)))
+
+(def carid (x val)
+  (if (acons x) (id (car x) val)))
+
 ; Maybe later make this internal.  Useful to let xs be a fn?
 
 (def map1 (f xs)
@@ -129,9 +135,32 @@
 (mac snoc! (var . args)
   `(atomic (= ,var (snoc ,var ,@args))))
 
+(mac param (name (o default 'nil) (o :guard false))
+  `(#'make-parameter ,default ,guard ',name))
+
+(def call-w/param (var val thunk)
+  (#'parameterize #`((#,var #,val)) (thunk)))
+
+(mac w/param (var val . body)
+  `(call-w/param ,var ,val (fn () ,@body)))
+
+(def call-w/values (thunk f)
+  (#'call-with-values thunk f))
+
+(mac w/values body
+ `(call-w/values (fn () ,@body) list))
+
 (mac let (var val . body)
-  `((fn (,var) ,@body)
-    ,val))
+  (if (caris var 'param)
+      `(w/param ,(cadr var) ,val
+         ,@body)
+      (caris var 'values)
+      `(let ,(cdr var) (w/values ,val)
+         ,@body)
+      (no body)
+      `(define ,var ,val)
+      `((fn (,var) ,@body)
+        ,val)))
 
 (mac with (var val . body)
   `(let ,var ,val
@@ -485,9 +514,6 @@
 
 (mac defs args
   `(do ,@(map [cons 'def _] (hug args))))
-
-(def caris (x val) 
-  (and (acons x) (is (car x) val)))
 
 (def warn (msg . args)
   (disp (+ "Warning: " msg ". "))
@@ -947,14 +973,11 @@
 (mac w/outstring (var . body)
   `(let ,var (outstring) ,@body))
 
-(mac w/param (var val . body)
-  `(call-w/param ,var ,val (fn () ,@body)))
+(mac defvar (name (o value 'nil) (o doc) :guard :const)
+  `(or= ,name (param ,name ,value guard: ,guard)))
 
-(mac defvar (name value (o doc) :guard :const)
-  `(or= ,name (make-param ,value (or ,guard false) ',name)))
-
-(mac defconst (name value (o doc) (o :guard))
-  `(def ,name (make-param ,value (or ,guard false) ',name)))
+(mac defconst (name (o value 'nil) (o doc) (o :guard))
+  `(def ,name (param ,name ,value guard: ,guard)))
 
 (or= original-stdin* (stdin)
      original-stdout* (stdout)
@@ -963,13 +986,13 @@
 ; rename this simply "to"?  - prob not; rarely use
 
 (mac w/stdout (str . body)
-  `(w/param stdout ,str ,@body))
+  `(let (param stdout) ,str ,@body))
 
 (mac w/stderr (str . body)
-  `(w/param stderr ,str ,@body))
+  `(let (param stderr) ,str ,@body))
 
 (mac w/stdin (str . body)
-  `(w/param stdin ,str ,@body))
+  `(let (param stdin) ,str ,@body))
 
 (mac tobytes body
   `(tostring bytes: true ,@body))
@@ -1207,8 +1230,6 @@
       (base tree)
       (f (treewise f base (car tree)) 
          (treewise f base (cdr tree)))))
-
-(def carif (x) (if (atom x) x (car x)))
 
 (def tree-subst (old new tree)
   (if (is tree old)
@@ -1671,7 +1692,7 @@
 
 (def load (file :once)
   (zap expandpath file)
-  (w/param cwd (expandpath ".." file)
+  (let (param cwd) (expandpath ".." file)
     (with value (unless (and once (loaded file))
                   (do1 (load-code file)
                        (hook 'load file)))
@@ -1931,7 +1952,7 @@
 (def tracer (f name)
   (annotate (type f)
     (fn (:kws . args)
-      (w/param trace-depth* (+ (trace-depth*) 1)
+      (let (param trace-depth*) (+ (trace-depth*) 1)
         (def n (trace-depth*))
         (def pre (* " │ " (- n 1)))
         (ero pre "╭" n (cons name (+ args kws)))

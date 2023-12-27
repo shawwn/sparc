@@ -990,10 +990,6 @@
 (xdef stdin  current-input-port)
 (xdef stderr current-error-port)
 
-(xdef call-w/param (var val thunk)
-  (parameterize ((var val))
-    (thunk)))
-
 (xdef readc ((i (current-input-port)) (fail #f))
   (let ((c (read-char i)))
     (if (eof-object? c) fail c)))
