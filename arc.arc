@@ -123,6 +123,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac snoc! (var . args)
   `(atomic (= ,var (snoc ,var ,@args))))
 
+(mac when (test . body)
+  `(if ,test (do ,@body)))
+
+(mac unless (test . body)
+  `(when (no ,test) ,@body))
+
 (mac let (var val . body)
   `((fn (,var) ,@body)
     ,val))
@@ -283,12 +289,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def in (x . choices)
   (yes (mem x choices)))
-
-(mac when (test . body)
-  `(if ,test (do ,@body)))
-
-(mac unless (test . body)
-  `(when (no ,test) ,@body))
 
 (mac point (name :default . body)
   (letu (g p)
