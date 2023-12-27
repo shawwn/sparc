@@ -20,13 +20,3 @@
   (def debug-demo (x)
     (debug)
     (prn "x is now " x)))
-
-(mac w/values body
- `(call-with-values (fn () ,@body) list))
-
-;arc> (w/values (values 1 2 3))
-;'(1 2 3)
-
-(mac assert (test (o msg "Assertion failed") . args)
-  `(or ,test
-       (err (string ,msg ":") ',test ,@args)))

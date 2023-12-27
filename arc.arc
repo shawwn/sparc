@@ -47,6 +47,12 @@
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
 
+(def list (:kws . args)
+  (+ args kws))
+
+(def call (f :kws . args)
+  (kwapply f kws args))
+
 (mac %brackets (:kws . args)
   `(fn (_) ,(+ args kws)))
 
@@ -55,11 +61,8 @@
 For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(obj ,@(+ args kws)))
 
-(def call (f :kws . args)
-  (kwapply f kws args))
-
-(def list (:kws . args)
-  (+ args kws))
+(mac w/values body
+ `(#'call-with-values (fn () ,@body) list))
 
 (def idfn (x) x)
 
@@ -192,6 +195,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def cat args
   (apply + "" args))
+
+(mac assert (test (o msg "Assertion failed") . args)
+  `(unless ,test (err (cat ,msg ":") ',test ,@args)))
 
 (mac do1 args
   `(with ,(uvar) ,(car args)
