@@ -1760,9 +1760,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
     (char sym) (coerce (upcase (str x)) (type x))
            (err "Can't upcase" x)))
 
-(def inc (x (o n 1))
-  (coerce (+ (coerce x 'int) n) (type x)))
-
 (def range (start (o end unset) (o step 1))
   (if (is end unset) (= end start start 0))
   (if (is step 0)
