@@ -47,22 +47,25 @@
 (def tag: mac mac (name parms . body)
   `(def tag: mac ,name ,parms ,@body))
 
+(mac %brackets (:kws . args)
+  `(fn (_) ,(+ args kws)))
+
+(mac %braces (:kws . args)
+  `(obj ,@(+ args kws)))
+
+(mac w/values body
+ `(#'call-with-values (fn () ,@body) list))
+
 (def list (:kws . args)
   (+ args kws))
 
 (def call (f :kws . args)
   (kwapply f kws args))
 
-(mac %brackets (:kws . args)
-  `(fn (_) ,(+ args kws)))
+(def cat args
+  (apply + "" args))
 
-(mac %braces (:kws . args)
-"The function invoked on curly-bracket calls.
-For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
-  `(obj ,@(+ args kws)))
-
-(mac w/values body
- `(#'call-with-values (fn () ,@body) list))
+(def string cat)
 
 (def idfn (x) x)
 
@@ -189,12 +192,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         `(let ,g ,x
            (if (null ,g) (either ,@args) ,g)))
       x))
-
-(def string args
-  (apply + "" args))
-
-(def cat args
-  (apply + "" args))
 
 (mac assert (test (o msg "Assertion failed") . args)
   `(unless ,test (err (cat ,msg ":") ',test ,@args)))
