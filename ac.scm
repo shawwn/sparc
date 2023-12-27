@@ -696,7 +696,11 @@
                      (cdr exprs)))))
 
 (define (ac-lexname (names (ac-dbname)))
-  (ar-concat (map (ar-to 'sym) (keep ar-true? names)) "--"))
+  (define (lex x)
+    (if (ar-car? x 'quote)
+      (lex (ar-cadr x))
+      ((ar-to 'sym) x)))
+  (ar-concat (map lex (keep ar-true? names)) "--"))
 
 (define (ac-lexvars (env (env*)))
   (remove-duplicates (keep symbol? env)))
