@@ -187,6 +187,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            (if (null ,g) (either ,@args) ,g)))
       x))
 
+(def string args
+  (apply + "" args))
+
+(def cat args
+  (apply + "" args))
+
 (mac do1 args
   `(with ,(uvar) ,(car args)
      ,@(cdr args)))
@@ -878,12 +884,6 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 ;        (if (isa!mac op)
 ;            (apply (rep op) (cdr e))
 ;            e))))
-
-(def string args
-  (apply + "" (map str args)))
-
-(def cat args
-  (apply string args))
 
 (def flat x
   ((afn (x acc)
