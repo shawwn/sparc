@@ -129,12 +129,6 @@
 (mac snoc! (var . args)
   `(atomic (= ,var (snoc ,var ,@args))))
 
-(mac when (test . body)
-  `(if ,test (do ,@body)))
-
-(mac unless (test . body)
-  `(when (no ,test) ,@body))
-
 (mac let (var val . body)
   `((fn (,var) ,@body)
     ,val))
@@ -193,12 +187,18 @@
            (if (null ,g) (either ,@args) ,g)))
       x))
 
-(mac assert (test (o msg "Assertion failed") . args)
-  `(unless ,test (err (cat ,msg ":") ',test ,@args)))
-
 (mac do1 args
   `(with ,(uvar) ,(car args)
      ,@(cdr args)))
+
+(mac when (test . body)
+  `(if ,test (do ,@body)))
+
+(mac unless (test . body)
+  `(when (no ,test) ,@body))
+
+(mac assert (test (o msg "Assertion failed") . args)
+  `(unless ,test (err (cat ,msg ":") ',test ,@args)))
 
 (mac guard body
   `(on-err (fn (c) (list false c))
