@@ -143,9 +143,10 @@
 
 (define (ar-type x)
   (cond ((ar-tagged? x)     (ar-tagged-type x))
+        ((null? x)          ar-nil)
         ((pair? x)          'cons)
         ((symbol? x)        'sym)
-        ((null? x)          ar-nil)
+        ((parameter? x)     'param)
         ((procedure? x)     'fn)
         ((char? x)          'char)
         ((string? x)        'string)
@@ -162,6 +163,8 @@
         ((evt? x)           'event)
         ((boolean? x)       'bool)
         ((eof-object? x)    'eof)
+        ((void? x)          'void)
+        ((ar-unset? x)      'unset)
         (#t                 (ar-typeof x))))
 
 (define (ar-typeof x)
