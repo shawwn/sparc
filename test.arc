@@ -1344,5 +1344,18 @@ c"
     (test? 2 y)
     (test? nil z)))
 
+(define-test param
+  (test? "hi" (let (param stdout) (outstring)
+                (pr "hi")
+                (inside (stdout))))
+  (test? "hi" (inside (with (param stdout) (outstring)
+                        (pr "hi"))))
+  (test? (stderr) (with (param stdout) (stderr)))
+  (test? 1 (with (param (#'make-parameter 1)) 2))
+  (let p (#'make-parameter 1)
+    (test? 2 (with (param p) 2
+               (test? (p) 2)))
+    (test? 1 (p))))
+
 run-tests
 

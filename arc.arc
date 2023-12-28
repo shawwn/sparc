@@ -157,15 +157,13 @@
       (caris var 'values)
       `(let ,(cdr var) (w/values ,val)
          ,@body)
-      (no body)
-      `(define ,var ,val)
       `((fn (,var) ,@body)
         ,val)))
 
 (mac with (var val . body)
-  `(let ,var ,val
-     ,@body
-     ,var))
+  (if (caris var 'param)
+      `(let ,var ,val ,@body ,(cdr var))
+      `(let ,var ,val ,@body ,var)))
 
 (mac withs (parms . body)
   (if (no parms) 
