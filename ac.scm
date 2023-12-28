@@ -915,11 +915,14 @@
 
 (xdef raise raise)
 (xdef err ar-err)
-(xdef nil ar-nil)
-(xdef unset ar-unset)
-(xdef t   ar-t)
+
 (xdef true  #t)
 (xdef false #f)
+
+(xdef t ar-t)
+(xdef nil ar-nil)
+(xdef unset ar-unset)
+
 (xdef nan ar-nan)
 (xdef inf ar-inf)
 (xdef -inf ar-ninf)
