@@ -1854,7 +1854,7 @@ function vote(node) {
                 (submit-page sub url title showtext text))))
 
 (def clean-sub (x)
-  (coerce (+ "/l/" (downcase:last (tokens x #\/))) 'sym))
+  (+ '/l/ (downcase:last (tokens x #\/))))
 
 (def url-input (url)
   (row "url" (input "u" url 50 "ln-url-input"))
