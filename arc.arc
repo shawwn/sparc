@@ -1071,7 +1071,7 @@
   (#'port->bytes str))
 
 (def allchars ((o str (stdin)))
-  (coerce (allbytes str) 'string 'utf8))
+  (as!utf8 (allbytes str)))
 
 (def filebytes (name)
   (w/infile s name (allbytes s) :bytes))
@@ -1088,15 +1088,20 @@
 (def writefile (val file (o writer write))
   (savefile val file writer))
 
-(def sym (x) (coerce x 'sym))
-(def str (x) (coerce x 'string))
-(def seq (x) (coerce x 'cons))
+(def as (type)
+  (fn (:kws val . args)
+    (kwapply coerce kws val type args)))
 
-(def int (x (o b 10)) (coerce x 'int b))
+(def sym (x) (as!sym x))
+(def key (x) (as!key x))
+(def seq (x) (as!cons x))
 
-(def bin (x) (if (< x 0) (+ "-" (bin (- x))) (coerce x 'string 2)))
-(def oct (x) (if (< x 0) (+ "-" (oct (- x))) (coerce x 'string 8)))
-(def hex (x) (if (< x 0) (+ "-" (hex (- x))) (coerce x 'string 16)))
+(def str (x (o b 10)) (as!str x b))
+(def int (x (o b 10)) (as!int x b))
+
+(def bin (x) (if (< x 0) (+ "-" (bin (- x))) (str x 2)))
+(def oct (x) (if (< x 0) (+ "-" (oct (- x))) (str x 8)))
+(def hex (x) (if (< x 0) (+ "-" (hex (- x))) (str x 16)))
 
 (mac rand-choice exprs
   `(case (rand ,(len exprs))
@@ -1340,7 +1345,7 @@
 (def sort (test seq)
   (if (alist seq)
       (mergesort test (copy seq))
-      (coerce (mergesort test (coerce seq 'cons)) (type seq))))
+      (coerce (mergesort test (as!cons seq)) (type seq))))
 
 ; Destructive stable merge-sort, adapted from slib and improved 
 ; by Eli Barzilay for MzLib; re-written in Arc.

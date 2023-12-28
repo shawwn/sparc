@@ -27,7 +27,7 @@
                    (test (car cs)) (self (cdr cs) (consif tok toks) nil)
                                    (self (cdr cs) toks (cons (car cs) tok))))
       (rev (map str
-                (map rev (rec (seq s) nil nil)))))))
+                (map rev (rec (as!cons s) nil nil)))))))
 
 ; names of cut, split, halve not optimal
 
@@ -38,7 +38,7 @@
                    (test (car cs)) (list cs (rev tok))
                                    (self (cdr cs) (cons (car cs) tok))))
       (rev (map str
-                (rec (seq s) nil))))))
+                (rec (as!cons s) nil))))))
 
 ; maybe promote to arc.arc, but if so include a list clause
 
@@ -188,7 +188,7 @@
             (tostring
               (map [apply pr (rev _)]
                    (rev (intersperse '(#\,)
-                                     (tuples (rev (coerce (string i) 'cons))
+                                     (tuples (rev (as!cons (string i)))
                                              3))))))
           abrep
           (let a (abs n)
