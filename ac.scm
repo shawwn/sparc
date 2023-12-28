@@ -677,9 +677,7 @@
                      ((ac-lex? a)        `(set! ,a ,n))
                      ((not (eqv? a (ac-quoted a)))
                       (ar-err "Can't rebind constant" a))
-                     (#t `(namespace-set-variable-value! ',(ar-name a)
-                                                         ,n
-                                                         #t)))
+                     (#t `(ar-namespace-set! ',(ar-name a) ,n)))
                n))
       (ar-err "First arg to set must be a symbol" a)))
 
@@ -848,7 +846,7 @@
          (display " (was " (current-error-port))
          (write a (current-error-port))
          (display ")\n" (current-error-port)))
-       (namespace-set-variable-value! nm a #t)))
+       (ar-namespace-set! nm a)))
     ((xxdef name parms body ...)
      (begin
        (hash-set! fn-signatures 'name 'parms)
@@ -860,7 +858,7 @@
 ; Haven't started using it yet.
 
 (define (odef a parms b)
-  (namespace-set-variable-value! (ar-name a) b)
+  (ar-namespace-set! (ar-name a) b)
   (hash-set! fn-signatures a (list parms))
   b)
 
@@ -1212,8 +1210,8 @@
   val)
  
 (define (ac-prompt-print val)
-  (namespace-set-variable-value! (ar-name 'that) val)
-  (namespace-set-variable-value! (ar-name 'thatexpr) (ac-that-expr*))
+  (ar-namespace-set! (ar-name 'that) val)
+  (ar-namespace-set! (ar-name 'thatexpr) (ac-that-expr*))
   (unless (null? val)
     (pp val))
   val)

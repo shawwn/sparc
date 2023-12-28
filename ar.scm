@@ -103,6 +103,7 @@
         ((string? com) (string-set! com ind val))
         ((bytes? com)  (bytes-set! com ind val))
         ((pair? com)   (nth-set! com ind val))
+        ((namespace? com) (ar-namespace-set! ind val com))
         (#t (ar-err "Can't set reference " com ind val)))
   val)
 
@@ -327,11 +328,10 @@
       (string->symbol (string-append "arc--" (symbol->string s)))
       s))
 
-; rewrite to pass a (true) gensym instead of #f in case var bound to #f
-
-(define (ar-bound? name (fail #f))
-  (let ((it (namespace-variable-value (ar-name name) #t (lambda () ar-unset))))
-    (if (ar-unset? it) fail it)))
+(define (ar-bound? name (fail #f) (ns (current-namespace)))
+  (define unbound (ar-join))
+  (define it (ar-namespace-ref (ar-name name) (lambda () unbound) ns))
+  (if (eq? it unbound) fail it))
 
 ; circular references will go into an infinite loop
 (define (ar-symbol-value name (fail ar-unset))
@@ -363,20 +363,31 @@
         ((symbol? fn)
          (ar-apply (ar-symbol-value fn) args))
         ((pair? fn)
-         (list-ref fn (car args)))
-        ((string? fn)
-         (string-ref fn (car args)))
+         (if (null? args)
+             (map ar-car fn)
+             (list-ref fn (car args))))
         ((hash? fn)
-         (hash-ref fn
-                   (car args)
-                   (if (pair? (cdr args)) (cadr args) ar-nil)))
-        ((and (ar-seq? fn) (not (null? fn)))
+         (if (null? args)
+             (hash-keys fn)
+             (hash-ref fn
+                       (car args)
+                       (if (pair? (cdr args)) (cadr args) ar-nil))))
+        ((namespace? fn)
+         (if (null? args)
+             (ar-namespace-keys fn)
+             (ar-namespace-ref (car args)
+                               (if (pair? (cdr args)) (ar-thunk (cadr args)) #f)
+                               fn)))
+        ((ar-seq? fn)
          (sequence-ref fn (car args)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
 ; another possibility: constant in functional pos means it gets
 ; passed to the first arg, i.e. ('kids item) means (item 'kids).
         (#t (ar-err "Function call on inappropriate object" fn args))))
+
+(define (ar-thunk val)
+  (if (procedure? val) val (lambda () val)))
 
 ; special cases of ar-apply for speed and to avoid consing arg lists
 
@@ -565,6 +576,7 @@
   (cond ((ar-list? x) (length x))
         ((ar-seq? x) (sequence-length x))
         ((hash? x) (hash-count x))
+        ((namespace? x) (ar-namespace-count x))
         ((symbol? x) (string-length (symbol->string x)))
         ((keyword? x) (string-length (keyword->string x)))
         (#t (ar-err "Can't get len of" x))))
@@ -593,4 +605,21 @@
             (lambda () (ar-apply f '()))))
         (lambda ()
           (thread-cell-set! ar-sema-cell #f)))))
+
+; namespace accessors
+
+(define (ar-namespace-ref name (fail #f) (ns (current-namespace)))
+  (namespace-variable-value name #t fail ns))
+
+(define (ar-namespace-set! name value (ns (current-namespace)))
+  (namespace-set-variable-value! name value #t ns))
+
+(define (ar-namespace-unset! name (ns (current-namespace)))
+  (namespace-undefine-variable! name ns))
+
+(define (ar-namespace-keys (ns (current-namespace)))
+  (namespace-mapped-symbols ns))
+
+(define (ar-namespace-count (ns (current-namespace)))
+  (length (ar-namespace-keys ns)))
 
