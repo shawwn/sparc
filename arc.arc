@@ -236,8 +236,8 @@
     `(let (,ok ,var) (guard ,expr)
        (if ,ok (do ,@body) ,fail))))
 
-(mac safe (expr)
-  `(on-err nil (fn () ,expr)))
+(mac safe (expr (o fail))
+  `(on-err ,fail (fn () ,expr)))
 
 (def assoc (key al)
   (if (atom al)
