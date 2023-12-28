@@ -154,11 +154,13 @@
 (define (has-ssyntax-char? string (i (- (string-length string) 2)))
   (and (>= i 0)
        (let ((c (string-ref string i)))
-         (or (eqv? c #\:) (eqv? c #\~)
-             (eqv? c #\&)
-             ;(eqv? c #\_)
-             (eqv? c #\.)  (eqv? c #\!)
-             (has-ssyntax-char? string (- i 1))))))
+         (if (= i 0)
+             (or (eqv? c #\~) (eqv? c #\!))
+             (or (eqv? c #\:) (eqv? c #\~)
+                 (eqv? c #\&)
+                 ;(eqv? c #\_)
+                 (eqv? c #\.)  (eqv? c #\!)
+                 (has-ssyntax-char? string (- i 1)))))))
 
 ; Though graphically the right choice, can't use _ for currying
 ; because then _!foo becomes a function.  Maybe use <>.  For now

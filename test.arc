@@ -753,10 +753,14 @@ c"
 (define-test reserved
   (withs (end 'zz
           try 'yy
-          return 99)
+          return 99
+          &or 'xx
+          .is 'ww)
     (test? 'zz end)
     (test? 'yy try)
-    (test? '99 return))
+    (test? '99 return)
+    (test? 'xx &or)
+    (test? 'ww .is))
   ;(define var (if end return)
   ;  (return (+ if end return)))
   ;(test? 6 (var 1 2 3))
