@@ -960,6 +960,10 @@
 
 (xdef type ar-type)
 
+(xdef typeof ar-typeof)
+
+(xdef typename ar-typename)
+
 (xdef rep ar-rep)
 
 (define (ar-gensym . names)

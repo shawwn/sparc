@@ -76,7 +76,7 @@
 (def no (x) (if x false true))
 (def yes (x) (if x true false))
 
-(def isa (x) [is (type _) x])
+(def isa (x) [is (type _) (typename x _)])
 
 (def acons (x) (isa!cons x))
 
