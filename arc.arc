@@ -171,8 +171,13 @@
       `(let ,(car parms) ,(cadr parms) 
          (withs ,(cddr parms) ,@body))))
 
-(mac atomic body
-  `(atomic-invoke (fn () ,@body)))
+(def atomic-invoke-if (test f)
+  (if test (atomic-invoke f) (f)))
+
+(mac atomic (if: test . body)
+  (if test
+      `(atomic-invoke-if ,test (fn () ,@body))
+      `(atomic-invoke (fn () ,@body))))
 
 (mac atlet body
   `(atomic (let ,@body)))
@@ -824,13 +829,14 @@
 
 (def pr (:file :flush :sep :end . args)
   (or= file (stdout))
-  (let c nil
-    (each x args
-      (if c (disp c file))
-      (= c sep)
-      (disp x file)))
-  (if end (disp end file))
-  (if flush (flushout file))
+  (atomic if: ((cor stdout? stderr?) file)
+    (let c nil
+      (each x args
+        (if c (disp c file))
+        (= c sep)
+        (disp x file)))
+    (if end (disp end file))
+    (if flush (flushout file)))
   (car args))
 
 (def prt (:file :flush :sep :end . args)
@@ -980,6 +986,10 @@
 (or= original-stdin* (stdin)
      original-stdout* (stdout)
      original-stderr* (stderr))
+
+(def stdin?  (port) (is port original-stdin*))
+(def stdout? (port) (is port original-stdout*))
+(def stderr? (port) (is port original-stderr*))
 
 ; rename this simply "to"?  - prob not; rarely use
 
