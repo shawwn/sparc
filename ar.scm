@@ -161,7 +161,6 @@
         ((exn? x)           'exception)
         ((channel? x)       'channel)
         ((async-channel? x) 'channel)
-        ((evt? x)           'event)
         ((boolean? x)       'bool)
         ((eof-object? x)    'eof)
         ((void? x)          'void)
