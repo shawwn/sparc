@@ -608,7 +608,10 @@
                         (list (+ (list g (car expr))
                                  (mappend list argsyms (cdr expr)))
                               `(,g ,@argsyms)
-                              `(fn (,h) (sref ,g ,h ,(car argsyms))))))))))))
+                              `(fn (,h)
+                                 ,(if (no argsyms)
+                                      `(,g ,h)
+                                      `(sref ,g ,h ,(car argsyms)))))))))))))
 
 (def metafn (x)
   (or (ssyntax x)
