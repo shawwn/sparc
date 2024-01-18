@@ -222,7 +222,6 @@
                       ((string)  (apply number->string x args))
                       ((bytes)   (retry (number->string x)))
                       ((bool)    #t)
-                      ((cons)    (sequence->list x))
                       (else      (fail))))
     ((number? x)    (case type
                       ((int)     (iround x))
