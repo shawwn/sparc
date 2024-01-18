@@ -944,7 +944,13 @@
 
 (xdef * ar-*)
 (xdef / /)
-(xdef mod modulo)
+
+; https://stackoverflow.com/questions/65411276/how-to-compute-a-floating-point-modulo-in-racket-flmod
+
+(define (flmod x m)
+  (- x (* (floor (/ x m)) m)))
+
+(xdef mod flmod)
 (xdef expt expt)
 (xdef sqrt sqrt)
 

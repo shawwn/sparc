@@ -679,7 +679,7 @@
   (let n (mod min 720)
     (string (let h (trunc (/ n 60)) (if (is h 0) "12" h))
             ":"
-            (let m (mod n 60)
+            (let m (trunc (mod n 60))
               (if (is m 0) "00"
                   (< m 10) (string "0" m)
                            m))
