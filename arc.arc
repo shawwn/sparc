@@ -1792,13 +1792,15 @@
   (case (type x)
     string     (#'string-downcase x)
     (char sym) (coerce (downcase (str x)) (type x))
+    nil        x
                (err "Can't downcase" x)))
 
 (def upcase (x)
   (case (type x)
     string     (#'string-upcase x)
     (char sym) (coerce (upcase (str x)) (type x))
-           (err "Can't upcase" x)))
+    nil        x
+               (err "Can't upcase" x)))
 
 (def range (start (o end unset) (o step 1))
   (if (is end unset) (= end start start 0))
