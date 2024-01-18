@@ -1819,7 +1819,7 @@
 
 (= bar* " | ")
 
-(mac w/bars body
+(mac w/bars args
   (letu (out needbars)
     `(let ,needbars nil
        (do ,@(map (fn (e)
@@ -1829,7 +1829,7 @@
                              (pr bar* ,out)
                              (do (= ,needbars t)
                                  (pr ,out))))))
-                  body)))))
+                  args)))))
 
 (def len< (x n) (< (len x) n))
 
