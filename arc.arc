@@ -1552,7 +1552,7 @@
       (table)))
 
 (def date ((o s (seconds)))
-  (rev (nthcdr 3 (timedate s))))
+  (firstn 3 (timedate s)))
 
 (def datestring ((o s (seconds)))
   (let (y m d) (date s)

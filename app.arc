@@ -789,10 +789,10 @@
 #'(require racket/date)
 
 (def mindate ((o secs (seconds)))
-  (cut (rev:timedate secs) 0 5))
+  (cut (timedate secs) 0 5))
 
 (def hourdate ((o secs (seconds)))
-  (cut (rev:timedate secs) 0 4))
+  (cut (timedate secs) 0 4))
 
 (defmemo date-seconds ((Y m d (o H 0) (o M 0) (o S 0)))
   (#'find-seconds S M H d m Y #f))
@@ -832,7 +832,7 @@
   ; locale's alternate numeric symbols if available.
   (withs (secs (trunc ts)
           ns 0 ; todo
-          (Y m d H M S) (rev:timedate secs)
+          (Y m d H M S) (timedate secs)
           I (aand (mod H 12) (if (is it 0) 12 it))
           fmt (if (begins fmt "+") (cut fmt 1) fmt)
           n (len fmt))

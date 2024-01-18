@@ -1482,12 +1482,12 @@
 
 (xdef timedate ((s (current-seconds)))
   (let ((d (gmt-date s)))
-    (list (date-second d)
-          (date-minute d)
-          (date-hour d)
-          (date-day d)
+    (list (date-year d)
           (date-month d)
-          (date-year d))))
+          (date-day d)
+          (date-hour d)
+          (date-minute d)
+          (date-second d))))
 
 (xdef sin sin)
 (xdef cos cos)
