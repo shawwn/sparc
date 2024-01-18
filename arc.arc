@@ -1210,12 +1210,13 @@
 
 (def memo (f)
   (withs (cache (table) nilcache (table))
-    (fn args
-      (or (cache args)
-          (and (no (nilcache args))
-               (aif (apply f args)
-                    (= (cache args) it)
-                    (do (= (nilcache args) t)
+    (fn (:kws . args)
+      (def a (+ args kws))
+      (or (cache a)
+          (and (no (nilcache a))
+               (aif (kwapply f kws args)
+                    (= (cache a) it)
+                    (do (= (nilcache a) t)
                         nil)))))))
 
 
