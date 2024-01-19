@@ -1356,8 +1356,11 @@
 (xdef msec                         current-milliseconds)
 (xdef mnow                         current-inexact-milliseconds)
 
-(xdef seconds current-seconds)
-(xdef now () (/ (current-inexact-milliseconds) 1000))
+(xdef seconds () (current-seconds))
+(xdef now () (current-inexact-seconds))
+
+(define (current-inexact-seconds)
+  (/ (current-inexact-milliseconds) 1000))
 
 (xdef client-ip (port)
   (let-values (((x y) (tcp-addresses port)))
@@ -1482,18 +1485,14 @@
 (xdef get-environment-variable getenv)
 (xdef set-environment-variable putenv)
 
-(void (putenv "TZ" ":GMT"))
-
-(define (gmt-date sec) (seconds->date sec))
-
-(xdef timedate ((s (current-seconds)))
-  (let ((d (gmt-date s)))
+(xdef timedate ((s (current-inexact-seconds)) #:local (local? #f))
+  (let ((d (seconds->date s (ar-true? local?))))
     (list (date-year d)
           (date-month d)
           (date-day d)
           (date-hour d)
           (date-minute d)
-          (date-second d))))
+          (+ (date-second d) (/ (date*-nanosecond d) 1000000000)))))
 
 (xdef sin sin)
 (xdef cos cos)

@@ -1552,11 +1552,11 @@
   (or (safe:load-table filename)
       (table)))
 
-(def date ((o s (seconds)))
-  (firstn 3 (timedate s)))
+(def date ((o s (seconds)) :local)
+  (firstn 3 (timedate s :local)))
 
-(def datestring ((o s (seconds)))
-  (let (y m d) (date s)
+(def datestring ((o s (seconds)) :local)
+  (let (y m d) (date s :local)
     (string y "-" (if (< m 10) "0") m "-" (if (< d 10) "0") d)))
 
 (def count (test x)

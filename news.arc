@@ -2466,14 +2466,19 @@ function suggestTitle() {
          ,@(standard-item-fields p a e x)))))
 
 (def standard-item-fields (i a e x)
+  (withs (d   (timedate i!time :local)
+          ymd (aand (cut d 0 3) (if a it (english-date it)))
+          hms (aand (cut d 3 6) (if a it (english-time it))))
        `((sexpr   votes     ,i!votes       ,a  nil)
+         (date    date      ,ymd            t ,a)
+         (time    time      ,hms            t ,a)
          (int     score     ,i!score        t ,a)
          (num     sockvotes ,i!sockvotes   ,a ,a)
          (yesno   dead      ,i!dead        ,e ,e)
          (yesno   deleted   ,i!deleted     ,a ,a)
-         (sexpr   flags     ,i!flags       ,a nil)
+         (sexpr   flags     ,i!flags       ,a  nil)
          (sexpr   keys      ,i!keys        ,a ,a)
-         (string  ip        ,i!ip          ,e  nil)))
+         (string  ip        ,i!ip          ,e  nil))))
 
 ; Should check valid-url etc here too.  In fact make a fn that
 ; does everything that has to happen after submitting a story,
@@ -2490,7 +2495,11 @@ function suggestTitle() {
                    (unless (ignore-edit i name val)
                      (when (and (is name 'dead) val (no i!dead))
                        (log-kill i))
-                     (= (i name) val)))
+                     (let d (timedate i!time :local)
+                       (case name
+                         date (= i!time (date>seconds (+ val (nthcdr 3 d)) :local))
+                         time (= i!time (date>seconds (+ (firstn 3 d) val) :local))
+                              (= (i name) val)))))
                  (fn () ;(if (admin) (pushnew 'locked i!keys))
                         (save-item i)
                         (metastory&adjust-rank i)

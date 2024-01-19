@@ -466,10 +466,13 @@
   (if (in typ 'syms 'sexpr 'users 'toks 'bigtoks 'lines 'hexcol)
        (fn (x y) (> (len x) (len y)))
       (is typ 'date)
+       (fn (x y) (or (no y) (yes:and x (< (date>seconds x) (date>seconds y)))))
+      (is typ 'time)
        (fn (x y)
-         (or (no y) (and x (date< x y))))
+         (def ymd (date))
+         (or (no y) (yes:and x (< (date>seconds (+ ymd x)) (date>seconds (+ ymd y))))))
        (fn (x y)
-         (or (empty y) (and (~empty x) (< x y))))))
+         (or (empty y) (yes:and (~empty x) (< x y))))))
 
 
 ; (= fail* (uniq))
@@ -674,41 +677,42 @@
           (do (if (is (s i) #\*) (writec #\\))
               (writec (s i)))))))
 
-
-(def english-time (min)
-  (let n (mod min 720)
-    (string (let h (trunc (/ n 60)) (if (is h 0) "12" h))
-            ":"
-            (let m (trunc (mod n 60))
-              (if (is m 0) "00"
-                  (< m 10) (string "0" m)
-                           m))
-            (if (is min 0)   " midnight"
-                (is min 720) " noon"
-                (>= min 720) " pm"
-                             " am"))))
+(def english-time ((hr min sec))
+  (def h (mod hr 12))
+  (def s (trunc sec))
+  (string (if (is h 0) "12" h)
+          (+ ":" (pad (str min) 2))
+          (when (> s 0)
+            (+ ":" (pad (str s) 2)))
+          (if (< hr 12) " am" " pm")))
 
 (def parse-time (s)
   (let (nums (o label "")) (halve s letter)
-    (withs ((h (o m 0)) (map int (tokens nums ~digit))
-           cleanlabel  (downcase (rem ~alphadig label)))
-      (+ (* (if (is h 12)
-                 (if (in cleanlabel "am" "midnight")
-                     0
-                     12)
-                (is cleanlabel "am")
-                 h
-                 (+ h 12))
-            60)
-          m))))
+    (withs ((h (o m 0) (o s 0)) (map int (tokens nums ~digit))
+           cleanlabel  (downcase (rem ~alphadig label))
+           h (if (is h 12)
+                  (if (in cleanlabel "am" "midnight") 0 12)
+                 (is cleanlabel "am")
+                  h
+                  (+ h 12)))
+      (list h m s))))
 
+(= days*   '("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday"
+             "Friday" "Saturday")
+   months* '("January" "February" "March" "April" "May" "June" "July"
+             "August" "September" "October" "November" "December"))
 
-(= months* '("January" "February" "March" "April" "May" "June" "July"
-             "August" "September" "October" "November" "December")
-   days* '("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"))
+(def english-weekday (ymd :local :short)
+  (aand (days* (weekday ymd :local))
+        (if short (cut it 0 3) it)))
 
-(def english-date ((y m d))
-  (string d " " (months* (- m 1)) " " y))
+(def english-month (m :short)
+  (aand (months* (- m 1))
+        (if short (cut it 0 3) it)))
+
+(def english-date (ymd :short)
+  (let (y m d) ymd
+    (string d " " (english-month m :short) " " y)))
 
 (= month-names* (obj "january"    1  "jan"        1
                      "february"   2  "feb"        2
@@ -788,30 +792,60 @@
 
 #'(require racket/date)
 
-(def mindate ((o secs (seconds)))
-  (cut (timedate secs) 0 5))
+(def seconds>date ((o ts (now)) :local)
+  (#'seconds->date ts (yes local)))
 
-(def hourdate ((o secs (seconds)))
-  (cut (timedate secs) 0 4))
+(def date>seconds (ymd :local)
+  (let (y m d (o H 0) (o M 0) (o S 0)) ymd
+    (#'find-seconds (trunc S) M H d m y (yes local))))
 
-(defmemo date-seconds ((Y m d (o H 0) (o M 0) (o S 0)))
-  (#'find-seconds S M H d m Y #f))
+(def tzname (:local)
+  (#'date*-time-zone-name (seconds>date :local)))
 
-(defmemo date-yearday (ymd)
-  (#'date-year-day (#'seconds->date (date-seconds ymd))))
+(def tzoffset ((o ts (now)) :local)
+  (- (date>seconds :local (timedate ts :local))
+     (date>seconds :local (timedate ts))))
 
-(defmemo date-weekday (ymd)
-  (#'date-week-day (#'seconds->date (date-seconds ymd))))
+(def days-in-month (ymd)
+  (/ (- (date>seconds:next-month ymd)
+        (date>seconds:this-month ymd))
+     60 60 24))
 
-(defmemo date-weekday-name (ymd (o short t))
-  (let s (days* (date-weekday ymd))
-    (if short (cut s 0 3) s)))
+(def next-month ((o ymd (date)))
+  (let (y m) ymd
+    (if (is m 12)
+        (list (+ y 1) 1 1)
+        (list y (+ m 1) 1))))
 
-(defmemo month-name (m (o short t))
-  (let s (months* (- m 1))
-    (if short (cut s 0 3) s)))
+(def this-month ((o ymd (date)))
+  (let (y m) ymd (list y m 1)))
 
-(defmemo strftime (fmt (o ts (seconds)))
+(def first-month ((o ymd (date)))
+  (let (y)   ymd (list y 1 1)))
+
+(def weekday (ymd :local :iso)
+  (aand (seconds>date (date>seconds ymd :local) :local)
+        (#'date-week-day it)
+        (if (and iso (is it 0)) 7 it)))
+
+(def yearday (ymd :local :offset)
+  (aand (seconds>date (date>seconds ymd :local) :local)
+        (#'date-year-day it)
+        (if offset
+            (let o (yearday-offset ymd offset :local)
+              (- it o -1))
+            it)))
+
+(def yearday-offset (ymd weekday :local)
+  (assert (isnt weekday t) "TODO")
+  (let (y m) ymd
+    (for d 1 10
+      (assert (< d 9) "Couldn't find weekday")
+      (if (no weekday) (break 0))
+      (if (is weekday (english-weekday (list y m d) :local))
+          (break (- d 1))))))
+
+(def strftime (fmt (o ts (now)) :local)
   ; TODO:
   ; By default, date pads numeric fields with zeroes.  The following
   ; optional flags may follow '%':
@@ -831,8 +865,9 @@
   ; locale's alternate representations if available, or O to use the
   ; locale's alternate numeric symbols if available.
   (withs (secs (trunc ts)
-          ns 0 ; todo
-          (Y m d H M S) (timedate secs)
+          ymd (timedate :local ts)
+          (Y m d H M S) ymd
+          ns (trunc:* (mod S 1) 1e9)
           I (aand (mod H 12) (if (is it 0) 12 it))
           fmt (if (begins fmt "+") (cut fmt 1) fmt)
           n (len fmt))
@@ -844,37 +879,37 @@
 ; %%     a literal %
               #\% (out "%")
 ; %a     locale's abbreviated weekday name (e.g., Sun)
-              #\a (out (date-weekday-name (list Y m d) t))
+              #\a (out (english-weekday :local ymd :short))
 ; %A     locale's full weekday name (e.g., Sunday)
-              #\A (out (date-weekday-name (list Y m d) nil))
+              #\A (out (english-weekday :local ymd))
 ; %b     locale's abbreviated month name (e.g., Jan)
-              #\b (out (month-name m t))
+              #\b (out (english-month m :short))
 ; %B     locale's full month name (e.g., January)
-              #\B (out (month-name m nil))
+              #\B (out (english-month m))
 ; %c     locale's date and time (e.g., Thu Mar  3 23:05:25 2005)
-              #\c (out (strftime "%a %b %e %H:%M:%S %Y" secs))
+              #\c (out (strftime :local "%a %b %e %H:%M:%S %Y" ts))
 ; %C     century; like %Y, except omit last two digits (e.g., 20)
               #\C (out (cut (str Y) 0 2))
 ; %d     day of month (e.g., 01)
               #\d (out (pad (str d) 2 "0"))
 ; %D     date; same as %m/%d/%y
-              #\D (out (strftime "%m/%d/%y" secs))
+              #\D (out (strftime :local "%m/%d/%y" ts))
 ; %e     day of month, space padded; same as %_d
               #\e (out (pad (str d) 2 " "))
 ; %F     full date; same as %Y-%m-%d
-              #\F (out (strftime "%Y-%m-%d" secs))
+              #\F (out (strftime :local "%Y-%m-%d" ts))
 ; %g     last two digits of year of ISO week number (see %G)
 ; %G     year of ISO week number (see %V); normally useful only with %V
               ;#\g (err "todo")
               ;#\G (err "todo")
 ; %h     same as %b
-              #\h (out (month-name m t))
+              #\h (out (english-month m :short))
 ; %H     hour (00..23)
               #\H (out (pad (str H) 2 "0"))
 ; %I     hour (01..12)
               #\I (out (pad (str I) 2 "0"))
 ; %j     day of year (001..366)
-              #\j (out (pad (str (+ 1 (date-yearday (list Y m d)))) 3 "0"))
+              #\j (out (pad (str (+ 1 (yearday :local ymd))) 3 "0"))
 ; %k     hour, space padded ( 0..23); same as %_H
               #\k (out (pad (str H) 2 " "))
 ; %l     hour, space padded ( 1..12); same as %_I
@@ -886,66 +921,75 @@
 ; %n     a newline
               #\n (out "\n")
 ; %N     nanoseconds (000000000..999999999)
-              #\N (out (pad (str ns) (len "000000000") "0"))
+              #\N (out (pad (str ns) 9 "0"))
 ; %p     locale's equivalent of either AM or PM; blank if not known
               #\p (out (if (>= H 12) "PM" "AM"))
 ; %P     like %p, but lower case
               #\P (out (if (>= H 12) "pm" "am"))
 ; %q     quarter of year (1..4)
 ; %r     locale's 12-hour clock time (e.g., 11:11:04 PM)
-              #\r (out (strftime "%I:%M:%S %p" secs))
+              #\r (out (strftime :local "%I:%M:%S %p" ts))
 ; %R     24-hour hour and minute; same as %H:%M
-              #\R (out (strftime "%H:%M" secs))
+              #\R (out (strftime :local "%H:%M" ts))
 ; %s     seconds since 1970-01-01 00:00:00 UTC
-              #\s (out (str secs))
+              #\s (out (str:trunc ts))
 ; %S     second (00..60)
-              #\S (out (pad (str S) 2 "0"))
+              #\S (out (pad (str:trunc S) 2 "0"))
 ; %t     a tab
               #\t (out "\t")
 ; %T     time; same as %H:%M:%S
-              #\T (out (strftime "%H:%M:%S" secs))
-; %u     day of week (1..7); 1 is Monday
-              #\u (out (str (aand (date-weekday (list Y m d)) (if (is it 0) 7 it))))
-; %U     week number of year, with Sunday as first day of week (00..53)
-              ;#\U (out (str (trunc:/ (date-yearday (list Y m d)) 7)))
-; %V     ISO week number, with Monday as first day of week (01..53)
-              ;#\V (out (str (trunc:/ (date-yearday (list Y m d)) 7)))
+              #\T (out (strftime :local "%H:%M:%S" ts))
 ; %w     day of week (0..6); 0 is Sunday
-              #\w (out (str (date-weekday (list Y m d))))
+              #\w (out (weekday :local ymd))
+; %u     day of week (1..7); 1 is Monday
+              #\u (out (weekday :local ymd :iso))
+; %U     week number of year, with Sunday as first day of week (00..53)
+;         All days in a new year preceding the first Sunday are considered to be in week 0.
+              #\U (out (aand (yearday :local ymd offset: "Sunday") (ceiling:/ it 7) (pad (str it) 2)))
 ; %W     week number of year, with Monday as first day of week (00..53)
+;         All days in a new year preceding the first Monday are considered to be in week 0.
+              #\W (out (aand (yearday :local ymd offset: "Monday") (ceiling:/ it 7) (pad (str it) 2)))
+; %V     week number of year, with Monday as first day of week (01..53)
+;         Week 01 is the week containing Jan 4.
+             ;#\V (out (aand (yearday :local ymd :offset)          (ceiling:/ it 7) (pad (str it) 2)))
 ; %x     locale's date representation (e.g., 12/31/99)
-              #\x (out (strftime "%m/%d/%y" secs))
+              #\x (out (strftime :local "%m/%d/%y" ts))
 ; %X     locale's time representation (e.g., 23:13:48)
-              #\X (out (strftime "%H:%M:%S" secs))
+              #\X (out (strftime :local "%H:%M:%S" ts))
 ; %y     last two digits of year (00..99)
               #\y (out (cut (str Y) 2))
 ; %Y     year
-              #\Y (out (str Y))
+              #\Y (out Y)
 ; %z     +hhmm numeric time zone (e.g., -0400)
-              #\z (out "-0000")
+              #\z (out:strfdtime "%H%M" (tzoffset ts :local))
 ; %:z    +hh:mm numeric time zone (e.g., -04:00)
               #\: (case (fmt (++ i))
-                    #\z (out "-00:00")
+                    #\z (out:strfdtime "%H:%M" (tzoffset ts :local))
 ; %::z   +hh:mm:ss numeric time zone (e.g., -04:00:00)
                     #\: (case (fmt (++ i))
-                          #\z (out "-00:00:00")
+                          #\z (out:strfdtime "%H:%M:%S" (tzoffset ts :local))
 ; %:::z  numeric time zone with : to necessary precision (e.g., -04, +05:30)
                           #\: (case (fmt (++ i))
-                                #\z (out "-00")
+                                ; todo: strip :00
+                                #\z (out:strfdtime "%H:%M:%S" (tzoffset ts :local))
                                 ; unknown
                                 (out "%:::" (fmt i)))))
 ; %Z     alphabetic time zone abbreviation (e.g., EDT)
-              #\Z (out "GMT")
+              #\Z (out (tzname :local))
               ; unknown
               (do (out #\% (fmt i)))))))))
 
+(def strfdtime (fmt dt)
+  (cat (if (>= dt 0) "+" "-")
+       (strftime fmt (+ (date>seconds (date)) (abs dt)))))
+
 (def idiv (i n) (trunc (/ i n)))
-(def imod (i n) (mod (trunc i) n))
+(def imod (i n) (trunc (mod i n)))
 
 (def sec->msec (ts) (* ts 1000))
 (def msec->sec (ms)  (idiv ms 1000))
 
-(def moment ((o ms (msec)))
+(def moment ((o ms (mnow)))
   (withs (secs (msec->sec ms)
           msecs (imod ms 1000))
     (strftime (+ "+%Y-%m-%dT%H:%M:%S." (pad (str msecs) 3 "0") "Z") secs)))
