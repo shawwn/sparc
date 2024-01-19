@@ -2490,7 +2490,7 @@ function suggestTitle() {
 ; and call it both there and here.
 
 (def edit-page (i)
-  (let here (edit-url i)
+  (withs (here (edit-url i) ymd (timedate i!time :local))
     (shortpage nil nil "Edit" here
       (tab (display-item nil i here t)
            (display-item-text i))
@@ -2500,12 +2500,12 @@ function suggestTitle() {
                    (unless (ignore-edit i name val)
                      (when (and (is name 'dead) val (no i!dead))
                        (log-kill i))
-                     (let d (timedate i!time :local)
-                       (case name
-                         date (= i!time (date>seconds (+ val (nthcdr 3 d)) :local))
-                         time (= i!time (date>seconds (+ (firstn 3 d) val) :local))
-                              (= (i name) val)))))
+                     (case name
+                       date (= ymd (+ val (nthcdr 3 ymd)))
+                       time (= ymd (+ (firstn 3 ymd) val))
+                            (= (i name) val))))
                  (fn () ;(if (admin) (pushnew 'locked i!keys))
+                        (aif (ok-date ymd) (= i!time it))
                         (save-item i)
                         (metastory&adjust-rank i)
                         (wipe (comment-cache* i!id))
@@ -2517,6 +2517,10 @@ function suggestTitle() {
        (case name
          title (len> val title-limit*)
          dead (mem 'nokill i!keys))))
+
+(def ok-time (ts) (and ts (<= ts (now)) ts))
+
+(def ok-date (ymd) (ok-time:safe:date>seconds ymd :local))
 
 ; Comment Submission
 
