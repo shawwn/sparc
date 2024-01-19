@@ -430,12 +430,12 @@
   (let x (or x "all")
     (apply orf
       (each x (tokens (str x) #\|)
-        (let fns (each x (tokens x #\&)
+        (let fns (each x (map downcase (tokens x #\&))
                    (if (begins x "!")
                        (let x (sym (string "/l/" (cut x 1)))
-                         (out [~mem x (subs _)]))
+                         (out [~mem x (map downcase (subs _))]))
                        (let x (sym (string "/l/" x))
-                         (out [mem x (subs _)]))))
+                         (out [mem x (map downcase (subs _))]))))
           (unless (empty fns)
             (out (apply andf fns))))))))
 
