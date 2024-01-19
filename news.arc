@@ -1738,11 +1738,16 @@ function vote(node) {
 (def logvote (story)
   (newslog 'vote story!id (list story!title)))
 
-(def text-age (a (o day t) (o hrs t))
-  (tostring
-    (if (and day (>= a 1440)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
-        (and hrs (>= a   60)) (pr (plural (trunc (/ a 60))   "hour")   " ago")
-                    (pr (plural (trunc a)          "minute") " ago"))))
+(def text-age (a)
+  (defs d (trunc:/ a 1440)
+        h (trunc:/ a 60)
+        m (trunc   a))
+  (if (>= d 365)
+      (strftime :local "on %b %e, %Y" (- (now) (* a 60)))
+      (tostring
+        (if (>= a 1440) (pr (plural d "day")    " ago")
+            (>= a   60) (pr (plural h "hour")   " ago")
+                        (pr (plural m "minute") " ago")))))
 
 
 ; Voting
