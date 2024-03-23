@@ -159,11 +159,10 @@
 (or= type-header* (table))
 
 (def gen-type-header (ctype)
-  (+ "HTTP/1.0 200 OK
-Content-Type: "
-     ctype
-     "
-Connection: close"))
+  (trim:tostring
+    (prn "HTTP/1.0 200 OK")
+    (prn "Content-Type: " ctype)
+    (prn "Connection: close")))
 
 (= header*         (gen-type-header "text/html; charset=utf-8")
    secure-header*  (trim:tostring
