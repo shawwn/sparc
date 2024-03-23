@@ -581,6 +581,10 @@
     (vspace 10)
     (center
       (place-board)))
+  (when (in whence "/l/qb" "/l/queensblood")
+    (vspace 10)
+    (center
+      (qb-board)))
   (when (in whence "/l/templeos")
     (terry))
   (vspace 10)
@@ -755,6 +759,7 @@ function vote(node) {
     (toplink "ask" "/l/ask" label)
     (toplink "show" "/l/show" label)
     (toplink "place" "/l/place" label)
+    (toplink "queen's blood" "/l/qb" label)
     (hook 'toprow label)
     (link "submit" "/submit")
     (unless (mem label toplabels*)
@@ -4022,6 +4027,33 @@ To clear the selection, click the x again, or click here: @(underlink 'clear '/p
 (newsop place (from to)
   (if (blank from) (wipe to))
   (place-page from to))
+
+(def qb-board ((o from) (o to) (o board place-board*))
+  (pr:tostring
+    (tag (style) (pr place-css*))
+    (tag (table id "qb" style "table-layout: fixed; width: 100%; overflow: hidden;")
+      (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
+        (each line (lines:trim place-info*)
+          (row line))
+        (spacerow 10)
+        (withs (j -1 from (or from "") to (or to "")
+                (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
+          (each y (lines board)
+            (++ j)
+            (tag tr
+              (when (is j 0) (td "palette:"))
+              (forlen i y
+                (tag (td id (string i "," j))
+                  (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i))))))
+            (when (is j 0)
+              (spacerow 4))
+            )))))
+  (flushout))
+
+(def qb-page ((o from) (o to) (o board place-board*))
+  (longpage (now) nil "Queen's Blood" "Queen's Blood" "/l/qb"
+    (center
+      (qb-board from to board))))
 
 (def lorem ()
   ; https://news.ycombinator.com/item?id=15609972
