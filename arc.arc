@@ -1684,18 +1684,24 @@
   (pushnew file loaded-files*)
   (= (loaded-file-times* file) secs))
 
-(def arcfile? (file)
-  (and (> (len file) 4)
-       (is ".arc" (cut file -4))))
+(def basename (path)
+  (aif (#'file-name-from-path path) (cat it)))
+
+(def pathext (path)
+  (aif (#'path-get-extension path) (cat it)))
+
+(def arcfile (path)
+  (aand (basename path)
+        (in (pathext it) ".arc" nil)))
 
 (def arcenv (file)
-  (zap expandpath file)
-  (list (list '__file__ file)))
+  (list (list '__file__ (expandpath file))))
 
 (def evaluator (file)
-  (if (arcfile? file)
-      (let env (arcenv file)
-        (with eval [eval _ env]))
+  (if (arcfile file)
+      (withs (env (arcenv file)
+              eval [eval _ env])
+        eval)
       seval))
 
 (def read-code ((o x (stdin)) (o eof eof))
