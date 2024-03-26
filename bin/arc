@@ -19,6 +19,6 @@ cd "${dir}"
 source "${home}/bin/setup.sh"
 set +e
 
-export ARC_HOST_FLAGS="${ARC_HOST_FLAGS} ${ARC_DEBUG:+-l errortrace}"
+export ARC_HOST_FLAGS="${ARC_HOST_FLAGS} ${ARC_DEBUG:+-l errortrace} -y"
 
 exec "${ARC_HOST}" ${ARC_HOST_FLAGS} -t "${ARC_HOME}/as.scm" -- "$@"
