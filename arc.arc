@@ -968,7 +968,7 @@
   ; the middle of a write?
 
   (mac w/appendfile (var name :kws . body)
-    `(w/outfile ,var ,name :append ,@kws ,@body))
+    `(w/outfile ,var ,name append: true ,@kws ,@body))
 
   (mac w/instring (var str . body)
     (expander 'instring var str body))
