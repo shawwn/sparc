@@ -980,7 +980,7 @@
 (mac w/outstring (var . body)
   `(let ,var (outstring) ,@body))
 
-(mac defvar (name (o value 'nil) (o doc) :guard :const)
+(mac defvar (name (o value 'nil) (o doc) :guard)
   `(or= ,name (param ,name ,value guard: ,guard)))
 
 (mac defconst (name (o value 'nil) (o doc) (o :guard))
