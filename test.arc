@@ -1361,5 +1361,13 @@ c"
                (test? (p) 2)))
     (test? 1 (p))))
 
+(define-test arcfile
+  (test? t (arcfile "foo.arc"))
+  (test? t (arcfile "foo"))
+  (test? t (~arcfile "foo.txt"))
+  (test? t (~arcfile "/"))
+  (test? t (~arcfile "foo/bar.arc/"))
+  (test? t (~arcfile "foo/bar.arc/..")))
+
 run-tests
 
