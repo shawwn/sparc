@@ -259,6 +259,7 @@
                        (do (prn (aif (static-header* op) (gen-type-header it) header*))
                            (awhen (max-age* op)
                              (prn "Cache-Control: max-age=" it))
+                           (prn "Access-Control-Allow-Origin: *") ; todo: a more comprehensive CORS plan
                            (when (srvsecure req)
                              (prn secure-header*))
                            (or (hook 'respond-headers str req f nil)
