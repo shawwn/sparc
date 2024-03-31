@@ -290,6 +290,7 @@
                       ((bytes)   (if x #"t" #"false"))
                       (else      (fail))))
     ((sequence? x)  (retry (sequence->list x)))
+    ((path? x)      (retry (path->string x)))
     (#t             (fail))))
 
 (define (ar-to type . args)
