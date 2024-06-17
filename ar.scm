@@ -388,6 +388,9 @@
            ((1) (set-box! fn (car args)))
            ((2) (box-cas! fn (cadr args) (car args)))
            (else (apply raise-arity-error 'apply-box-cas! 2 args))))
+        ((string? fn)
+         ; note: this is >100x faster than relying on sequence-ref
+         (string-ref fn (car args)))
         ((ar-seq? fn)
          (sequence-ref fn (car args)))
 ; experiment: means e.g. [1] is a constant fn
