@@ -234,7 +234,7 @@
   `(when (no ,test) ,@body))
 
 (mac assert (test (o msg "Assertion failed") . args)
-  `(unless ,test (err (cat ,msg ":") ',test ,@args)))
+  `(or ,test (err (cat ,msg ":") ',test ,@args)))
 
 (mac guard body
   `(on-err (fn (c) (list false c))
