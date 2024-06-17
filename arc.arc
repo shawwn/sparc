@@ -198,6 +198,10 @@
            (letu ,names ,@body)))
       `(do ,@body)))
 
+; backwards compatibility
+(mac w/uniq (names . body)
+  `(letu ,names ,@body))
+
 (mac and ((o x 'true) . args)
   (if args
       (letu g
