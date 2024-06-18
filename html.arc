@@ -248,21 +248,21 @@
 
 (def br2 () (prn "<br><br>"))
 
-(mac center    body         `(tag center ,@body))
-(mac underline body         `(tag u ,@body))
-(mac idtab     (id . body)  `(tag (table border 0 id ,id) ,@body))
-(mac tab       body         `(tag (table border 0) ,@body))
-(mac tr        body         `(tag tr ,@body))
+(mac center    (:kws . body)     `(tag center ,@kws ,@body))
+(mac underline (:kws . body)     `(tag u ,@kws ,@body))
+(mac idtab     (id :kws . body)  `(tab id: ,id ,@kws ,@body))
+(mac tab       (:kws . body)     `(tag table border: 0 ,@kws ,@body))
+(mac tr        (:kws . body)     `(tag tr ,@kws ,@body))
 
 (let pratoms (fn (body)
                (if (all [~caris _ 'quote] body)
                    body
                    `((pr ,@body))))
 
-  (mac td       body         `(tag td ,@(pratoms body)))
-  (mac trtd     body         `(tr (td ,@(pratoms body))))
-  (mac tdr      body         `(tag (td align 'right) ,@(pratoms body)))
-  (mac tdcolor  (col . body) `(tag (td bgcolor ,col) ,@(pratoms body)))
+  (mac td       (:kws . body)     `(tag td ,@kws ,@(pratoms body)))
+  (mac trtd     (:kws . body)     `(tr (td ,@kws ,@(pratoms body))))
+  (mac tdr      (:kws . body)     `(tag td align: 'right ,@kws ,@(pratoms body)))
+  (mac tdcolor  (col :kws . body) `(tag td bgcolor: ,col ,@kws ,@(pratoms body)))
 )
 
 (mac row args
