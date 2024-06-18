@@ -176,28 +176,30 @@
 
 (mac gentag args (start-tag args))
 
-(mac tag (spec . body)
-  `(do ,(start-tag spec)
-       ,@body
-       ,(end-tag spec)))
+(def pratom (x)
+  (zap macex x)
+  (if (isa!string x) `(pr ,x) x))
 
-(mac tag-if (test spec . body)
+(mac tag (spec :kws . body)
+  (= spec (+ (listify spec) kws))
+  `(do ,(start-tag spec)
+       ,@(map pratom body)
+       ,(end-tag spec)
+       nil))
+
+(mac tag-if (test spec :kws . body)
   `(if ,test
-       (tag ,spec ,@body)
+       (tag ,spec ,@kws ,@body)
        (do ,@body)))
 
 (def start-tag (spec)
   (if (atom spec)
       `(pr ,(string "<" spec ">"))
       (let opts (tag-options (car spec) (hug (cdr spec)))
-        (if (all [isa!string _] opts)
+        (if (all isa!string opts)
             `(pr ,(string "<" (car spec) (apply string opts) ">"))
             `(do (pr ,(string "<" (car spec)))
-                 ,@(map (fn (opt)
-                          (if (isa!string opt)
-                              `(pr ,opt)
-                              opt))
-                        opts)
+                 ,@(map pratom opts)
                  (pr ">"))))))
 
 (def end-tag (spec)
@@ -217,6 +219,7 @@
   (if (no options)
       '()
       (let ((opt val) . rest) options
+        (zap sym opt)
         (let meth (if (is opt 'style) opstring
                       (is opt 'id)    opsym
                       (is opt 'src)   opstring
@@ -252,9 +255,7 @@
 (mac tr        body         `(tag tr ,@body))
 
 (let pratoms (fn (body)
-               (if (or (no body)
-                       (all [and (acons _) (isnt (car _) 'quote)]
-                            body))
+               (if (all [~caris _ 'quote] body)
                    body
                    `((pr ,@body))))
 
@@ -427,12 +428,13 @@
 (def nbsp () (pr "&nbsp;"))
 
 (def link (text (o dest (+ (if (headmatch "/" (str text)) "" "/") text)) :color :onclick :title)
-  (tag (a href dest onclick onclick title title)
-    (tag-if color (font color color)
+  (tag a href: dest :onclick :title
+    (tag-if color font :color
       (pr text))))
 
 (def underlink (text (o dest text) :onclick :title)
-  (tag (a href dest onclick onclick title title) (tag u (pr text))))
+  (tag a href: dest :onclick :title
+    (tag u (pr text))))
 
 (def striptags (s)
   (let intag nil
