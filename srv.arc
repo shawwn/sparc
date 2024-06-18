@@ -616,7 +616,7 @@
 ; f should be a fn of one arg, which will be http request args.
 
 (def fnformf (f bodyfn (o redir) (o k))
-  (tag (form method 'post action (if redir rfnurl2* fnurl*))
+  (form (if redir rfnurl2* fnurl*)
     (fnid-field (fnid f k))
     (bodyfn)))
 
@@ -627,7 +627,7 @@
 ; Is there a way to ensure user doesn't use "fnid" as a key?
 
 (mac aform (f :redir . body)
-  `(tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
+  `(form ,(if redir 'rfnurl* 'fnurl*)
      (fnid-field (fnid ,(fredir f redir) (lexkey aform ,f ,@body)))
      ,@body))
 
@@ -647,7 +647,7 @@
     `(withs (,gl ,lasts
              ,ge (lexkey taform ,f ,@body)
              ,gf ,(fredir f redir))
-       (tag (form method 'post action ,(if redir 'rfnurl* 'fnurl*))
+       (form ,(if redir 'rfnurl* 'fnurl*)
          (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
          ,@body))))
 
@@ -658,7 +658,7 @@
   `(taform :redir ,lasts ,f ,@body))
 
 (mac aformh (f :redir . body)
-  `(tag (form method 'post action ,(if redir 'rfnurl2* 'fnurl*))
+  `(form ,(if redir 'rfnurl2* 'fnurl*)
      (fnid-field (fnid ,(fredir f redir) (lexkey aformh ,f ,@body)))
      ,@body))
 

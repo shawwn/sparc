@@ -31,8 +31,15 @@
 
 (or= opmeths* (table))
 
-(mac opmeth args
-  `(opmeths* (list ,@args)))
+(def opmeth (spec opt)
+  (or (opmeths* (list spec opt))
+      (case opt
+        (id align valign) opsym
+        (name type)       opstring
+        (class style src) opstring
+        (onclick onfocus) opstring
+        (width height)    opstring
+        (color bgcolor)   opcolor)))
 
 (mac attribute (tag opt f)
   `(= (opmeths* (list ',tag ',opt)) ,f))
@@ -84,101 +91,62 @@
 
 (attribute a          href           opstring)
 (attribute a          rel            opstring)
-(attribute a          class          opstring)
-(attribute a          id             opsym)
-(attribute a          onclick        opstring)
 (attribute a          title          opstring)
-(attribute div        class          opstring)
-(attribute div        id             opsym)
-(attribute div        onclick        opstring)
 (attribute body       alink          opcolor)
-(attribute body       bgcolor        opcolor)
-(attribute body       leftmargin     opnum)
+(attribute body       vlink          opcolor)
 (attribute body       link           opcolor)
+(attribute body       text           opcolor)
+(attribute body       leftmargin     opnum)
 (attribute body       marginheight   opnum)
 (attribute body       marginwidth    opnum)
 (attribute body       topmargin      opnum)
-(attribute body       vlink          opcolor)
-(attribute body       text           opcolor)
 (attribute body       background     opstring)
 (attribute br         clear          opsym)
-(attribute font       color          opcolor)
 (attribute font       face           opstring)
 (attribute font       size           opnum)
 (attribute form       action         opstring)
 (attribute form       method         opsym)
 (attribute form       onsubmit       opstring)
-(attribute img        align          opsym)
 (attribute img        border         opnum)
-(attribute img        height         opnum)
-(attribute img        width          opnum)
 (attribute img        vspace         opnum)
 (attribute img        hspace         opnum)
 (attribute img        src            opstring)
 (attribute img        alt            opstring)
-(attribute meta       name           opstring)
 (attribute meta       property       opstring)
 (attribute meta       content        opstring)
 (attribute link       rel            opstring)
-(attribute link       type           opstring)
 (attribute link       href           opstring)
 (attribute link       sizes          opstring)
 (attribute link       title          opstring)
-(attribute link       color          opcolor)
 
-(attribute input      name           opstring)
 (attribute input      size           opnum)
-(attribute input      type           opsym)
 (attribute input      value          opesc)
 (attribute input      checked        opcheck)
-(attribute input      id             opsym)
-(attribute input      class          opstring)
 (attribute input      oninput        opstring)
-(attribute input      onfocus        opstring)
 (attribute input      autocorrect    opstring)
 (attribute input      spellcheck     opstring)
 (attribute input      autocapitalize opstring)
 (attribute input      autofocus      opstring)
-(attribute select     name           opstring)
 (attribute option     selected       opsel)
-(attribute table      bgcolor        opcolor)
 (attribute table      border         opnum)
 (attribute table      cellpadding    opnum)
 (attribute table      cellspacing    opnum)
-(attribute table      width          opstring)
-(attribute table      id             opsym)
 (attribute textarea   cols           opnum)
-(attribute textarea   name           opstring)
 (attribute textarea   rows           opnum)
 (attribute textarea   wrap           opsym)
-(attribute td         align          opsym)
-(attribute td         bgcolor        opcolor)
+(attribute textarea   oninput        opstring)
 (attribute td         colspan        opnum)
-(attribute td         width          opnum)
-(attribute td         valign         opsym)
-(attribute td         class          opstring)
-(attribute td         id             opsym)
-(attribute tr         bgcolor        opcolor)
-(attribute tr         valign         opsym)
-(attribute hr         color          opcolor)
-(attribute span       class          opstring)
-(attribute span       align          opstring)
-(attribute span       id             opsym)
 (attribute rss        version        opstring)
 (attribute rss        xmlns:content  opstring)
 (attribute rss        xmlns:dc       opstring)
-(attribute script     type           opstring)
 (attribute script     src            opstring)
-(attribute canvas     id             opsym)
-(attribute canvas     class          opstring)
-(attribute canvas     width          opnum)
-(attribute canvas     height         opnum)
 
-(mac gentag args (start-tag args))
+(mac gentag (:kws . args)
+  (start-tag (+ args kws)))
 
 (def pratom (x)
   (zap macex x)
-  (if (isa!string x) `(pr ,x) x))
+  (if (in (type x) 'string 'sym) `(pr ,x) x))
 
 (mac tag (spec :kws . body)
   (= spec (+ (listify spec) kws))
@@ -205,11 +173,12 @@
 (def end-tag (spec)
   `(pr ,(string "</" (carif spec) ">")))
 
-(def html-literal (x)
+(def literal (x)
   (case (type x)
-    sym   (in x nil t)
-    cons  (caris x 'quote)
-          t))
+    sym    ~t
+    string (~cdr (#'codestring x))
+    cons   (caris x 'quote)
+           t))
 
 ; Returns a list whose elements are either strings, which can
 ; simply be printed out, or expressions, which when evaluated
@@ -220,27 +189,22 @@
       '()
       (let ((opt val) . rest) options
         (zap sym opt)
-        (let meth (if (is opt 'style) opstring
-                      (is opt 'id)    opsym
-                      (is opt 'src)   opstring
-                      (is opt 'width)  opnum
-                      (is opt 'height) opnum
-                      (is opt 'value2) (do (= opt 'value) opstring)
-                      (opmeth spec opt))
-          (if meth
-              (if val
-                  (cons (if (precomputable-tagopt val)
-                            (tostring (eval (meth opt val)))
-                            (meth opt val))
-                        (tag-options spec rest))
-                  (tag-options spec rest))
-              (do
-                (pr "<!-- ignoring " opt " for " spec "-->")
-                (tag-options spec rest)))))))
+        (def meth (opmeth spec opt))
+        (when (is opt 'value2)
+          (= opt 'value meth opstring))
+        (if meth
+            (if val
+                (cons (if (precomputable-tagopt val)
+                          (tostring (eval (meth opt val)))
+                          (meth opt val))
+                      (tag-options spec rest))
+                (tag-options spec rest))
+            (do
+              (pr "<!-- ignoring " opt " for " spec "-->")
+              (tag-options spec rest))))))
 
 (def precomputable-tagopt (val)
-  (and (html-literal val)
-       (no (and (is (type val) 'string) (find #\@ val)))))
+  (literal val))
 
 (def br ((o n 1))
   (repeat n (pr "<br>"))
@@ -248,11 +212,10 @@
 
 (def br2 () (prn "<br><br>"))
 
-(mac center    (:kws . body)     `(tag center ,@kws ,@body))
-(mac underline (:kws . body)     `(tag u ,@kws ,@body))
-(mac idtab     (id :kws . body)  `(tab id: ,id ,@kws ,@body))
+(mac center    (:kws . body)     `(tag center          ,@kws ,@body))
+(mac underline (:kws . body)     `(tag u               ,@kws ,@body))
 (mac tab       (:kws . body)     `(tag table border: 0 ,@kws ,@body))
-(mac tr        (:kws . body)     `(tag tr ,@kws ,@body))
+(mac tr        (:kws . body)     `(tag tr              ,@kws ,@body))
 
 (let pratoms (fn (body)
                (if (or (no body) 
@@ -286,14 +249,14 @@
   (when args (apply pr args)))
 
 (def menu (name items (o sel nil))
-  (tag (select name name)
+  (tag select :name
     (each i items
-      (tag (option selected (is i sel))
+      (tag option selected: (is i sel)
         (pr i)))))
 
 (mac whitepage body
   `(tag html
-     (tag (body bgcolor white alink linkblue) ,@body)))
+     (tag body bgcolor: white alink: linkblue ,@body)))
 
 (def errpage args (whitepage (apply prn args)))
 
@@ -307,39 +270,34 @@
 (def vspace (n)    (gentag img src (blank-url) height n width 0))
 (def vhspace (h w) (gentag img src (blank-url) height h width w))
 
-(mac new-hspace (n)
-  (if (number n)
-      `(pr ,(string "<span style=\"padding-left:" n "px\" />"))
-      `(pr "<span style=\"padding-left:" ,n "px\" />")))
+(def new-hspace (n)
+  (tag span style: "padding-left: @{n}px"))
 
 ;(def spacerow (h) (tr (td (vspace h))))
 
-(def spacerow (h (o units "px")) (pr "<tr style=\"height:" h units "\"></tr>"))
-(def spacecol (w (o units "px")) (pr "<td style=\"width:" w units "\"></td>"))
+(def spacerow (h (o units "px")) (tr style: (+ "height: " h units)))
+(def spacecol (w (o units "px")) (td style: (+ "width: " w units)))
 
 ; For use as nested table.
 
-(mac zerotable body
-  `(tag (table border 0 cellpadding 1 cellspacing 0)
-     ,@body))
+(mac zerotable (:kws . body)
+  `(tag table border: 0 cellpadding: 1 cellspacing: 0 ,@kws ,@body))
 
 ; was `(tag (table border 0 cellpadding 0 cellspacing 7) ,@body)
 
-(mac sptab body
-  `(tag (table style "border-spacing: 7px 0px;") ,@body))
+(mac sptab (:kws . body)
+  `(tag table style: "border-spacing: 7px 0px;" ,@kws ,@body))
 
-(mac widtable (w . body)
-  `(tag (table width ,w) (tr (td ,@body))))
+(mac widtable (w :kws . body)
+  `(tag table width: ,w ,@kws (tr (td ,@body))))
 
 (def cellpr (x) (pr (or x "&nbsp;")))
 
-(def but ((o text "submit") (o name nil) (o noesc))
-  (if noesc
-      (gentag input type 'submit name name value2 text)
-      (gentag input type 'submit name name value  text)))
+(def but ((o text "submit") (o name nil))
+  (gentag input type: 'submit :name value: text))
 
-(def submit ((o val "submit"))
-  (gentag input type 'submit value val))
+(def submit ((o value "submit"))
+  (gentag input type: 'submit :value))
 
 (def buts (name . texts)
   (if (no texts)
@@ -349,20 +307,20 @@
             (pr " ")
             (but text name)))))
 
-(mac spanrow (n . body)
-  `(tr (tag (td colspan ,n) ,@body)))
+(mac spanrow (n :kws . body)
+  `(trtd colspan: ,n ,@kws ,@body))
 
-(mac form (action . body)
-  `(tag (form method "post" action ,action) ,@body))
+(mac form (action :kws . body)
+  `(tag form method: 'post action: ,action ,@kws ,@body))
 
-(mac textarea (name rows cols . body)
-  `(tag (textarea name ,name rows ,rows cols ,cols) ,@body))
+(mac textarea (name rows cols :kws . body)
+  `(tag textarea name: ,name rows: ,rows cols: ,cols ,@kws ,@body))
 
-(def input (:type name (o val "") (o size 10) (o id) (o oninput) (o onfocus))
-  (gentag input type (or type 'text) name name value val size size id id oninput oninput onfocus onfocus))
+(def input (name (o value "") (o size 10) (o :type 'text) :id :oninput :onfocus)
+  (gentag input :type :name :value :size :id :oninput :onfocus))
 
 (mac inputs args
-  `(tag (table border 0)
+  `(tag table border: 0
      ,@(map (fn ((name label len text (o plain) (o autofocus)))
               (letu (gl gt)
                 `(let ,gl ,len
@@ -370,16 +328,15 @@
                        (if (isa!cons ,gl)
                            (td (textarea ',name (car ,gl) (cadr ,gl)
                                  (let ,gt ,text (if ,gt (pr ,gt)))))
-                           (td (gentag input type ',(if (is label 'password)
-                                                    'password
-                                                    'text)
-                                         name ',name
-                                         size ,len
-                                         value ,text
-                                         autofocus (if ,autofocus "true")
-                                         autocorrect (if ,plain "off")
-                                         spellcheck (if ,plain "false")
-                                         autocapitalize (if ,plain "off"))))))))
+                           (td (gentag input
+                                       type ',(if (is label 'password) 'password 'text)
+                                       name ',name
+                                       size ,len
+                                       value ,text
+                                       autofocus (if ,autofocus "true")
+                                       autocorrect (if ,plain "off")
+                                       spellcheck (if ,plain "false")
+                                       autocapitalize (if ,plain "off"))))))))
             args)))
 
 (def single-input (label name chars btext (o pwd) (o value))
@@ -465,8 +422,8 @@
           (unless ink (pr "<p>"))
           (wipe ink))))))
 
-(mac spanclass (name . body)
-  `(tag (span class ',name) ,@body))
+(mac spanclass (name :kws . body)
+  `(tag span class: ',name ,@kws ,@body))
 
 (def pagemessage (text)
   (when text (prn text) (br2)))
@@ -480,11 +437,11 @@
            (begins url "https://"))
        (~find [in _ #\< #\> #\" #\'] url)))
 
-(mac fontcolor (c . body)
+(mac fontcolor (c :kws . body)
   (letu g
     `(let ,g ,c
-       (tag-if color (font color ,g)
+       (tag-if color font color: ,g ,@kws
          ,@body))))
 
 (def script (js (o type "text/javascript"))
-  (tag (script type type) (pr js)))
+  (tag script :type (pr js)))

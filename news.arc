@@ -607,7 +607,7 @@
 
 (def search-bar (elapsed whence)
   (br2)
-  ;(tag (form method "get" action "//search.laarc.io/")
+  ;(form method: 'get "//search.laarc.io/"
   ;  (inputs (q Search 17 nil 'plain)))
   )
 
@@ -1862,7 +1862,7 @@ function vote(node) {
   (+ '/l/ (downcase:last (tokens x #\/))))
 
 (def url-input (url)
-  (row "url" (input "u" url 50 "ln-url-input"))
+  (row "url" (input "u" url 50 id: "ln-url-input"))
   (row "" (underlink "suggest title" nil onclick: "suggestTitle();")))
 
 (= submitjs* "
@@ -1890,7 +1890,7 @@ function suggestTitle() {
       (script submitjs*)
       (tab
         (row "to" (input "l" (or sub "news") 50))
-        (row "title" (do (input "t" title 50 "ln-title-input" "tlen(this)" "tlen(this)")
+        (row "title" (do (input "t" title 50 id: "ln-title-input" oninput: "tlen(this)" onfocus: "tlen(this)")
                          (gentag span style "margin-left:10px")))
         (if prefer-url*
             (do (url-input url)
@@ -3188,7 +3188,7 @@ reproduced verbatim.  (This is intended for code.)
     (urform (get-user) req
             (do (todisk guidelines-page* (md-from-form arg!guidelines nil t))
                 "/newsguidelines.html")
-      (idtab "guidelines"
+      (tab id: 'guidelines
         (row (underlink "/newsguidelines.html"))
         (row (textarea "guidelines" 80 60
                (pr:esc-tags:unmarkdown guidelines-page* t)))
@@ -3197,7 +3197,7 @@ reproduced verbatim.  (This is intended for code.)
     (urform (get-user) req
             (do (todisk welcome-page* (md-from-form arg!welcome nil t))
                 "/welcome.html")
-      (idtab "welcome"
+      (tab id: 'welcome
         (row (underlink "/welcome.html"))
         (row (textarea "welcome" 80 60
                (pr:esc-tags:unmarkdown welcome-page* t)))
@@ -3206,7 +3206,7 @@ reproduced verbatim.  (This is intended for code.)
     (urform (get-user) req
             (do (todisk newsfaq-page* (md-from-form arg!newsfaq nil t))
                 "/newsfaq.html")
-      (idtab "newsfaq"
+      (tab id: 'newsfaq
         (row (underlink "/newsfaq.html"))
         (row (textarea "newsfaq" 80 60
                (pr:esc-tags:unmarkdown newsfaq-page* t)))
@@ -3215,7 +3215,7 @@ reproduced verbatim.  (This is intended for code.)
     (urform (get-user) req
             (do (todisk bookmarklet-page* arg!bookmarklet)
                 "/bookmarklet.html")
-      (idtab "bookmarklet"
+      (tab id: 'bookmarklet
         (row (underlink "/bookmarklet.html"))
         (row (textarea "bookmarklet" 80 60
                (pr:esc-tags bookmarklet-page*)))
@@ -3780,11 +3780,11 @@ RNBQKBNR
 
 (def chess-piece (text (o a) (o b) (o from) (o to))
   (let op (if (~blank from) (+ "from=" from "&to=") "from=")
-    (tag (form method 'post action (+ "/chess?" op a "," b))
+    (form (+ "/chess?" op a "," b)
       (gentag input type 'submit value2 text style "width: 3em;"))))
 
 (def chess-board ((o from) (o to) (o board chess-board*))
-  (idtab "chess"
+  (tab id: 'chess
     (withs (i 0 j 0 from (or from "") to (or to ""))
       (each y (chess board)
         (= i 0)
@@ -3883,7 +3883,7 @@ RNBQKBNR
   (withs (op (if (~blank from) (+ "from=" from "&to=") "from=")
           url (if (~blank from) "/placeop" "/place")
           whence (if (~blank from) (string "#" from) (string "#" a "," b)))
-    (tag (form method 'post action (string url "?" op a "," b) onsubmit "return placeSubmit(this);")
+    (form (string url "?" op a "," b) onsubmit: "return placeSubmit(this);"
       (gentag input type 'submit value2 text style "background-color: #@(hexrep bgcol);"))))
 
 (= place-submit-url* "/submitlink?l=ask%20place&t=Ask%20TL:%20what%20should%20we%20draw%20next%3F"
