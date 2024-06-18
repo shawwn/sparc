@@ -38,7 +38,7 @@
         (name type)       opstring
         (class style src) opstring
         (onclick onfocus) opstring
-        (width height)    opstring
+        (width height)    opnum
         (color bgcolor)   opcolor)))
 
 (mac attribute (tag opt f)
