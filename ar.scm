@@ -211,9 +211,7 @@
     ((char? x)      (case type
                       ((int)     (char->ascii x))
                       ((string)  (string x))
-                      ((bytes)   (retry (string x)))
-                      ((sym)     (string->symbol (string x)))
-                      ((keyword) (string->keyword (string x)))
+                      ((sym keyword bytes latin1 utf8) (retry (string x)))
                       ((bool)    #t)
                       (else      (fail))))
     ((exint? x)     (case type
@@ -250,6 +248,9 @@
                       ((string)  (retry x (ar-encoding (ar-car args))))
                       ((latin1)  (bytes->string/latin-1 x))
                       ((utf8)    (bytes->string/utf-8 x))
+                      ((char)    (if (<= (bytes-length x) 6)
+                                     (retry (retry x 'utf8) 'char)
+                                     (fail)))
                       ((bool)    #t)
                       (else      (fail))))
     ((pair? x)      (case type
