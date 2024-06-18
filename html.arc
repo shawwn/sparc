@@ -255,7 +255,9 @@
 (mac tr        (:kws . body)     `(tag tr ,@kws ,@body))
 
 (let pratoms (fn (body)
-               (if (all [~caris _ 'quote] body)
+               (if (or (no body) 
+                       (all [and (acons _) (isnt (car _) 'quote)]
+                            body))
                    body
                    `((pr ,@body))))
 
