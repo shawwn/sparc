@@ -230,8 +230,8 @@
   (mac tdcolor  (col :kws . body) `(tag td bgcolor: ,col ,@kws ,@(pratoms body)))
 )
 
-(mac row args
-  `(tr ,@(map [list 'td _] args)))
+(mac row (:kws . args)
+  `(tr ,@kws ,@(map [list 'td _] args)))
 
 (mac prrow args
   (letu g
