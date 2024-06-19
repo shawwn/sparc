@@ -1149,13 +1149,16 @@
 
 (xdef expandpath ar-expand-path)
 
+(define ar-cwd (make-derived-parameter current-directory
+                                       (lambda (x) (if (ar-nil? x) (current-directory) x))
+                                       (lambda (x) x)))
+(xdef cwd ar-cwd)
+
 (define-runtime-path ar-path ".")
-(define ar-libdir (make-parameter (ar-expand-path "." ar-path)
-                                #f
-                                'libdir))
+
+(define ar-libdir (make-parameter (ar-expand-path "." ar-path) #f 'libdir))
 
 (xdef libdir ar-libdir)
-(xdef cwd current-directory)
 
 (define (ar-library-path . parts)
   (ar-expand-path (apply build-path parts)

@@ -1380,5 +1380,15 @@ c"
   (test? t (~arcfile "foo/bar.arc/"))
   (test? t (~arcfile "foo/bar.arc/..")))
 
+(define-test cwd
+  (let home (cwd)
+    (w/param cwd "."
+      (test? home (cwd)))
+    (w/param cwd nil
+      (test? home (cwd)))
+    (w/param cwd (libpath "static")
+      (test? t (apply in "robots.txt" (glob "*.txt"))))
+    (test? home (cwd))))
+
 run-tests
 
