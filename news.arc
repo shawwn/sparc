@@ -10,24 +10,22 @@
 (require "firebase.arc")
 (require "algolia.arc")
 
-(= site-name*    "Lambda News"
-   site-abbrev*  "LN"
-   site-repo*    "https://github.com/shawwn/sparc"
-   site-email*   "shawnpresser@@gmail.com"
-   site-twitter* "theshawwn"
-   site-discord* "shawwn#3694"
-   discord-url*  nil
-   site-url*     "http://localhost:8080"
-   parent-url*   "http://localhost:8080"
-   welcome-url*  "/welcome.html"
-   site-desc*    "Lambda News"     ; for rss feed
-   site-color*   (color 154 186 170)
-   border-color* (color 154 186 170)
-   prefer-url*   t
-   site-img*     (obj url:    "https://user-images.githubusercontent.com/59632/213842621-78c527ed-c657-4126-b27d-2670f35fb053.png"
-                      type:   "image/png"
-                      width:  512
-                      height: 512))
+(or= site-name*    (str:readenv "SITE_NAME"    "Lambda News")
+     site-abbrev*  (str:readenv "SITE_ABBREV"  "LN")
+     site-repo*    (str:readenv "SITE_REPO"    "https://github.com/shawwn/sparc")
+     site-email*   (str:readenv "SITE_EMAIL"   "shawnpresser@@gmail.com")
+     site-twitter* (str:readenv "SITE_TWITTER" "theshawwn")
+     discord-url*  (str:readenv "DISCORD_URL"  nil)
+     site-url*     (str:readenv "SITE_URL"     "http://localhost:8080")
+     parent-url*   (str:readenv "PARENT_URL"   site-url*)
+     site-desc*    (str:readenv "SITE_DESC"    site-name*)     ; for rss feed
+     site-color*   (color 154 186 170)
+     border-color* (color 154 186 170)
+     prefer-url*   t
+     site-img*     (obj url:    "https://user-images.githubusercontent.com/59632/213842621-78c527ed-c657-4126-b27d-2670f35fb053.png"
+                        type:   "image/png"
+                        width:  512
+                        height: 512))
 
 ; Structures
 
@@ -589,7 +587,7 @@
   (center
     (hook 'longfoot)
     (w/bars
-      (link "Welcome"     welcome-url*)
+      (link "Welcome"     "/welcome.html")
       (link "Guidelines"  "/newsguidelines.html")
       (link "FAQ"         "/newsfaq.html")
       (link "Bookmarklet" "/bookmarklet.html")
@@ -4033,9 +4031,7 @@ To clear the selection, click the x again, or click here: @(underlink 'clear '/p
       (prn "\"God says... @it\""))))
 
 (def prize-msg ()
-  "You found an easter egg. Message @site-discord* on
-  @(underlink 'discord discord-url*) or email @site-email* to
-  claim a prize.")
+  "You found an easter egg. Email @site-email* to claim a prize.")
 
 (newsop test ()
   (msgpage (prize-msg)))
