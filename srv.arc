@@ -13,7 +13,7 @@
 (def serve ((o port 8080) repl: (o repl? (readenv "DEV")))
   (wipe quitsrv*)
   (ensure-srvdirs)
-  (map [apply new-bgthread _] pending-bgthreads*)
+  (ensure-bgthreads)
   (w/socket s port
     (ero "ready to serve http://localhost:@port")
     (= currsock* s)
@@ -31,6 +31,9 @@
 
 (def ensure-srvdirs ()
   (map ensure-dir (list arcdir* logdir* staticdir*)))
+
+(def ensure-bgthreads ()
+  (map [apply new-bgthread _] pending-bgthreads*))
 
 (or= srv-noisy* nil)
 
