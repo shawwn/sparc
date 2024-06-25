@@ -142,7 +142,8 @@
 (attribute script     src            opstring)
 
 (mac gentag (:kws . args)
-  (start-tag (+ args kws)))
+  `(do ,(start-tag (+ args kws))
+       nil))
 
 (def pratom (x)
   (zap macex x)
