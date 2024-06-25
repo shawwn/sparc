@@ -37,3 +37,7 @@ test: bcrypt setup compile
 bench:
 	@make scm
 	@time make test
+	@time make test
+	@time make test
+	@time make test
+	@time make test
