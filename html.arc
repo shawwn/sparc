@@ -387,14 +387,14 @@
 
 (def nbsp () (pr "&nbsp;"))
 
-(def link (text (o dest (+ (if (headmatch "/" (str text)) "" "/") text)) :color :onclick :title)
+(def link (text (o dest text) :color :onclick :title :underline)
   (tag a href: dest :onclick :title
     (tag-if color font :color
-      (pr text))))
+      (tag-if underline u
+        (pr text)))))
 
-(def underlink (text (o dest text) :onclick :title)
-  (tag a href: dest :onclick :title
-    (tag u (pr text))))
+(def underlink (text (o dest text) :color :onclick :title)
+  (link text dest :color :onclick :title :underline))
 
 (def striptags (s)
   (let intag nil
