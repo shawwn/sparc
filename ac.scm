@@ -526,13 +526,6 @@
       (and (pair? args)
            (ac-kwargs? (ar-cdr args)))))
 
-(define (ar-kwproc f)
-  (make-keyword-procedure
-    (lambda (ks vs . args)
-      (let ((kwargs (apply append (map list ks vs))))
-        (apply f args #:kws kwargs)))
-    f))
-
 ; does an fn arg list use optional parameters or destructuring?
 ; a rest parameter is not complex
 
@@ -768,9 +761,8 @@
 
 (define direct-calls #f)
 
-(define (ac-call fn args)
-  (let* ((args (ac-unflag-args args))
-         (argc (length args)))
+(define (ac-compile-call fn args)
+  (let* ((argc (length args)))
     (cond ((ar-car? fn 'fn)
            `(,(ac fn) ,@(ac-args (cadr fn) args)))
           ((and direct-calls (symbol? fn) (not (ac-lex? fn))
@@ -783,7 +775,15 @@
           ((= argc 2) `(ar-funcall2 ,(ac fn) ,@(map ac args)))
           ((= argc 3) `(ar-funcall3 ,(ac fn) ,@(map ac args)))
           ((= argc 4) `(ar-funcall4 ,(ac fn) ,@(map ac args)))
-          (#t `(ar-apply ,(ac fn) (list ,@(map ac args)))))))
+          (#t         `(ar-apply    ,(ac fn) (list ,@(map ac args)))))))
+
+(define (ac-call fn args)
+  (let* ((args (ac-unflag-args args))
+         (expr (ac-compile-call fn args))
+         (kws (map ar-keyword? (keep ar-keyword? args))))
+    (if (null? kws)
+        expr
+        `(parameterize ((ar-kworder ',kws)) ,expr))))
 
 ; returns #f or the macro function
 

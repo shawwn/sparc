@@ -1390,5 +1390,23 @@ c"
       (test? t (apply in "robots.txt" (glob "*.txt"))))
     (test? home (cwd))))
 
+(mac list1 (:kws . args)
+  `(list ,@kws ,@args))
+
+(define-test ordered-kws
+  (def f (:kws . args) kws)
+  (test? '(b: 2 a: 1) (f b: 2 a: 1))
+  (test? '(a: 1 b: 2) (f a: 1 b: 2))
+  (test? '(b: 2 a: 1) (kwapply f (list b: 2 a: 1) nil))
+  (test? '(a: 1 b: 2) (kwapply f (list a: 1 b: 2) nil))
+  (test? '(b: 2 a: 1) (list1 b: 2 a: 1))
+  (test? '(a: 1 b: 2) (list1 a: 1 b: 2))
+  (test? '(list b: 2 a: 1) (macex1 '(list1 b: 2 a: 1)))
+  (test? '(list a: 1 b: 2) (macex1 '(list1 a: 1 b: 2)))
+  (test? '(list b: 2 a: 1) (kwapply (rep list1) '(b: 2 a: 1) nil))
+  (test? '(list a: 1 b: 2) (kwapply (rep list1) '(a: 1 b: 2) nil))
+  (test? '(b: 2 a: 1) ((fn (:kws . args) kws) b: 2 a: 1))
+  (test? '(a: 1 b: 2) ((fn (:kws . args) kws) a: 1 b: 2)))
+
 run-tests
 

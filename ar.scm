@@ -8,7 +8,7 @@
 (require (only-in racket/async-channel async-channel?))
 (require (only-in racket/sequence sequence->list sequence-ref sequence-length))
 (require (only-in racket/vector vector-append))
-(require (only-in racket/list make-list))
+(require (only-in racket/list make-list index-of))
 
 (define ar-unset undefined)
 
@@ -446,6 +446,14 @@
 
 (provide hash->plist)
 
+(define ar-kworder (make-parameter (list) #f 'ar-kworder))
+
+(define (ar-sort-kvs ks vs (kworder (ar-kworder)))
+  (define kvs (map list ks vs))
+  (define (keyfn x)
+    (or (index-of kworder (car x)) -1))
+  (apply append (sort kvs < #:key keyfn)))
+
 (define (ar-keyword? x)
   (or (and (keyword? x) x)
       (and (symbol? x)
@@ -455,25 +463,32 @@
                   (not (eq? (string-ref s (- (string-length s) 2)) #\:))
                   (symbol->keyword (string->symbol (substring s 0 (- (string-length s) 1)))))))))
 
-(define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)))
+(define (ar-unstash args (kwargs #f) (xs '()) (kws (make-hasheq)) (kworder '()))
   (cond ((ar-list? kwargs)
-         (list args (cadr (ar-unstash kwargs #f xs kws))))
+         (cons args (cdr (ar-unstash kwargs #f xs kws kworder))))
         ((hash? kwargs)
-         (ar-unstash args (hash->plist kwargs) xs kws))
+         (ar-unstash args (hash->plist kwargs) xs kws kworder))
         ((null? args)
-         (list (reverse xs) kws))
+         (list (reverse xs) kws (reverse kworder)))
         ((ar-keyword? (car args))
-         (ar-unstash (cddr args) kwargs xs (ar-join! kws (list (ar-keyword? (car args)) (cadr args)))))
-        (#t (ar-unstash (cdr args) kwargs (cons (car args) xs) kws))))
+         (define key (ar-keyword? (car args)))
+         (define val (cadr args))
+         (define kws1 (ar-join! kws (list (keyword->symbol key) val)))
+         (ar-unstash (cddr args) kwargs xs kws1 (cons key kworder)))
+        (#t (ar-unstash (cdr args) kwargs (cons (car args) xs) kws kworder))))
 
 (define (ar-kwapply-1 f kwargs . args)
   (let* ((it (ar-unstash (ar-apply-args args) kwargs))
          (xs (car it))
-         (kvs (cadr it)))
-    (if (hash-empty? kvs)
-        (ar-apply f xs)
-        (let ((al (hash->list kvs #t)))
-          (keyword-apply (ar-symbol-function f) (map car al) (map cdr al) xs)))))
+         (kvs (cadr it))
+         (kworder (caddr it)))
+    (parameterize ((ar-kworder kworder))
+      (if (hash-empty? kvs)
+          (ar-apply f xs)
+          (let* ((al (hash->list kvs #t))
+                 (ks (map symbol->keyword (map car al)))
+                 (vs (map cdr al)))
+              (keyword-apply (ar-symbol-function f) ks vs xs))))))
 
 (define (ar-kwappend . args)
   (hash->plist (apply ar-join! (make-hasheq) args)))
@@ -484,6 +499,13 @@
       (let ((kws1 (apply ar-kwappend kws (map list keys vals))))
         (apply ar-kwapply fn kws1 args)))
     ar-kwapply-1))
+
+(define (ar-kwproc f)
+  (make-keyword-procedure
+    (lambda (ks vs . args)
+      (let ((kwargs (ar-sort-kvs ks vs)))
+        (apply f args #:kws kwargs)))
+    f))
 
 ; (ar-pairwise pred '(a b c d)) =>
 ;   (and (pred a b) (pred b c) (pred c d))
