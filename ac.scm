@@ -589,7 +589,7 @@
                               (#t        `(ar-car ,ra)))
                         #f))))
            (append x (ac-complex-args (cdr args)
-                                      (if is-kw ra `(ar-cdr ,ra))
+                                      (if is-kw `(ar-without ,ra ',is-kw) `(ar-cdr ,ra))
                                       is-params))))
         (#t (ar-err "Can't understand fn arg list" args))))
 

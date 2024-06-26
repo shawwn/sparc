@@ -811,6 +811,12 @@ c"
     (test? 20 b)
     (test? 17 foo)
     (test? '(1 2 3) bar))
+  (let (:a b: bar d: (o baz 4) :e . kws) (obj a: 1 b: 2 c: 3)
+    (test? 1 a)
+    (test? 2 bar)
+    (test? 4 baz)
+    (test? nil e)
+    (test? (obj c: 3) kws))
   (let yy (list 1 2 3)
     (let (xx yy . zz) yy
       (test? 1 xx)

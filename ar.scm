@@ -446,6 +446,15 @@
 
 (provide hash->plist)
 
+(define (ar-without h key)
+  (if (hash-has-key? h key)
+      (ar-without! (hash-copy h) key)
+      h))
+
+(define (ar-without! h key)
+  (hash-remove! h key)
+  h)
+
 (define ar-kworder (make-parameter (list) #f 'ar-kworder))
 
 (define (ar-sort-kvs ks vs (kworder (ar-kworder)))
