@@ -130,8 +130,7 @@
       (ar-false? x)
       (syntax? x)
       (ar-keyword? x)
-      (ar-tagged? x)
-      (ac-number-literal x)))
+      (ar-tagged? x)))
 
 (define (ac-literal x)
   (cond ((null? x) (list 'quote x))
@@ -365,7 +364,7 @@
          ar-inf)
         ((eqv? x '-inf)
          ar-ninf)
-        (#t (or (ar-keyword? x) (ac-number-literal x) x))))
+        (#t (or (ar-keyword? x) x))))
 
 (define (ac-unquoted x)
   (cond ((pair? x)
