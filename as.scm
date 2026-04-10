@@ -26,6 +26,8 @@
                (args (map safe-read args)))
           (when (procedure? x) (apply x args))
           (when repl (interact)))
-        (interact))))
+        (if (and (not repl) (not (terminal-port? (current-input-port))))
+            (aload1 (current-input-port))
+            (interact)))))
 
 (apply arc-main (vector->list (current-command-line-arguments)))
