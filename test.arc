@@ -1414,5 +1414,23 @@ c"
   (test? '(b: 2 a: 1) ((fn (:kws . args) kws) b: 2 a: 1))
   (test? '(a: 1 b: 2) ((fn (:kws . args) kws) a: 1 b: 2)))
 
+(define-test kws-with-keywords
+  (def f (:x :y :kws . args)
+    (list x y kws args))
+  ; main case: known kwargs routed, extras collected, positional args passed through
+  (test? '(1 2 (z: 3) (4 5)) (f x: 1 y: 2 z: 3 4 5))
+  ; no extras → kws is nil (not swallowed)
+  (test? '(1 2 nil nil) (f x: 1 y: 2))
+  ; only unrecognized kwargs -> declared params get defaults
+  (test? '(nil nil (z: 3 w: 4) nil) (f z: 3 w: 4))
+  ; partial match: one declared, one extra
+  (test? '(1 nil (z: 3) nil) (f x: 1 z: 3))
+  ; no args at all -> all defaults
+  (test? '(nil nil nil nil) (f))
+  ; apply goes through the same fix path
+  (test? '(1 2 (z: 3) nil) (apply f '(x: 1 y: 2 z: 3)))
+  ; extras preserve call order
+  (test? '(nil nil (c: 3 a: 1 b: 2) nil) (f c: 3 a: 1 b: 2)))
+
 run-tests
 

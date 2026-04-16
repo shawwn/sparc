@@ -510,10 +510,30 @@
     ar-kwapply-1))
 
 (define (ar-kwproc f)
+  (define-values (req-kws all-kws) (procedure-keywords f))
+  ; Keywords that f handles directly via its own params (excluding #:kws itself)
+  (define f-direct-kws
+    (and (list? all-kws) (remove '#:kws all-kws)))
   (make-keyword-procedure
     (lambda (ks vs . args)
-      (let ((kwargs (ar-sort-kvs ks vs)))
-        (apply f args #:kws kwargs)))
+      ; Partition incoming keywords: those f declares explicitly vs extras for #:kws
+      (let loop ((ks ks) (vs vs)
+                 (dks '()) (dvs '())
+                 (extra-ks '()) (extra-vs '()))
+        (if (null? ks)
+            (let* ((extra-kwargs (ar-sort-kvs (reverse extra-ks) (reverse extra-vs)))
+                   ; Build alist of all keyword args to pass, including #:kws for extras
+                   (kv-alist (cons (cons '#:kws extra-kwargs)
+                                   (map cons (reverse dks) (reverse dvs))))
+                   ; keyword-apply requires keywords sorted by keyword<?
+                   (sorted-kv (sort kv-alist keyword<? #:key car))
+                   (final-ks (map car sorted-kv))
+                   (final-vs (map cdr sorted-kv)))
+              (keyword-apply f final-ks final-vs args))
+            (let ((k (car ks)) (v (car vs)))
+              (if (and f-direct-kws (member k f-direct-kws))
+                  (loop (cdr ks) (cdr vs) (cons k dks) (cons v dvs) extra-ks extra-vs)
+                  (loop (cdr ks) (cdr vs) dks dvs (cons k extra-ks) (cons v extra-vs)))))))
     f))
 
 ; (ar-pairwise pred '(a b c d)) =>
