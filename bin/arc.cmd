@@ -1,10 +1,12 @@
 @echo off
 setlocal
 
-set home=%~dp0
+set "bin=%~dp0"
+pushd "%bin%\.."
+set "home=%cd%"
+popd
 
-cd "%home%"
-cd ..
+set "ARC_HOME=%home%"
+set "ARC_HOST=%home%\bin\racket\Racket.exe"
 
-racket -t as.scm %*
-
+"%ARC_HOST%" -y -t "%ARC_HOME%\as.scm" -- %*

@@ -13,6 +13,7 @@
   "private": false,
   "dependencies": {},
   "scripts": {
+    "postinstall": "node bin/postinstall.js",
     "racket": "./bin/racket/bin/racket",
     "raco": "./bin/racket/bin/raco",
     "pkg": "./bin/racket/bin/raco pkg",

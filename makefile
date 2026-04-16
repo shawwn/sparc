@@ -7,11 +7,15 @@ setup:
 	@bash bin/setup.sh
 
 
-bcrypt: ./src/bcrypt/build
+bcrypt: ./src/bcrypt/build/libbcrypt.$(shell uname -s | grep -qi darwin && echo dylib || echo so)
 
-./src/bcrypt/build:
+./src/bcrypt/build/libbcrypt.dylib:
 	@mkdir -p src/bcrypt/build
-	@cd src/bcrypt/build && cmake .. && make
+	c++ -std=c++14 -shared -fPIC -o src/bcrypt/build/libbcrypt.dylib src/bcrypt/bcrypt.cc src/bcrypt/blowfish.cc
+
+./src/bcrypt/build/libbcrypt.so:
+	@mkdir -p src/bcrypt/build
+	c++ -std=c++14 -shared -fPIC -o src/bcrypt/build/libbcrypt.so src/bcrypt/bcrypt.cc src/bcrypt/blowfish.cc
 
 
 compile: setup ./compiled

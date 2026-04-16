@@ -33,27 +33,30 @@ fi
 
 if [ ! -x "${home}/bin/racket/bin/racket" ]
 then
-  case "$(uname -s)" in
+  _os="$(uname -s)"
+  _arch="$(uname -m)"
+  case "${_arch}" in
+    arm64) _arch="aarch64" ;;
+  esac
+  case "${_os}" in
     Linux*)
-      set -ex
-      cd "${home}/bin"
-      wget https://download.racket-lang.org/releases/8.9/installers/racket-minimal-8.9-x86_64-linux-cs.tgz -O racket-minimal-8.9-x86_64-linux-cs.tgz
-      tar xvf racket-minimal-8.9-x86_64-linux-cs.tgz
-      set +ex
+      _platform="${_arch}-linux-cs"
       ;;
     Darwin*)
-      set -ex
-      cd "${home}/bin"
-      wget https://download.racket-lang.org/releases/8.9/installers/racket-minimal-8.9-aarch64-macosx-cs.tgz -O racket-minimal-8.9-aarch64-macosx-cs.tgz
-      tar xvf racket-minimal-8.9-aarch64-macosx-cs.tgz
-      set +ex
+      _platform="${_arch}-macosx-cs"
       ;;
     *)
-      echo "Don't know how to install racket on $(uname -s)!" 1>&2
+      echo "Don't know how to install racket on ${_os}!" 1>&2
       echo "Visit https://download.racket-lang.org/ and install racket to ${home}/bin/racket" 1>&2
       exit 1
       ;;
   esac
+  _tarball="racket-minimal-9.1-${_platform}.tgz"
+  set -ex
+  cd "${home}/bin"
+  wget "https://download.racket-lang.org/releases/9.1/installers/${_tarball}" -O "${_tarball}"
+  tar xvf "${_tarball}"
+  set +ex
 
   cd "${home}"
   "${home}/bin/racket/bin/raco" pkg install --auto compiler-lib
