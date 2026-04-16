@@ -32,7 +32,7 @@ Wired up the repo for `npm publish` so users can install Arc Lisp via `npm insta
 
 ## Known issues / open work
 
-- **`src/bcrypt/bcrypt.dll` is x86_64 only.** Windows ARM64 users will get an `ffi-lib` error when bcrypt is first called. Fix: build an ARM64 DLL (from `bcrypt.cc` + `blowfish.cc` using MSVC or MinGW targeting ARM64) and either ship it alongside the x86_64 DLL or add a build step to `setup.cmd` that compiles it using the MSVC toolchain (`cl`) if available.
+- **`src/bcrypt/bcrypt.dll` is x86_64 only, but works on ARM64** — Windows 11 ARM64 has built-in x64 emulation so the x64 DLL loads fine. Confirmed working on a Windows 11 ARM64 VM.
 
 ## Testing
 

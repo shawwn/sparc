@@ -96,5 +96,5 @@ npm uninstall -g sparclisp
 
 ## Known issues / open work
 
-- **bcrypt.dll is x86_64 only** (carried over from prior session) — Windows ARM64 users will get an FFI error when bcrypt is first called.
+- **bcrypt.dll is x86_64 only, but works on ARM64** — Windows 11 ARM64 has built-in x64 emulation, so the x64 `bcrypt.dll` loads fine via Racket's FFI. No ARM64-native DLL is needed.
 - The `(require 'foo)` error message if a package isn't found could be cleaner — currently `err` is called with multiple args which may not concatenate as expected depending on Arc's `err` signature.
