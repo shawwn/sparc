@@ -1,0 +1,13 @@
+/arc
+/src/bcrypt/build
+/src/bcrypt/cmake-build-debug
+/src/bcrypt/.idea
+static/place.txt
+static/traffic*
+.env
+*.swp
+/bin/racket
+/bin/racket-*.*
+/compiled
+.claude/
+docs/

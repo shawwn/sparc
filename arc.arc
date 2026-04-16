@@ -1725,9 +1725,26 @@
                        (hook 'load file)))
       (notetime file))))
 
+(def npm-resolve (name)
+  (let pkg (string "arc-" name)
+    ((afn (dir)
+       (let candidate (string dir "/node_modules/" pkg)
+         (if (dir-exists candidate)
+           (string candidate "/"
+             (or (aif (file-exists (string candidate "/package.json"))
+                      (w/infile f it (aif (read-json f) (it 'main))))
+                 (string name ".arc")))
+           (let parent (expandpath ".." dir)
+             (unless (is parent dir)
+               (self parent))))))
+     (expandpath "."))))
+
 (mac require (x)
   (if (or (isa!sym x) (caris x 'quote))
-      `(#'require ,x)
+      (let name (if (caris x 'quote) (cadr x) x)
+        `(aif (npm-resolve ',name)
+              (load :once it)
+              (err "arc package not found: arc-" ',name)))
       `(load :once ,x)))
 
 ; This file is already loaded; note it.
