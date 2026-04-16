@@ -5,5 +5,5 @@ const path = require('path');
 const script = process.platform === 'win32'
   ? path.join(__dirname, 'sparc.cmd')
   : path.join(__dirname, 'sparc');
-const result = spawnSync(script, process.argv.slice(2), { stdio: 'inherit' });
+const result = spawnSync(script, process.argv.slice(2), { stdio: 'inherit', shell: process.platform === 'win32' });
 process.exit(result.status ?? 1);
