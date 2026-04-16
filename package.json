@@ -1,6 +1,6 @@
 {
   "name": "sparclisp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Arc Lisp for Racket",
   "repository": {
     "type": "git",

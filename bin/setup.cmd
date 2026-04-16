@@ -25,9 +25,13 @@ if errorlevel 1 (
 )
 
 echo Installing Racket...
-mkdir "%home%\bin\racket" 2>nul
-for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "[System.IO.Path]::GetShortPathName('%home%\bin\racket')"`) do set "racket_short=%%i"
-"%installer%" /S /D=!racket_short!
+powershell -NoProfile -Command "Unblock-File -Path '%installer%'" 2>nul
+"%installer%" /S /D=%home%\bin\racket
+if errorlevel 1 (
+  echo Failed to install Racket. Try running as Administrator.
+  del "%installer%" 2>nul
+  exit /b 1
+)
 del "%installer%"
 
 echo Installing compiler-lib...
