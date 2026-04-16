@@ -345,7 +345,7 @@
 (mac catch body
   `(point throw ,@body))
 
-(def accfn ((o l))
+(def accumulator ((o l))
   (fn xs
     (if (cdr xs) (assign l (cons xs l))
         xs       (assign l (cons (car xs) l))
@@ -353,12 +353,12 @@
                    (assign l nil)))))
 
 (mac accum (f . body)
-  `(let ,f (accfn)
+  `(let ,f (accumulator)
      ,@body
      (,f)))
 
 (mac w/break body
-  `(let out (accfn)
+  `(let out (accumulator)
      (point break default: (out)
        ,@body)))
 
