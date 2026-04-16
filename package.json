@@ -1,11 +1,14 @@
 {
   "name": "sparclisp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Arc Lisp for Racket",
-  "repository": "shawwn/sparc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shawwn/sparc.git"
+  },
   "bin": {
-    "arc": "./bin/arc",
-    "sparc": "./bin/sparc"
+    "arc": "bin/arc.js",
+    "sparc": "bin/sparc.js"
   },
   "main": "news.arc",
   "author": "Shawn Presser <shawnpresser@gmail.com>",
