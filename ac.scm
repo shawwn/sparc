@@ -1191,26 +1191,7 @@
       (newline)
       (tle))))
 
-(define (interact)
-  (display "Use (quit) to quit, (interact) to return here after an interrupt.\n")
-  (tl2))
-
 (define ac-that-expr* (make-parameter (void) #f 'ac-that-expr*))
-
-(define (ac-read-interaction src in)
-  (parameterize ((read-accept-reader #t)
-                 (read-accept-lang #f))
-    (let ((stx (read-syntax src in)))
-      (if (eof-object? stx) stx
-          (begin (ac-that-expr* stx)
-                 (ac stx))))))
-
-(define (ac-prompt-read)
-  ; (display (format "arc:~a> " (source-location-line (ac-that-expr*))))
-  (display "arc> ")
-  (let ((in ((current-get-interaction-input-port))))
-    (parameterize ((current-read-interaction ac-read-interaction))
-      ((current-read-interaction) (object-name in) in))))
 
 (define (pp-to-string val (writer pretty-write))
   (string-trim (disp-to-string val writer)))
@@ -1218,7 +1199,7 @@
 (define (pp val (port (current-output-port)) (writer pretty-write))
   (displayln (pp-to-string val writer) port)
   val)
- 
+
 (define (ac-prompt-print val)
   (ar-namespace-set! (ar-name 'that) val)
   (ar-namespace-set! (ar-name 'thatexpr) (ac-that-expr*))
@@ -1226,17 +1207,326 @@
     (pp val))
   val)
 
-(define (tl2)
-  (parameterize ((port-count-lines-enabled #t)
-                 ; (current-namespace (arc-namespace))
-                 (current-prompt-read ac-prompt-read)
-                 (current-print       ac-prompt-print)
-                 ; ((dynamic-require 'readline/pread 'current-prompt) #"arc> ")
-                 ; (current-prompt-read (dynamic-require 'readline/pread 'read-cmdline-syntax))
-                 )
-    ; (dynamic-require 'xrepl #f)
-    (port-count-lines! (current-input-port))
-    (read-eval-print-loop)))
+; ------------------------------------------------------------------------
+; Cooperative REPL stack + single stdin dispatcher.
+;
+; Every REPL (`interact`, `dbg`, future ones) pushes an `ar-repl` record
+; onto `ar-repl-stack` and consumes parsed forms from its own channel.
+; A single long-lived dispatcher thread owns terminal stdin, reads one
+; form per iteration, and delivers it to the top-of-stack REPL. When the
+; stack changes (push/pop), the dispatcher aborts the in-flight read and
+; re-prompts for the new top. Ctrl-C at a REPL prompt re-prompts without
+; exiting; Ctrl-D / EOF pops the REPL; `(quit)` exits.
+
+(define-struct ar-repl
+  ; channel: forms flow dispatcher → REPL.
+  ; done:    1-count signalling "ready for next prompt". Starts at 1 so the
+  ;          first prompt fires immediately; the REPL posts after each eval
+  ;          (via dynamic-wind, so breaks/errors still release it).
+  ; interrupt: 0-count. Eval thread posts when it catches exn:break at the
+  ;          idle prompt; dispatcher syncs on it to abort the in-flight
+  ;          reader and re-prompt (the "Ctrl-C clears the line" behaviour).
+  (channel done interrupt prompt thread label)
+  #:mutable
+  #:transparent)
+
+(define (ar-make-repl label prompt)
+  (make-ar-repl (make-channel)
+                (make-semaphore 1)
+                (make-semaphore 0)
+                prompt
+                (current-thread)
+                label))
+
+(define ar-repl-stack '())
+(define ar-repl-stack-sema (make-semaphore 1))
+; Counting semaphore used only as a change-notification channel. Post on
+; every push/pop; the dispatcher watches it via semaphore-peek-evt.
+(define ar-repl-stack-change (make-semaphore 0))
+
+(define (ar-repl-top)
+  (call-with-semaphore ar-repl-stack-sema
+    (lambda ()
+      (if (null? ar-repl-stack) ar-nil (car ar-repl-stack)))))
+
+(define (ar-repl-push! r)
+  (call-with-semaphore ar-repl-stack-sema
+    (lambda () (set! ar-repl-stack (cons r ar-repl-stack))))
+  (semaphore-post ar-repl-stack-change))
+
+(define (ar-repl-pop! r)
+  (call-with-semaphore ar-repl-stack-sema
+    (lambda () (set! ar-repl-stack (remq r ar-repl-stack))))
+  (semaphore-post ar-repl-stack-change))
+
+(xdef make-repl-record
+  (lambda (label prompt) (ar-make-repl label prompt)))
+(xdef repl-push (lambda (r) (ar-repl-push! r) ar-t))
+(xdef repl-pop  (lambda (r) (ar-repl-pop! r) ar-t))
+(xdef repl-top  ar-repl-top)
+
+; Narrow output lock: acquired only around prompt-print and result-print
+; so those atoms can't be visually split by a server log line. Not held
+; across eval.
+(define ar-stdout-sema (make-semaphore 1))
+
+(define (ar-with-stdout-lock f)
+  (call-with-semaphore ar-stdout-sema (lambda () (ar-apply f '()))))
+
+(xdef with-stdout-lock ar-with-stdout-lock)
+
+; The dispatcher captures the terminal stdin port at first-call time
+; (so a `(dbg)` fired from a request handler, whose current-input-port
+; is a socket, does not mislead us).
+(define ar-dispatcher-thread #f)
+(define ar-dispatcher-stdin #f)
+
+(define (ar-display-prompt p)
+  (ar-with-stdout-lock
+    (lambda ()
+      (let ((s (if (procedure? p) (p) p)))
+        (when s (display s) (flush-output))))))
+
+(define (ar-dispatcher-loop)
+  (let loop ()
+    (let ((top (ar-repl-top)))
+      (cond
+        ((not top)
+         (semaphore-wait ar-repl-stack-change)
+         (loop))
+        (else
+         ; Wait until the top REPL is ready for a new prompt. `done` starts
+         ; at 1 so the first prompt fires immediately; subsequent prompts
+         ; wait for the REPL's dynamic-wind cleanup to repost after eval.
+         ; Also wake on stack-change so a push by a nested REPL can preempt.
+         (let ((ready
+                (sync (handle-evt (semaphore-peek-evt (ar-repl-done top))
+                                  (lambda _ 'ready))
+                      (handle-evt (semaphore-peek-evt ar-repl-stack-change)
+                                  (lambda _ 'stack-changed)))))
+           (cond
+             ((eq? ready 'stack-changed)
+              (semaphore-try-wait? ar-repl-stack-change)
+              (loop))
+             (else
+              ; Consume one done-token for this iteration.
+              (semaphore-try-wait? (ar-repl-done top))
+              (ar-display-prompt (ar-repl-prompt top))
+              ; Spawn a helper thread that does one sread and posts the
+              ; result to `form-ch`. We race its completion against a
+              ; stack change, an interrupt, or a re-push of the same top.
+              (let* ((form-ch (make-channel))
+                     (reader
+                      (thread
+                       (lambda ()
+                         (with-handlers
+                             ((exn:break? (lambda _ (channel-put form-ch 'break)))
+                              (exn:fail?  (lambda (c)
+                                            (channel-put form-ch (cons 'error c)))))
+                           (channel-put form-ch (sread ar-dispatcher-stdin eof)))))))
+                (let wait ()
+                  (let ((result
+                         (sync (handle-evt form-ch
+                                           (lambda (v) (cons 'form v)))
+                               (handle-evt (semaphore-peek-evt ar-repl-stack-change)
+                                           (lambda _ 'stack-changed))
+                               (handle-evt (semaphore-peek-evt
+                                            (ar-repl-interrupt top))
+                                           (lambda _ 'interrupted)))))
+                    (cond
+                      ((eq? result 'interrupted)
+                       ; Idle-prompt Ctrl-C: the eval thread posted here
+                       ; from its exn:break handler. Kill the reader, drop
+                       ; any bytes it had consumed, re-prompt.
+                       (semaphore-try-wait? (ar-repl-interrupt top))
+                       (kill-thread reader)
+                       (ar-with-stdout-lock
+                         (lambda () (display "^C") (newline) (flush-output)))
+                       ; Repost done so the next iteration can prompt again
+                       ; (the REPL's loop just went back to channel-get and
+                       ; won't be running eval, so it won't repost itself).
+                       (semaphore-post (ar-repl-done top))
+                       (loop))
+                      ((eq? result 'stack-changed)
+                       (semaphore-try-wait? ar-repl-stack-change)
+                       (let ((new-top (ar-repl-top)))
+                         (cond
+                           ((eq? new-top top) (wait))
+                           (else
+                            (kill-thread reader)
+                            (ar-with-stdout-lock
+                              (lambda () (newline) (flush-output)))
+                            ; old top is no longer active; hand its "ready"
+                            ; slot back so it can prompt again when restored.
+                            (semaphore-post (ar-repl-done top))
+                            (loop)))))
+                      ((and (pair? result) (eq? (car result) 'form))
+                       (let ((v (cdr result)))
+                         (cond
+                           ((eq? v 'break)
+                            (ar-with-stdout-lock
+                              (lambda () (newline) (flush-output)))
+                            (semaphore-post (ar-repl-done top))
+                            (loop))
+                           ((and (pair? v) (eq? (car v) 'error))
+                            (ar-with-stdout-lock
+                              (lambda ()
+                                (displayln (exn-message (cdr v))
+                                           (current-error-port))))
+                            (semaphore-post (ar-repl-done top))
+                            (loop))
+                           (else
+                            ; Synchronous channel-put rendezvous waits until
+                            ; the REPL is at channel-get (post-eval). Then
+                            ; the REPL evals and will repost done when done.
+                            (channel-put (ar-repl-channel top) v)
+                            (loop)))))))))))))))))
+
+(define (ar-ensure-dispatcher)
+  (unless (and ar-dispatcher-thread (not (thread-dead? ar-dispatcher-thread)))
+    (unless ar-dispatcher-stdin
+      (set! ar-dispatcher-stdin (current-input-port)))
+    (set! ar-dispatcher-thread (thread ar-dispatcher-loop))))
+
+(xdef ensure-dispatcher (lambda () (ar-ensure-dispatcher) ar-t))
+
+; Core REPL driver: pushes a record, consumes forms from its channel,
+; calls eval-fn on each, loops until EOF or (repl-quit). Handles
+; exn:break at both the channel-get step (idle-prompt Ctrl-C) and during
+; eval — if the break arrives on a thread that is no longer the stack
+; top (e.g. interact is blocked while dbg is active), we forward the
+; break to the top's eval thread so Ctrl-C always targets the active
+; REPL.
+
+(define ar-repl-quit-tag (gensym 'ar-repl-quit))
+
+(define (ar-repl-quit-tag? v) (eq? v ar-repl-quit-tag))
+
+(xdef repl-quit (lambda () (raise ar-repl-quit-tag) ar-nil))
+
+(define (ar-run-repl label prompt eval-fn)
+  (ar-ensure-dispatcher)
+  (let ((r (ar-make-repl label prompt)))
+    (dynamic-wind
+      (lambda () (ar-repl-push! r))
+      (lambda ()
+        (parameterize ((current-input-port  ar-dispatcher-stdin)
+                       (current-output-port (or ar-original-stdout
+                                                (current-output-port)))
+                       (current-error-port  (or ar-original-stderr
+                                                (current-error-port))))
+          (let/ec exit
+            (let loop ()
+              (let ((expr
+                     (with-handlers
+                         ((ar-repl-quit-tag? (lambda _ (exit (void))))
+                          (exn:break?
+                           (lambda _
+                             ; Break while parked at the prompt: if we're
+                             ; the top, tell the dispatcher to abort the
+                             ; in-flight read and re-prompt. If we're not
+                             ; top (e.g. interact parked while dbg is
+                             ; active), forward the break to the top's
+                             ; eval thread.
+                             (let ((top (ar-repl-top)))
+                               (cond
+                                 ((and top
+                                       (not (eq? (ar-repl-thread top)
+                                                 (current-thread))))
+                                  (break-thread (ar-repl-thread top))
+                                  'forwarded)
+                                 (else
+                                  (when top
+                                    (semaphore-post (ar-repl-interrupt top)))
+                                  'break))))))
+                       (channel-get (ar-repl-channel r)))))
+                (cond
+                  ((eof-object? expr) (exit (void)))
+                  ((eq? expr 'forwarded) (loop))
+                  ((eq? expr 'break)
+                   ; The dispatcher will reprint the prompt; nothing to do
+                   ; here except loop back to channel-get.
+                   (loop))
+                  (else
+                   ; Run eval-fn. On normal return or caught break, post
+                   ; done so the dispatcher re-prompts us. On (quit)
+                   ; (quit-tag), skip the done post — the outer pop-wind
+                   ; below will post stack-change, and we don't want the
+                   ; dispatcher to prompt us once more before noticing the
+                   ; pop. eval-fn chooses how to consume the expression:
+                   ; the scheme-side `ar-interact-eval` wants syntax; an
+                   ; Arc-supplied eval-fn gets the raw datum (see xdef
+                   ; run-repl).
+                   (let ((quitting #f))
+                     (dynamic-wind
+                       void
+                       (lambda ()
+                         (with-handlers
+                             ((ar-repl-quit-tag?
+                               (lambda _
+                                 (set! quitting #t)
+                                 (exit (void))))
+                              (exn:break?
+                               (lambda _
+                                 (ar-with-stdout-lock
+                                   (lambda ()
+                                     (display "^C") (newline)
+                                     (flush-output))))))
+                           (ar-apply eval-fn (list expr))))
+                       (lambda ()
+                         (unless quitting
+                           (semaphore-post (ar-repl-done r))))))
+                   (loop))))))))
+      (lambda () (ar-repl-pop! r)))))
+
+; Arc-level entry: eval-fn is an Arc closure that expects raw s-expressions,
+; not the syntax objects the dispatcher delivers. Strip syntax here so the
+; debugger's `(is expr ''c)` checks (and similar) work.
+(xdef run-repl (lambda (label prompt eval-fn)
+                 (ar-run-repl label prompt
+                              (lambda (expr)
+                                (ar-apply eval-fn
+                                          (list (if (syntax? expr)
+                                                    (syntax->datum expr)
+                                                    expr)))))
+                 ar-t))
+
+; The original stdout/stderr captured at startup. arc.arc sets these in
+; ar-original-stdout / ar-original-stderr via (set-ar-original-stdout! ...)
+; so run-repl can restore terminal I/O for debuggers fired inside request
+; handlers (whose current-output-port has been redirected to a socket).
+(define ar-original-stdout #f)
+(define ar-original-stderr #f)
+
+(xdef set-original-ports (lambda (o e)
+                           (set! ar-original-stdout o)
+                           (set! ar-original-stderr e)
+                           ar-t))
+
+; Default eval-fn for `interact`-style REPLs: compiles an incoming syntax
+; object via `ac`, evaluates it, and prints the result via ac-prompt-print
+; (which also updates `that` / `thatexpr`). Errors are caught and printed;
+; breaks propagate to run-repl's handler.
+(define (ar-interact-eval stx)
+  (with-handlers ((exn:fail?
+                   (lambda (c)
+                     (ar-with-stdout-lock
+                       (lambda ()
+                         ((error-display-handler) (exn-message c) c))))))
+    (ac-that-expr* stx)
+    (let ((v (eval (ac stx) (arc-namespace))))
+      (ar-with-stdout-lock (lambda () (ac-prompt-print v))))))
+
+(define (interact)
+  (cond
+    ((not (terminal-port? (current-input-port)))
+     ; Piped stdin: no dispatcher ceremony; just eval each form until EOF.
+     (aload1 (current-input-port)))
+    (else
+     (display "Use (quit) to quit, (interact) to return here after an interrupt.\n")
+     (parameterize ((port-count-lines-enabled #t))
+       (port-count-lines! (current-input-port))
+       (ar-run-repl "interact" "arc> " ar-interact-eval)))))
 
 (define (aload1 p)
   (let ((x (sread p)))
@@ -1323,6 +1613,16 @@
 
 (xdef details (c)
   (disp-to-string (exn-message c)))
+
+; Print an exception with Racket's error-display-handler (stack trace etc.),
+; so errors inside (dbg) show the same context top-level errors do. Caller
+; is responsible for holding the stdout lock — this xdef does not take it,
+; because `dbg-eval-fn` already wraps its whole body in `w/stdout-lock` and
+; the semaphore is not reentrant.
+(xdef display-error
+  (lambda (c)
+    ((error-display-handler) (exn-message c) c)
+    ar-t))
 
 (xdef xar (x val) (ar-xar x val))
 
@@ -1425,7 +1725,14 @@
 (xdef ssexpand (x)
   (if (ssyntax? x) (expand-ssyntax x) x))
 
-(xdef quit exit)
+; `(quit)` inside a REPL pops that REPL (via the same quit-tag the
+; debugger's 'c uses); outside any REPL, it exits the process.
+(xdef quit
+  (lambda args
+    (cond
+      ((null? ar-repl-stack)
+       (if (null? args) (exit) (exit (car args))))
+      (else (raise ar-repl-quit-tag)))))
 
 ; there are two ways to close a TCP output port.
 ; (close o) waits for output to drain, then closes UNIX descriptor.

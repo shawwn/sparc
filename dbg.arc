@@ -29,14 +29,16 @@
   (each k (keys *env)
     (wipe (*env k))))
 
-(def tlread (prompt)
-  (w/stdout original-stdout*
-    (w/stdin original-stdin*
-      (pr prompt :flush)
-      (read))))
+; `tlread` used to prompt and (read) directly from original-stdin. With
+; the cooperative REPL stack in ac.scm, the dispatcher owns stdin and
+; delivers parsed forms through a channel — nothing here reads the
+; terminal any more.
+
+(mac w/stdout-lock body
+  `(with-stdout-lock (fn () ,@body)))
 
 (def tlerr (c)
-  (prn (details c))
+  (display-error c)
   c)
 
 (def dbg-stats ()
@@ -152,57 +154,44 @@
 (assign prnred prn)
 (assign prnblue prn)
 
+(def dbg-eval-fn (e lenv retexpr o i)
+  (fn (expr)
+    (w/stdout-lock
+      (on-err tlerr
+        (fn ()
+          (assign dbgexpr* expr)
+          (if (or (is expr ''c) (is expr eof))
+              (do (dbg-prexpr e lenv retexpr
+                              (fn (expr result)
+                                (when expr
+                                  (prnblue (dbg-pps expr))
+                                  (pr "  returned ")
+                                  (prnred (dbg-pps result))))
+                              o i)
+                  (repl-quit))
+              (is expr ''v)
+                (dbg-prexpr e lenv retexpr)
+              (is expr ''h)
+                (dbg-prn lenv retexpr)
+              (do (prnred (dbg-pps (dbg-eval e expr lenv)))
+                  (if (is dbgexpr* ''c)
+                      (do (assign dbgexpr* nil)
+                          (dbg-prn lenv retexpr))))))))))
+
 (def debugger (lenv (o retexpr) (o o (stdout)) (o i (stdin)))
-  (w/stdin original-stdin*
-    (w/stdout original-stdout*
-      (let e (dbg-copy (or dbgenv* *env))
-        (dbg-restore e)
-        (assign dbgenv* nil)
-        (assign *debug nil)
-        (when (is (type lenv) 'exception)
-          ;(= lenv (lexenv lenv)))
-          (= lenv (dbg-exnenv e lenv)))
-        (when (is (type lenv) 'sym)
-          (= lenv (e lenv)))
-        (when (is (type lenv) 'fn)
-          (= lenv (lenv)))
-        (dbg-prn lenv retexpr)
-        (let done nil
-          ((afn ()
-             (on-err (fn (c)
-                         ;(dbgerr c)
-                         (if *debug
-                             (w/pushnew c exn*
-                               (debugger c))
-                             (do
-                               (tlerr c)
-                               (if done
-                                   nil
-                                   (self)))))
-                     (fn ()
-             (let expr (tlread "> ")
-               (assign dbgexpr* expr)
-               (if (or (is expr ''c) (is expr eof))
-                   (do (= done t)
-                       (dbg-prexpr e lenv retexpr
-                                   (fn (expr result)
-                                     (when expr
-                                       (prnblue (dbg-pps expr))
-                                       (pr "  returned ")
-                                       (prnred (dbg-pps result))))
-                                   o i))
-                   (is expr ''v)
-                    (do (dbg-prexpr e lenv retexpr)
-                        (self))
-                   (is expr ''h)
-                     (do (dbg-prn lenv retexpr)
-                         (self))
-                   (do (prnred (dbg-pps (dbg-eval e expr lenv)))
-                       (if (is dbgexpr* ''c)
-                           (do
-                             (assign dbgexpr* nil)
-                             (dbg-prn lenv retexpr)))
-                       (self)))))))))))))
+  (let e (dbg-copy (or dbgenv* *env))
+    (dbg-restore e)
+    (assign dbgenv* nil)
+    (assign *debug nil)
+    (when (is (type lenv) 'exception)
+      ;(= lenv (lexenv lenv)))
+      (= lenv (dbg-exnenv e lenv)))
+    (when (is (type lenv) 'sym)
+      (= lenv (e lenv)))
+    (when (is (type lenv) 'fn)
+      (= lenv (lenv)))
+    (w/stdout-lock (dbg-prn lenv retexpr))
+    (run-repl "dbg" "> " (dbg-eval-fn e lenv retexpr o i))))
 
 (mac dbg ((o expr 'nil))
   `(debugger (lexenv) ',expr))

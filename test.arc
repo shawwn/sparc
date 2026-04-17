@@ -1432,5 +1432,29 @@ c"
   ; extras preserve call order
   (test? '(nil nil (c: 3 a: 1 b: 2) nil) (f c: 3 a: 1 b: 2)))
 
+(define-test repl-stack
+  ; empty stack
+  (test? t (no (repl-top)))
+  ; single push/pop
+  (let r1 (make-repl-record "a" "a> ")
+    (repl-push r1)
+    (test? t (is (repl-top) r1))
+    (repl-pop r1)
+    (test? t (no (repl-top))))
+  ; nested push; pop-by-identity removes the bottom without changing top
+  (withs (r1 (make-repl-record "a" "a> ")
+          r2 (make-repl-record "b" "b> "))
+    (repl-push r1)
+    (repl-push r2)
+    (test? t (is (repl-top) r2))
+    (repl-pop r1)
+    (test? t (is (repl-top) r2))
+    (repl-pop r2)
+    (test? t (no (repl-top))))
+  ; popping a record that isn't on the stack is a no-op
+  (let r1 (make-repl-record "a" "a> ")
+    (repl-pop r1)
+    (test? t (no (repl-top)))))
+
 run-tests
 
