@@ -1411,10 +1411,8 @@
       (lambda () (ar-repl-push! r))
       (lambda ()
         (parameterize ((current-input-port  ar-dispatcher-stdin)
-                       (current-output-port (or ar-original-stdout
-                                                (current-output-port)))
-                       (current-error-port  (or ar-original-stderr
-                                                (current-error-port))))
+                       (current-output-port ar-original-stdout)
+                       (current-error-port  ar-original-stderr))
           (let/ec exit
             (let loop ()
               (let ((expr
@@ -1491,17 +1489,9 @@
                                                     expr)))))
                  ar-t))
 
-; The original stdout/stderr captured at startup. arc.arc sets these in
-; ar-original-stdout / ar-original-stderr via (set-ar-original-stdout! ...)
-; so run-repl can restore terminal I/O for debuggers fired inside request
-; handlers (whose current-output-port has been redirected to a socket).
-(define ar-original-stdout #f)
-(define ar-original-stderr #f)
-
-(xdef set-original-ports (lambda (o e)
-                           (set! ar-original-stdout o)
-                           (set! ar-original-stderr e)
-                           ar-t))
+; The original stdout/stderr captured at startup.
+(define ar-original-stdout (current-output-port))
+(define ar-original-stderr (current-error-port))
 
 ; Default eval-fn for `interact`-style REPLs: compiles an incoming syntax
 ; object via `ac`, evaluates it, and prints the result via ac-prompt-print

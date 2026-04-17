@@ -994,11 +994,6 @@
      original-stdout* (stdout)
      original-stderr* (stderr))
 
-; let the Scheme-side REPL dispatcher restore terminal stdout/stderr
-; inside a (dbg) fired from a request handler (whose ports are redirected
-; to a socket)
-(set-original-ports original-stdout* original-stderr*)
-
 (def stdin?  (port) (is port original-stdin*))
 (def stdout? (port) (is port original-stdout*))
 (def stderr? (port) (is port original-stderr*))
