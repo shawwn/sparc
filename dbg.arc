@@ -151,9 +151,6 @@
 
 (assign dbgerr debugger:tlerr)
 
-(assign prnred prn)
-(assign prnblue prn)
-
 (def dbg-eval-fn (e lenv retexpr o i)
   (fn (expr)
     (w/stdout-lock
@@ -178,7 +175,10 @@
                       (do (assign dbgexpr* nil)
                           (dbg-prn lenv retexpr))))))))))
 
-(def debugger (lenv (o retexpr) (o o (stdout)) (o i (stdin)))
+; o/i default to the terminal (not the current dynamic stdout/stdin) so
+; `(dbg)` fired from a request handler evaluates retexpr results against
+; the terminal, not the socket.
+(def debugger (lenv (o retexpr) (o o original-stdout*) (o i original-stdin*))
   (let e (dbg-copy (or dbgenv* *env))
     (dbg-restore e)
     (assign dbgenv* nil)
@@ -190,7 +190,11 @@
       (= lenv (e lenv)))
     (when (is (type lenv) 'fn)
       (= lenv (lenv)))
-    (w/stdout-lock (dbg-prn lenv retexpr))
+    ; (dbg) fired from a request handler inherits current-output-port bound
+    ; to the socket. run-repl rebinds to original-stdout* internally, but the
+    ; preamble runs before that, so force it to the terminal here.
+    (w/stdout original-stdout*
+      (w/stdout-lock (dbg-prn lenv retexpr)))
     (run-repl "dbg" "> " (dbg-eval-fn e lenv retexpr o i))))
 
 (mac dbg ((o expr 'nil))
