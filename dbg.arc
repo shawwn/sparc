@@ -34,9 +34,6 @@
 ; delivers parsed forms through a channel — nothing here reads the
 ; terminal any more.
 
-(mac w/stdout-lock body
-  `(with-stdout-lock (fn () ,@body)))
-
 (def tlerr (c)
   (display-error c)
   c)
@@ -55,7 +52,6 @@
 
 ;(when (~bound 'exn*)
 (assign exn* nil)
-(assign dbgexpr* nil)
 
 (def dbg-restore (tbl)
   (when tbl
@@ -103,8 +99,8 @@
     (intersperse #\space
       (map [trim:tostring:pprint _] xs))))
 
-(def dbg-slot ((k v))
-  (list k (if (isa!fn v) (v) v)))
+(def dbg-slot ((name getter))
+  (list name (getter)))
 
 (def dbg-locals (lenv)
   (map dbg-slot lenv))
@@ -112,10 +108,6 @@
 (def dbg-prn (lenv retexpr)
   (when (> (len exn*) 0)
     (tlerr (car exn*)))
-  ;(iflet stack (stacktrace) ;(at (stacktrace) 0 (pos 'dbg-prn (stacktrace)))
-  ;       (prn "debugging at: " (dbg-pps (nthcdr (+ (pos 'debugger stack) 1) stack))))
-  (whenlet trace (assoc '*stacktrace lenv)
-    (prn "debugging at: " (dbg-pps (dbg-slot trace))))
   (pr "locals:")
   (each (name val) (dbg-locals lenv)
     (prn)
@@ -129,19 +121,16 @@
 
 (assign dbgenv* nil)
 
-(def dbg-eval (e expr lenv)
-  (let prev (dbg-copy e)
+(def dbg-eval (locals expr lenv (o o (stdout)) (o i (stdin)))
+  (let prev (dbg-copy locals)
     (assign dbgenv* (dbg-copyenv))
-    (dbg-restore e)
-    (eval expr lenv)))
+    (dbg-restore locals)
+    (w/stdout o (w/stdin i (eval expr lenv)))))
 
-(def dbg-prexpr (e lenv expr (o printer) (o o (stdout)) (o i (stdin)))
-  (with result (w/stdout o (w/stdin i (dbg-eval e expr lenv)))
-    (if printer
-      (printer expr result)
-      (prnred (dbg-pps result)))
-    (= thatexpr expr)
-    (= that result)))
+(def dbg-prexpr (locals lenv expr o i)
+  (with result (dbg-eval locals expr lenv o i)
+    (prnred (dbg-pps result))
+    (= that result thatexpr expr)))
 
 ;(def dbgerr (c)
 ;  (prn:details c)
@@ -151,52 +140,38 @@
 
 (assign dbgerr debugger:tlerr)
 
-(def dbg-eval-fn (e lenv retexpr o i)
+(def dbg-eval-fn (locals lenv retexpr o i)
   (fn (expr)
-    (w/stdout-lock
-      (on-err tlerr
-        (fn ()
-          (assign dbgexpr* expr)
-          (if (or (is expr ''c) (is expr eof))
-              (do (dbg-prexpr e lenv retexpr
-                              (fn (expr result)
-                                (when expr
-                                  (prnblue (dbg-pps expr))
-                                  (pr "  returned ")
-                                  (prnred (dbg-pps result))))
-                              o i)
-                  (repl-quit))
-              (is expr ''v)
-                (dbg-prexpr e lenv retexpr)
-              (is expr ''h)
-                (dbg-prn lenv retexpr)
-              (do (prnred (dbg-pps (dbg-eval e expr lenv)))
-                  (if (is dbgexpr* ''c)
-                      (do (assign dbgexpr* nil)
-                          (dbg-prn lenv retexpr))))))))))
+    (on-err tlerr
+      (fn ()
+        (case expr
+          ('c eof)
+           (repl-quit)
+          ('v)
+           (dbg-prexpr locals lenv retexpr o i)
+          ('h)
+           (dbg-prn lenv retexpr)
+           (prnred (dbg-pps (dbg-eval locals expr lenv o i))))))))
 
-; o/i default to the terminal (not the current dynamic stdout/stdin) so
-; `(dbg)` fired from a request handler evaluates retexpr results against
-; the terminal, not the socket.
-(def debugger (lenv (o retexpr) (o o original-stdout*) (o i original-stdin*))
-  (let e (dbg-copy (or dbgenv* *env))
-    (dbg-restore e)
+(def debugger (lenv (o retexpr) (o o (stdout)) (o i (stdin)) (o :prompt "> "))
+  (let locals (dbg-copy (or dbgenv* *env))
+    (dbg-restore locals)
     (assign dbgenv* nil)
     (assign *debug nil)
     (when (is (type lenv) 'exception)
-      ;(= lenv (lexenv lenv)))
-      (= lenv (dbg-exnenv e lenv)))
+      (= lenv (dbg-exnenv locals lenv)))
     (when (is (type lenv) 'sym)
-      (= lenv (e lenv)))
+      (= lenv (locals lenv)))
     (when (is (type lenv) 'fn)
       (= lenv (lenv)))
     ; (dbg) fired from a request handler inherits current-output-port bound
     ; to the socket. run-repl rebinds to original-stdout* internally, but the
     ; preamble runs before that, so force it to the terminal here.
     (w/stdout original-stdout*
-      (w/stdout-lock (dbg-prn lenv retexpr)))
-    (run-repl "dbg" "> " (dbg-eval-fn e lenv retexpr o i))))
+      (dbg-prn lenv retexpr))
+    (run-repl "dbg" prompt (dbg-eval-fn locals lenv retexpr o i))
+    (dbg-eval locals retexpr lenv o i)))
 
-(mac dbg ((o expr 'nil))
-  `(debugger (lexenv) ',expr))
+(mac dbg ((o expr 'nil) :kws)
+  `(debugger (lexenv) ',expr ,@kws))
 
